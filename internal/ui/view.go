@@ -115,10 +115,28 @@ func (m Form) View() string {
 		// Enum / var-picker popup overlay: when the user opens a
 		// closed-choice field in grid mode, splice the popup over the
 		// rows immediately below the focused cell so the grid stays put.
-		// The popup is anchored at the focused cell's column; if it
-		// would run off the bottom of the viewport it caps at the visible
-		// row count.
+		// The popup is anchored at the focused cell's column. When the
+		// viewport can't hold the full popup below the focused row, we
+		// grow visibleLines with blank rows so the popup always renders
+		// completely — pushing the preview line down rather than
+		// silently clipping the popup's bottom border.
 		if focusedRow >= 0 && focusedCol >= 0 {
+			var popupHeight int
+			switch m.mode {
+			case FormModeEnum:
+				popupHeight = enumPopupHeight(m.enumPop.choices)
+			case FormModeVarPick:
+				popupHeight = len(m.buildVarPickerBox())
+			}
+			if popupHeight > 0 {
+				visibleIdx := focusedRow - m.vp.YOffset
+				if visibleIdx >= 0 {
+					needed := visibleIdx + 1 + popupHeight
+					for len(visibleLines) < needed {
+						visibleLines = append(visibleLines, "")
+					}
+				}
+			}
 			switch m.mode {
 			case FormModeEnum:
 				visibleLines = m.spliceEnumOverlay(visibleLines, focusedRow, focusedCol, cellWidths)
@@ -935,13 +953,34 @@ func buildTopBorder(innerWidth, cols, visibleCols, offset int) string {
 	return "┌" + strings.Repeat("─", leftPad) + label + strings.Repeat("─", rightPad) + "┐"
 }
 
+// enumPopupHeight returns the number of terminal rows the enum popup
+// will occupy for the given choices (top + visible items + bottom).
+func enumPopupHeight(choices []string) int {
+	n := len(choices)
+	if n == 0 {
+		return 0
+	}
+	if n > maxPopupItems {
+		n = maxPopupItems
+	}
+	return n + 2
+}
+
+// maxPopupItems caps the visible choice rows in an enum popup. Longer
+// lists slide a window around the cursor and mark the clipped side with
+// a "↑"/"↓" glyph inside the top/bottom border.
+const maxPopupItems = 7
+
 // buildPopupLines returns the bordered popup block for one column of
 // choices. The first and last lines are top/bottom borders; the
 // interior lines are `│ label │` with `▶ ` prefix on the cursor row.
-// Choices wider than the interior are truncated with `…`. Returns an
-// empty slice when choices is empty (caller skips drawing).
+// Choices wider than the interior are truncated with `…`. When more
+// than maxPopupItems choices are present, the visible slice slides to
+// keep the cursor in view and clipped sides are marked in the border.
+// Returns an empty slice when choices is empty (caller skips drawing).
 func buildPopupLines(choices []string, cursor int) []string {
-	if len(choices) == 0 {
+	n := len(choices)
+	if n == 0 {
 		return nil
 	}
 	// Width = longest choice + cursor + padding, floored at gridValueBudget
@@ -954,13 +993,29 @@ func buildPopupLines(choices []string, cursor int) []string {
 		}
 	}
 	interior := popupWidth - 2
+
+	visible := n
+	if visible > maxPopupItems {
+		visible = maxPopupItems
+	}
+	start := 0
+	if n > visible {
+		start = cursor - visible/2
+		if start < 0 {
+			start = 0
+		}
+		if start+visible > n {
+			start = n - visible
+		}
+	}
+	end := start + visible
+	clipTop := start > 0
+	clipBot := end < n
+
 	var out []string
-	var top strings.Builder
-	top.WriteString("┌")
-	top.WriteString(strings.Repeat("─", interior))
-	top.WriteString("┐")
-	out = append(out, top.String())
-	for i, choice := range choices {
+	out = append(out, borderLine("┌", "┐", interior, clipTop, "↑"))
+	for i := start; i < end; i++ {
+		choice := choices[i]
 		prefix := "  "
 		styled := false
 		if i == cursor {
@@ -987,12 +1042,29 @@ func buildPopupLines(choices []string, cursor int) []string {
 		line.WriteString("│")
 		out = append(out, line.String())
 	}
-	var bot strings.Builder
-	bot.WriteString("└")
-	bot.WriteString(strings.Repeat("─", interior))
-	bot.WriteString("┘")
-	out = append(out, bot.String())
+	out = append(out, borderLine("└", "┘", interior, clipBot, "↓"))
 	return out
+}
+
+// borderLine builds a horizontal border ("┌────┐" style). When clipped
+// is true, the middle of the border shows `glyph` to signal off-screen
+// choices in that direction.
+func borderLine(left, right string, interior int, clipped bool, glyph string) string {
+	if !clipped || interior < 3 {
+		var b strings.Builder
+		b.WriteString(left)
+		b.WriteString(strings.Repeat("─", interior))
+		b.WriteString(right)
+		return b.String()
+	}
+	mid := interior / 2
+	var b strings.Builder
+	b.WriteString(left)
+	b.WriteString(strings.Repeat("─", mid))
+	b.WriteString(glyph)
+	b.WriteString(strings.Repeat("─", interior-mid-1))
+	b.WriteString(right)
+	return b.String()
 }
 
 func (m *Form) spliceOverlay(lines []string, focusedRow, focusedCol int, cellWidths []int, choices []string, cursor int) []string {
