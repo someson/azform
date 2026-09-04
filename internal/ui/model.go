@@ -862,6 +862,70 @@ func (m Form) GridLayout() (roCols [][]int, globalsCol []int, cols int) {
 	return m.gridLayout()
 }
 
+// moveCursorVert moves the cursor to the previous (delta = -1) or next
+// (delta = +1) row in the visual grid. On top of a non-first column, it
+// wraps to the previous column's last row; on the bottom of a non-last
+// column, it wraps to the next column's first row. Hard stops at the
+// very top of the first column and the very bottom of the last column.
+// In single-column mode (cols < 2) it falls back to a flat step through
+// m.visible. Returns true if the cursor moved.
+func (m *Form) moveCursorVert(delta int) bool {
+	roCols, globalsCol, cols := m.gridLayout()
+	if cols < 2 {
+		next := m.cursor + delta
+		if next < 0 || next >= len(m.visible) {
+			return false
+		}
+		m.cursor = next
+		return true
+	}
+	all := append([][]int(nil), roCols...)
+	if len(globalsCol) > 0 {
+		all = append(all, globalsCol)
+	}
+	focusIdx := m.fieldAt(m.cursor)
+	if focusIdx < 0 {
+		return false
+	}
+	curCol, curRow := -1, -1
+	for c, col := range all {
+		for r, idx := range col {
+			if idx == focusIdx {
+				curCol, curRow = c, r
+				break
+			}
+		}
+		if curCol >= 0 {
+			break
+		}
+	}
+	if curCol < 0 {
+		return false
+	}
+	newCol, newRow := curCol, curRow+delta
+	if newRow < 0 {
+		newCol--
+		if newCol < 0 {
+			return false
+		}
+		newRow = len(all[newCol]) - 1
+	} else if newRow >= len(all[curCol]) {
+		newCol++
+		if newCol >= len(all) {
+			return false
+		}
+		newRow = 0
+	}
+	targetIdx := all[newCol][newRow]
+	for vi, idx := range m.visible {
+		if idx == targetIdx {
+			m.cursor = vi
+			return true
+		}
+	}
+	return false
+}
+
 // moveCursorHoriz jumps the cursor to the same row in the neighbouring
 // column (delta = -1 for left, +1 for right). Returns true if the cursor
 // moved. When the target column is shorter, lands on its last row.
@@ -947,7 +1011,7 @@ func (m Form) Result() string { return m.result }
 func (m Form) TextInputValue() string { return m.textInput.Value() }
 
 // PickerVarNames returns the var picker's full name list (unfiltered).
-func (m Form) PickerVarNames() []string { return append([]string(nil), m.varPop.vars...) }
+func (m Form) PickerVarNames() []string { return m.varPop.AllNames() }
 
 // PickerCols returns the total column count in the var picker.
 func (m Form) PickerCols() int { return m.varPop.cols }

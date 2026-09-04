@@ -64,7 +64,7 @@ So the loop becomes: type, run, read error, fix, run again. Sometimes four or fi
 ## Install
 
 ```sh
-curl -fsSL https://raw.githubusercontent.com/<owner>/azform/main/install.sh | sh
+curl -fsSL https://raw.githubusercontent.com/someson/azform/main/install.sh | sh
 ```
 
 One command. No `sudo`, nothing outside your home directory. The installer asks before touching your shell profile, and `install.sh --uninstall` removes everything it added.

@@ -298,8 +298,8 @@ func TestVarPickerInsertAndReturnToEdit(t *testing.T) {
 		t.Fatalf("mode after Ctrl+V = %v, want FormModeVarPick", f.Mode())
 	}
 
-	// Down once → cursor at LOC (RG, LOC, BLD → j).
-	m, _ = f.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'j'}})
+	// Down once → cursor at LOC (RG, LOC, BLD).
+	m, _ = f.Update(tea.KeyMsg{Type: tea.KeyDown})
 	f = m.(ui.Form)
 
 	// Enter → picker emits VarPickedMsg via a tea.Cmd; deliver it.
@@ -504,8 +504,8 @@ func TestVarPickerFiltersUnderscorePrefixed(t *testing.T) {
 	}
 
 	// Picker has [RG, WSTE] sorted. Cursor starts at 0 = RG. Press
-	// 'j' to navigate to WSTE; Enter picks it.
-	m, _ = f.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'j'}})
+	// Down to navigate to WSTE; Enter picks it.
+	m, _ = f.Update(tea.KeyMsg{Type: tea.KeyDown})
 	f = m.(ui.Form)
 	m, cmd := f.Update(tea.KeyMsg{Type: tea.KeyEnter})
 	if cmd == nil {
@@ -652,10 +652,10 @@ func TestVarPickerFitsAcrossColumnsWhenManyVars(t *testing.T) {
 	// same var at the same coordinates regardless of the column count.
 	col1row1 := f.PickerColNames(1)[1]
 
-	// Press 'l' (right) then 'j' (down). Cursor → (1, 1).
-	m, _ = f.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'l'}})
+	// Press Right then Down. Cursor → (1, 1).
+	m, _ = f.Update(tea.KeyMsg{Type: tea.KeyRight})
 	f = m.(ui.Form)
-	m, _ = f.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'j'}})
+	m, _ = f.Update(tea.KeyMsg{Type: tea.KeyDown})
 	f = m.(ui.Form)
 	col, row := f.PickerCursor()
 	if col != 1 || row != 1 {
@@ -2900,5 +2900,244 @@ func TestVKeyIgnoredOnBoolField(t *testing.T) {
 	bf = findField(t, f, "--allow-blob-public-access")
 	if bf.Mode == ui.FieldModeVar {
 		t.Errorf("v toggled bool field into var mode: %+v", bf)
+	}
+}
+
+// TestVarPickerFilterInsertsSelectedVar covers Ctrl+V → type filter →
+// Enter end-to-end: the filtered pick is spliced as ${NAME} at the
+// saved cursor position in the text input.
+func TestVarPickerFilterInsertsSelectedVar(t *testing.T) {
+	dir := t.TempDir()
+	src := ui.Sources{
+		Engine: validate.NewEngine(validate.BuiltinProvider{}),
+		Vars: []vars.Variable{
+			{Name: "RG", Value: "g"},
+			{Name: "MYBUCKET", Value: "b"},
+			{Name: "MYENV", Value: "e"},
+		},
+	}
+	f := ui.NewFormWithSources("storage account create", "/tmp/out.txt", dir, "test", nil, src)
+	m, _ := f.Update(ui.MetadataLoadedMsg{Params: testParams, Summary: "."})
+	f = m.(ui.Form)
+
+	// Enter edit mode on --name and type a prefix.
+	m, _ = f.Update(tea.KeyMsg{Type: tea.KeyEnter})
+	f = m.(ui.Form)
+	for _, r := range "pre-" {
+		m, _ = f.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{r}})
+		f = m.(ui.Form)
+	}
+
+	// Open picker.
+	m, _ = f.Update(tea.KeyMsg{Type: tea.KeyCtrlV})
+	f = m.(ui.Form)
+	if f.Mode() != ui.FormModeVarPick {
+		t.Fatalf("mode after Ctrl+V = %v, want FormModeVarPick", f.Mode())
+	}
+
+	// Type filter `mye` → narrows to MYENV only (cursor at 0,0).
+	for _, r := range "mye" {
+		m, _ = f.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{r}})
+		f = m.(ui.Form)
+	}
+
+	// Enter → pick.
+	m, cmd := f.Update(tea.KeyMsg{Type: tea.KeyEnter})
+	f = m.(ui.Form)
+	if cmd == nil {
+		t.Fatal("Enter on filtered picker should emit a VarPickedMsg command")
+	}
+	m, _ = f.Update(cmd())
+	f = m.(ui.Form)
+	if f.Mode() != ui.FormModeEdit {
+		t.Fatalf("mode after pick = %v, want FormModeEdit", f.Mode())
+	}
+	if got := f.TextInputValue(); got != "pre-$MYENV" {
+		t.Errorf("textinput after filtered pick = %q, want \"pre-$MYENV\"", got)
+	}
+}
+
+// pressDown / pressUp send a Down / Up key and return the mutated Form.
+func pressDown(t *testing.T, f ui.Form) ui.Form {
+	t.Helper()
+	m, _ := f.Update(tea.KeyMsg{Type: tea.KeyDown})
+	return m.(ui.Form)
+}
+
+func pressUp(t *testing.T, f ui.Form) ui.Form {
+	t.Helper()
+	m, _ := f.Update(tea.KeyMsg{Type: tea.KeyUp})
+	return m.(ui.Form)
+}
+
+// TestVertNavStopsAtTopOfFirstColumn verifies Up at the top of column 0
+// is a no-op (no wraparound, no crash).
+func TestVertNavStopsAtTopOfFirstColumn(t *testing.T) {
+	f := makeGridForm(t, 3, 18, 3, 240, true)
+	before := f.Cursor()
+	f = pressUp(t, f)
+	if f.Cursor() != before {
+		t.Errorf("Up at top of col 0: cursor moved from %d to %d, want no-op", before, f.Cursor())
+	}
+}
+
+// TestVertNavWrapsToPrevColBottom verifies Up at the top of a non-first
+// column jumps to the last row of the previous column.
+func TestVertNavWrapsToPrevColBottom(t *testing.T) {
+	f := makeGridForm(t, 3, 18, 3, 240, true)
+	roCols, _, _ := f.GridLayout()
+	// Jump directly to top of col 1 by advancing 9 Down presses (col 0 has 9).
+	for i := 0; i < 9; i++ {
+		f = pressDown(t, f)
+	}
+	if got := f.Visible()[f.Cursor()]; got != roCols[1][0] {
+		t.Fatalf("precondition: cursor at %d, want roCols[1][0]=%d", got, roCols[1][0])
+	}
+	f = pressUp(t, f)
+	want := roCols[0][len(roCols[0])-1]
+	if got := f.Visible()[f.Cursor()]; got != want {
+		t.Errorf("Up from top of col 1: field idx %d, want %d (roCols[0] last)", got, want)
+	}
+}
+
+// TestVertNavWrapsToNextColTop verifies Down at the last row of a
+// non-last column jumps to the top of the next column.
+func TestVertNavWrapsToNextColTop(t *testing.T) {
+	f := makeGridForm(t, 3, 18, 3, 240, true)
+	roCols, _, _ := f.GridLayout()
+	// Advance to last row of col 0 (8 presses lands at roCols[0][8]).
+	for i := 0; i < 8; i++ {
+		f = pressDown(t, f)
+	}
+	if got := f.Visible()[f.Cursor()]; got != roCols[0][8] {
+		t.Fatalf("precondition: cursor at %d, want roCols[0][8]=%d", got, roCols[0][8])
+	}
+	f = pressDown(t, f)
+	if got := f.Visible()[f.Cursor()]; got != roCols[1][0] {
+		t.Errorf("Down from bottom of col 0: field idx %d, want %d (roCols[1][0])", got, roCols[1][0])
+	}
+}
+
+// TestVertNavStopsAtBottomOfLastColumn verifies Down at the last field
+// of the last column is a no-op.
+func TestVertNavStopsAtBottomOfLastColumn(t *testing.T) {
+	f := makeGridForm(t, 3, 18, 3, 240, true)
+	roCols, globalsCol, _ := f.GridLayout()
+	total := len(roCols[0]) + len(roCols[1]) + len(globalsCol)
+	// Advance to the very last field (total-1 Down presses from index 0).
+	for i := 0; i < total-1; i++ {
+		f = pressDown(t, f)
+	}
+	if got := f.Visible()[f.Cursor()]; got != globalsCol[len(globalsCol)-1] {
+		t.Fatalf("precondition: cursor at %d, want globalsCol last=%d", got, globalsCol[len(globalsCol)-1])
+	}
+	before := f.Cursor()
+	f = pressDown(t, f)
+	if f.Cursor() != before {
+		t.Errorf("Down at bottom of last col: cursor moved from %d to %d, want no-op", before, f.Cursor())
+	}
+}
+
+// TestVertNavSingleColumnStillWorks verifies flat-index Up/Down still
+// applies when the grid falls back to single-column mode.
+func TestVertNavSingleColumnStillWorks(t *testing.T) {
+	f := makeGridForm(t, 2, 5, 3, 60, true) // narrow term → single col
+	_, _, cols := f.GridLayout()
+	if cols != 1 {
+		t.Fatalf("precondition: expected cols=1, got %d", cols)
+	}
+	// From cursor 0, Down → 1; Up → 0; Up at 0 → still 0.
+	f = pressDown(t, f)
+	if f.Cursor() != 1 {
+		t.Errorf("Down from 0 (single col): cursor=%d, want 1", f.Cursor())
+	}
+	f = pressUp(t, f)
+	if f.Cursor() != 0 {
+		t.Errorf("Up back to 0 (single col): cursor=%d, want 0", f.Cursor())
+	}
+	before := f.Cursor()
+	f = pressUp(t, f)
+	if f.Cursor() != before {
+		t.Errorf("Up at 0 (single col): cursor moved from %d to %d, want no-op", before, f.Cursor())
+	}
+}
+
+// TestVertNavSweepIgnoresScrambledMetadataOrder is the reproducer for
+// the show-backend-health bug: when the metadata parser emits params
+// with globals interleaved among optionals, flat-index navigation
+// jumps between visual columns. Grid-aware Up/Down must still walk the
+// visual grid in top-to-bottom, left-to-right order.
+func TestVertNavSweepIgnoresScrambledMetadataOrder(t *testing.T) {
+	// Interleave: opt, opt, global, opt, global, opt, opt.
+	// This mimics the real show-backend-health baseline shape.
+	params := []metadata.Parameter{
+		{Name: "--req0", Required: true, TakesValue: true, ValueKind: metadata.ValueKindString},
+		{Name: "--req1", Required: true, TakesValue: true, ValueKind: metadata.ValueKindString},
+		{Name: "--opt0", TakesValue: true, ValueKind: metadata.ValueKindString},
+		{Name: "--opt1", TakesValue: true, ValueKind: metadata.ValueKindString},
+		{Name: "--global0", Global: true, TakesValue: true, ValueKind: metadata.ValueKindString},
+		{Name: "--opt2", TakesValue: true, ValueKind: metadata.ValueKindString},
+		{Name: "--global1", Global: true, TakesValue: true, ValueKind: metadata.ValueKindString},
+		{Name: "--opt3", TakesValue: true, ValueKind: metadata.ValueKindString},
+		{Name: "--opt4", TakesValue: true, ValueKind: metadata.ValueKindString},
+	}
+	f := ui.NewForm("test cmd", "/tmp/out", t.TempDir(), "test", nil)
+	m, _ := f.Update(tea.WindowSizeMsg{Width: 240, Height: 40})
+	m, _ = m.(ui.Form).Update(ui.MetadataLoadedMsg{Params: params, Summary: "."})
+	m, _ = m.(ui.Form).Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("g")}) // show globals
+	f = m.(ui.Form)
+	roCols, globalsCol, cols := f.GridLayout()
+	if cols < 2 {
+		t.Fatalf("precondition: expected multi-col grid, got cols=%d", cols)
+	}
+	want := make([]int, 0)
+	for _, col := range roCols {
+		want = append(want, col...)
+	}
+	want = append(want, globalsCol...)
+	got := []int{f.Visible()[f.Cursor()]}
+	for i := 1; i < len(want); i++ {
+		f = pressDown(t, f)
+		got = append(got, f.Visible()[f.Cursor()])
+	}
+	for i := range want {
+		if got[i] != want[i] {
+			t.Errorf("sweep[%d] = field %d (%q), want field %d (%q)",
+				i, got[i], nameOfField(f, got[i]), want[i], nameOfField(f, want[i]))
+		}
+	}
+}
+
+// nameOfField is a tiny debug helper for sweep-order test failures.
+func nameOfField(f ui.Form, idx int) string {
+	fs := f.Fields()
+	if idx < 0 || idx >= len(fs) {
+		return "?"
+	}
+	return fs[idx].Param.Name
+}
+
+// TestVertNavSweepFollowsVisualOrder verifies that pressing Down N-1
+// times from the top visits every field in visual grid order (col 0
+// top-to-bottom, then col 1, then globals). This is the bug reproducer.
+func TestVertNavSweepFollowsVisualOrder(t *testing.T) {
+	f := makeGridForm(t, 3, 18, 3, 240, true)
+	roCols, globalsCol, _ := f.GridLayout()
+	want := make([]int, 0)
+	want = append(want, roCols[0]...)
+	want = append(want, roCols[1]...)
+	want = append(want, globalsCol...)
+	got := []int{f.Visible()[f.Cursor()]}
+	for i := 1; i < len(want); i++ {
+		f = pressDown(t, f)
+		got = append(got, f.Visible()[f.Cursor()])
+	}
+	if len(got) != len(want) {
+		t.Fatalf("sweep length = %d, want %d", len(got), len(want))
+	}
+	for i := range want {
+		if got[i] != want[i] {
+			t.Errorf("sweep[%d] = %d, want %d", i, got[i], want[i])
+		}
 	}
 }

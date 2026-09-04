@@ -794,8 +794,43 @@ func (m *Form) buildVarPickerBox() []string {
 	// Top border with optional scroll indicator.
 	top := buildTopBorder(innerWidth, cols, visibleCols, offset)
 
-	// Interior rows.
+	// Reserved filter line above the grid. Shows `filter: <text>█` when
+	// the user has typed anything, or the neutral `variables` label
+	// when empty. Always reserved so the grid never jumps.
+	filterLine := buildVarPickerFilterLine(m.varPop.Filter(), innerWidth)
+
+	// Interior grid rows. When the filtered list is empty, render a
+	// single centered `no matches` line and blank remaining rows.
 	rows := make([]string, pickerRows)
+	if cols == 0 {
+		msgText := "no matches"
+		if runewidth.StringWidth(msgText) > innerWidth {
+			msgText = ansi.Truncate(msgText, innerWidth, "")
+		}
+		msgW := runewidth.StringWidth(msgText)
+		leftPad := (innerWidth - msgW) / 2
+		if leftPad < 0 {
+			leftPad = 0
+		}
+		rightPad := innerWidth - leftPad - msgW
+		if rightPad < 0 {
+			rightPad = 0
+		}
+		midRow := pickerRows / 2
+		blank := "│" + strings.Repeat(" ", innerWidth) + "│"
+		for r := 0; r < pickerRows; r++ {
+			if r == midRow {
+				rows[r] = "│" + strings.Repeat(" ", leftPad) + msgText + strings.Repeat(" ", rightPad) + "│"
+			} else {
+				rows[r] = blank
+			}
+		}
+		out := make([]string, 0, pickerRows+3)
+		out = append(out, top, filterLine)
+		out = append(out, rows...)
+		out = append(out, "└"+strings.Repeat("─", innerWidth)+"┘")
+		return out
+	}
 	for r := 0; r < pickerRows; r++ {
 		var sb strings.Builder
 		for c := 0; c < visibleCols; c++ {
@@ -847,11 +882,35 @@ func (m *Form) buildVarPickerBox() []string {
 
 	bot := "└" + strings.Repeat("─", innerWidth) + "┘"
 
-	out := make([]string, 0, pickerRows+2)
-	out = append(out, top)
+	out := make([]string, 0, pickerRows+3)
+	out = append(out, top, filterLine)
 	out = append(out, rows...)
 	out = append(out, bot)
 	return out
+}
+
+// buildVarPickerFilterLine renders the reserved filter-status row that
+// sits between the top border and the entry grid. When filter is
+// non-empty it shows `filter: <text>█`; when empty it shows the neutral
+// `variables` label. The line is always present so the grid does not
+// vertically jump when the user starts typing.
+func buildVarPickerFilterLine(filter string, innerWidth int) string {
+	if innerWidth < 1 {
+		innerWidth = 1
+	}
+	var content string
+	if filter == "" {
+		content = " variables"
+	} else {
+		content = " filter: " + filter + "█"
+	}
+	if runewidth.StringWidth(content) > innerWidth {
+		content = ansi.Truncate(content, innerWidth, "")
+	}
+	if pad := innerWidth - runewidth.StringWidth(content); pad > 0 {
+		content += strings.Repeat(" ", pad)
+	}
+	return "│" + content + "│"
 }
 
 // buildTopBorder returns the top border of the var picker box. When the

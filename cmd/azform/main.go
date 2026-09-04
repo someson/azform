@@ -200,7 +200,7 @@ func runTUI(raw shell.RawBuffer, shellVars, azureDefaults []vars.Variable, outPa
 	defer func() { _ = lk.Close() }()
 
 	p := tea.NewProgram(form,
-		tea.WithInput(tty),
+		tea.WithInput(ui.NewKeyNormalizer(tty)),
 		tea.WithOutput(tty),
 		// WithAltScreen swaps to a separate screen on Init and back to the
 		// shell on Quit, so the widget fills the whole window without residue

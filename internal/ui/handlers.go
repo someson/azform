@@ -129,16 +129,14 @@ func (m Form) handleKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	case FormModeList:
 		switch msg.String() {
 		case "up", "k":
-			if m.cursor > 0 {
-				m.cursor--
+			if m.moveCursorVert(-1) {
 				if idx := m.fieldAt(m.cursor); idx >= 0 {
 					return m, m.maybeFetchField(idx)
 				}
 			}
 			return m, nil
 		case "down", "j":
-			if m.cursor < len(m.visible)-1 {
-				m.cursor++
+			if m.moveCursorVert(+1) {
 				if idx := m.fieldAt(m.cursor); idx >= 0 {
 					return m, m.maybeFetchField(idx)
 				}
