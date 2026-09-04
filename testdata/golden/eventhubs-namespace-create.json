@@ -328,7 +328,7 @@
         "required": false,
         "group": "Managed Identity Arguments",
         "global": false,
-        "takes_value": true,
+        "takes_value": false,
         "value_kind": "bool",
         "help": "Enable System Assigned Identity.",
         "choices": [

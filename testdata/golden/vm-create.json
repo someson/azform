@@ -391,7 +391,7 @@
         "required": false,
         "group": "Optional Parameters",
         "global": false,
-        "takes_value": true,
+        "takes_value": false,
         "value_kind": "bool",
         "help": "Enable secure boot.",
         "choices": [
@@ -407,7 +407,7 @@
         "required": false,
         "group": "Optional Parameters",
         "global": false,
-        "takes_value": true,
+        "takes_value": false,
         "value_kind": "bool",
         "help": "Enable vTPM.",
         "choices": [
@@ -1195,7 +1195,7 @@
         "required": false,
         "group": "Network Arguments",
         "global": false,
-        "takes_value": true,
+        "takes_value": false,
         "value_kind": "bool",
         "help": "Enable accelerated networking. Unless specified, CLI will enable it based on machine image and size.",
         "choices": [
@@ -1497,7 +1497,7 @@
         "required": false,
         "group": "Storage Arguments",
         "global": false,
-        "takes_value": true,
+        "takes_value": false,
         "value_kind": "bool",
         "help": "Enable Host Encryption for the VM or VMSS. This will enable the encryption for all the disks including Resource/Temp disk at host itself.",
         "choices": [

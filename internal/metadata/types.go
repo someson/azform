@@ -77,12 +77,13 @@ func (c *Command) FindParameter(name string) *Parameter {
 }
 
 // IsSwitch reports whether the parameter is a bare bool switch — a flag that
-// doesn't accept a value. True when takes_value=false and value_kind=bool with
-// no explicit choices list (which is how az documents switches like --debug,
-// --help, --verbose). Used by the form to omit the value column and by the
-// validator to skip enum checks.
+// doesn't accept a value (e.g. --debug, --help, --no-wait). Used by the form
+// to omit the value column and by the validator to skip enum checks. Choices
+// are ignored: some az help pages document `--no-wait` with a documented
+// `true|false` choices list even though the flag is bare, so relying on the
+// choices list to detect switches misclassifies them.
 func (p Parameter) IsSwitch() bool {
-	return !p.TakesValue && p.ValueKind == ValueKindBool && len(p.Choices) == 0
+	return !p.TakesValue && p.ValueKind == ValueKindBool
 }
 
 // NavigationItem is one entry on an Azure CLI group help page.

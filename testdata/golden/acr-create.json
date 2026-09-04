@@ -94,7 +94,7 @@
         "required": false,
         "group": "Optional Parameters",
         "global": false,
-        "takes_value": true,
+        "takes_value": false,
         "value_kind": "bool",
         "help": "Enable or disable the metadata-search feature for the registry. If not specified, this is set to disabled by default. WARNING: Argument '--allow-metadata-search' is in preview and under development. Reference and support levels: https://aka.ms/CLI_refstatus",
         "choices": [
@@ -270,7 +270,7 @@
         "required": false,
         "group": "Network Rule Arguments",
         "global": false,
-        "takes_value": true,
+        "takes_value": false,
         "value_kind": "bool",
         "help": "Enable dedicated data endpoint for client firewall configuration.",
         "choices": [

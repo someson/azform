@@ -134,7 +134,7 @@
         "required": false,
         "group": "Optional Parameters",
         "global": false,
-        "takes_value": true,
+        "takes_value": false,
         "value_kind": "bool",
         "help": "Enable encryption on the virtual network.",
         "choices": [
@@ -204,7 +204,7 @@
         "required": false,
         "group": "Optional Parameters",
         "global": false,
-        "takes_value": true,
+        "takes_value": false,
         "value_kind": "bool",
         "help": "Do not wait for the long-running operation to finish.",
         "choices": [
@@ -259,7 +259,7 @@
         "required": false,
         "group": "Optional Parameters",
         "global": false,
-        "takes_value": true,
+        "takes_value": false,
         "value_kind": "bool",
         "help": "Enable VM protection for all subnets in the VNet.",
         "choices": [

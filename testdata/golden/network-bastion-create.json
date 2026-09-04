@@ -58,7 +58,7 @@
         "required": false,
         "group": "Optional Parameters",
         "global": false,
-        "takes_value": true,
+        "takes_value": false,
         "value_kind": "bool",
         "help": "Do not wait for the long-running operation to finish.",
         "choices": [

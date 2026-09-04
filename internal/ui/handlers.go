@@ -163,6 +163,20 @@ func (m Form) handleKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 				return m, nil
 			}
 			f := &m.fields[idx]
+			// Bare switches (--no-wait, --debug, etc.) have no value —
+			// Enter toggles them on/off, matching space. Skip the picker.
+			if f.Param.IsSwitch() {
+				if f.Param.Required {
+					m.hintMsg = f.Param.Name + " is required"
+					m.hintActive = true
+					return m, tea.Tick(hintDuration, func(time.Time) tea.Msg { return HintClearMsg{} })
+				}
+				f.Enabled = !f.Enabled
+				f.Value = ""
+				m.hintMsg = ""
+				m.recomputeFindings(nil)
+				return m, nil
+			}
 			switch f.Param.ValueKind {
 			case metadata.ValueKindEnum, metadata.ValueKindBool:
 				// Prefer lazily fetched choices over static metadata (spec §6.1).

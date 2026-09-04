@@ -418,7 +418,15 @@ func inferValueKind(p *Parameter, choices []string, defaultValue *string) ValueK
 }
 
 func takesValue(p *Parameter) bool {
-	return p.ValueKind != ValueKindBool || len(p.Choices) != 0 || p.Default != nil || !looksLikeSwitch(p.Name, p.Help)
+	if p.ValueKind != ValueKindBool {
+		return true
+	}
+	// Choices consisting only of bool synonyms (e.g. az's documented
+	// `0|1|f|false|...` set for --no-wait) don't mean the flag actually
+	// takes a value — the flag still works bare. Ignore them for the
+	// switch check; treat any non-synonym choice as a genuine value set.
+	hasRealChoices := len(p.Choices) != 0 && !isBoolChoiceSet(p.Choices)
+	return hasRealChoices || p.Default != nil || !looksLikeSwitch(p.Name, p.Help)
 }
 
 var boolChoiceSynonyms = map[string]struct{}{

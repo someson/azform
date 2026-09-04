@@ -134,7 +134,7 @@
         "required": false,
         "group": "Encryption Policy Arguments",
         "global": false,
-        "takes_value": true,
+        "takes_value": false,
         "value_kind": "bool",
         "help": "Block override of encryption scope from the container default. WARNING: Argument '--prevent-encryption-scope-override' is in preview and under development. Reference and support levels: https://aka.ms/CLI_refstatus",
         "choices": [

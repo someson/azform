@@ -925,7 +925,7 @@
         "required": false,
         "group": "Optional Parameters",
         "global": false,
-        "takes_value": true,
+        "takes_value": false,
         "value_kind": "bool",
         "help": "Enable High Log Scale Mode for Container Logs. Auto-enabled when --enable-container- network-logs is specified.",
         "choices": [
@@ -1100,7 +1100,7 @@
         "required": false,
         "group": "Optional Parameters",
         "global": false,
-        "takes_value": true,
+        "takes_value": false,
         "value_kind": "bool",
         "help": "Enable syslog data collection for Monitoring addon.",
         "choices": [

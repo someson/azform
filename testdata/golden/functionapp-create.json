@@ -372,7 +372,7 @@
         "required": false,
         "group": "Optional Parameters",
         "global": false,
-        "takes_value": true,
+        "takes_value": false,
         "value_kind": "bool",
         "help": "Disable creating application insights resource during functionapp create. No logs will be available.",
         "choices": [
@@ -778,7 +778,7 @@
         "required": false,
         "group": "Optional Parameters",
         "global": false,
-        "takes_value": true,
+        "takes_value": false,
         "value_kind": "bool",
         "help": "Enable zone redundancy for high availability. Applies to Flex Consumption SKU only.",
         "choices": [

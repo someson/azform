@@ -724,9 +724,6 @@ func (m *Form) spliceVarOverlay(lines []string, focusedRow, focusedCol int, cell
 	if len(lines) == 0 || focusedRow < 0 {
 		return lines
 	}
-	if len(m.varPop.vars) == 0 {
-		return lines
-	}
 	visibleIdx := focusedRow - m.vp.YOffset
 	if visibleIdx < 0 || visibleIdx >= len(lines) {
 		return lines
@@ -1041,45 +1038,63 @@ func (m *Form) spliceOverlay(lines []string, focusedRow, focusedCol int, cellWid
 		return lines
 	}
 
-	pad := strings.Repeat(" ", xAnchor)
-	for i, pl := range popupLines {
-		popupLines[i] = pad + pl
-	}
-
 	belowSpace := len(lines) - (visibleIdx + 1)
 	aboveSpace := visibleIdx
 
-	// Prefer placing below (natural reading order). Flip to above only
-	// when it fully fits there and below doesn't. When neither side has
-	// full room, insert below and let the popup overflow the viewport
-	// (visually rendered under the grid region) rather than truncate —
-	// truncating loses the bottom border and, for tall popups, choices.
+	// Prefer placing below (natural reading order); flip to above only
+	// when the popup fully fits there and doesn't below. If neither side
+	// has full room, place on the side with more space and clip the
+	// popup at the viewport edge.
 	fitsBelow := belowSpace >= len(popupLines)
 	fitsAbove := aboveSpace >= len(popupLines)
-	placeBelow := fitsBelow || !fitsAbove
-
-	var insertAt, tailStart int
+	var startRow int
 	switch {
-	case placeBelow && fitsBelow:
-		insertAt = visibleIdx + 1
-		tailStart = insertAt + len(popupLines)
-	case placeBelow:
-		// Not enough room below — insert-push instead of replacing, so
-		// no popup lines are dropped. The overflow renders past the
-		// viewport, which is preferable to losing the bottom border.
-		insertAt = visibleIdx + 1
-		tailStart = insertAt
+	case fitsBelow:
+		startRow = visibleIdx + 1
+	case fitsAbove:
+		startRow = visibleIdx - len(popupLines)
 	default:
-		insertAt = visibleIdx - len(popupLines)
-		tailStart = visibleIdx
+		if belowSpace >= aboveSpace {
+			startRow = visibleIdx + 1
+		} else {
+			startRow = visibleIdx - len(popupLines)
+			if startRow < 0 {
+				startRow = 0
+			}
+		}
 	}
-	head := lines[:insertAt]
-	tail := lines[tailStart:]
-	out := make([]string, 0, len(head)+len(popupLines)+len(tail))
-	out = append(out, head...)
-	out = append(out, popupLines...)
-	out = append(out, tail...)
+
+	// Composite the popup as a character-level overlay: each popup line
+	// is spliced into the base line at xAnchor, keeping cells outside
+	// the popup's footprint intact. This preserves adjacent grid columns
+	// (e.g. the required column when the popup anchors under an
+	// optional/globals column) that a whole-line replacement would wipe.
+	out := make([]string, len(lines))
+	copy(out, lines)
+	for i, pl := range popupLines {
+		r := startRow + i
+		if r < 0 || r >= len(out) {
+			continue
+		}
+		out[r] = overlayAt(out[r], pl, xAnchor)
+	}
 	return out
+}
+
+// overlayAt splices `overlay` into `base` starting at visible column x,
+// preserving cells before x and after x+width(overlay). ANSI escapes in
+// base are honored; the overlay's own styling is included verbatim.
+func overlayAt(base, overlay string, x int) string {
+	overlayW := ansi.StringWidth(overlay)
+	left := ansi.Truncate(base, x, "")
+	if lw := ansi.StringWidth(left); lw < x {
+		left += strings.Repeat(" ", x-lw)
+	}
+	var right string
+	if ansi.StringWidth(base) > x+overlayW {
+		right = ansi.TruncateLeft(base, x+overlayW, "")
+	}
+	return left + overlay + right
 }
 
 // renderGridCell produces one cell for the grid: bullet + padded name +

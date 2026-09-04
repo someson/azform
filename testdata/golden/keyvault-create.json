@@ -179,7 +179,7 @@
         "required": false,
         "group": "Optional Parameters",
         "global": false,
-        "takes_value": true,
+        "takes_value": false,
         "value_kind": "bool",
         "help": "[Vault Only] Don't add permissions for the current user/service principal in the new vault.",
         "choices": [

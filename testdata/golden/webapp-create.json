@@ -279,7 +279,7 @@
         "required": false,
         "group": "Optional Parameters",
         "global": false,
-        "takes_value": true,
+        "takes_value": false,
         "value_kind": "bool",
         "help": "Enable or disable end-to-end encryption between the Front End and the Workers.",
         "choices": [
@@ -423,7 +423,7 @@
         "required": false,
         "group": "Optional Parameters",
         "global": false,
-        "takes_value": true,
+        "takes_value": false,
         "value_kind": "bool",
         "help": "Enable or disable site-scoped certificates.",
         "choices": [

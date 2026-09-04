@@ -110,7 +110,7 @@
         "required": false,
         "group": "Optional Parameters",
         "global": false,
-        "takes_value": true,
+        "takes_value": false,
         "value_kind": "bool",
         "help": "Disable private endpoint network policies on the subnet. Please note that it will be replaced by `--private- endpoint-network-policies` soon.",
         "choices": [
@@ -134,7 +134,7 @@
         "required": false,
         "group": "Optional Parameters",
         "global": false,
-        "takes_value": true,
+        "takes_value": false,
         "value_kind": "bool",
         "help": "Disable private link service network policies on the subnet. Please note that it will be replaced by `--private-link- service-network-policies` soon.",
         "choices": [
@@ -214,7 +214,7 @@
         "required": false,
         "group": "Optional Parameters",
         "global": false,
-        "takes_value": true,
+        "takes_value": false,
         "value_kind": "bool",
         "help": "Do not wait for the long- running operation to finish.",
         "choices": [
