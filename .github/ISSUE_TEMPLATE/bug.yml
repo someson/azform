@@ -1,0 +1,54 @@
+name: Bug report
+description: Something went wrong — a parameter is missing, the form broke, the command came out wrong.
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time. The two most useful things you can give me are
+        the `azform --doctor` output and the exact command you were building.
+
+  - type: input
+    id: command
+    attributes:
+      label: Which az command were you building?
+      description: Just the command path is enough, e.g. `az storage account create`.
+      placeholder: az storage account create
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: What did you expect, and what happened instead?
+      placeholder: |
+        Expected: --min-tls-version to show a list of allowed values.
+        Happened: it was a plain text field.
+    validations:
+      required: true
+
+  - type: textarea
+    id: doctor
+    attributes:
+      label: Output of `azform --doctor`
+      description: This is pasted verbatim into the issue — check it for anything you'd rather not share.
+      render: text
+    validations:
+      required: true
+
+  - type: textarea
+    id: dump
+    attributes:
+      label: Output of `azform --dump-cache "<command>"`
+      description: Only needed for problems with missing or wrong parameters.
+      render: json
+    validations:
+      required: false
+
+  - type: textarea
+    id: extra
+    attributes:
+      label: Anything else
+      description: Screenshots, terminal emulator, multiplexer, anything unusual about your setup.
+    validations:
+      required: false

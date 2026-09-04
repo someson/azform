@@ -1,0 +1,59 @@
+
+Command
+    az acr login : Log in to an Azure Container Registry through the Docker CLI.
+        Docker must be installed on your machine. Once done, use `docker logout <registry url>` to
+        log out. (If you only need a refresh token and do not want to install Docker, specify '--
+        expose-token').
+
+Arguments
+    --name -n   [Required] : The name of the container registry. It should be specified in lower
+                             case. You can configure the default registry name using `az configure
+                             --defaults acr=<registry name>`.
+    --endpoint   [Preview] : Log in to a specific regional endpoint of the container registry.
+                             Specify the region name (e.g., eastus, westus2). Only applicable when
+                             regional endpoints are enabled.
+        WARNING: Argument '--endpoint' is in preview and under development. Reference and support
+        levels: https://aka.ms/CLI_refstatus
+    --expose-token -t      : Expose refresh token instead of automatically logging in through Docker
+                             CLI.
+    --password -p          : The password used to log into a container registry.
+    --resource-group -g    : Name of resource group. You can configure the default group using `az
+                             configure --defaults group=<name>`.
+    --suffix               : The tenant suffix in registry login server. You may specify '--suffix
+                             tenant' if your registry login server is in the format 'registry-
+                             tenant.azurecr.io'. Applicable if you're accessing the registry from a
+                             different subscription or you have permission to access images but not
+                             the permission to manage the registry resource.
+    --username -u          : The username used to log into a container registry.
+
+Global Policy Arguments
+    --acquire-policy-token : Acquiring an Azure Policy token automatically for this resource
+                             operation.
+    --change-reference     : The related change reference ID for this resource operation.
+
+Global Arguments
+    --debug                : Increase logging verbosity to show all debug logs.
+    --help -h              : Show this help message and exit.
+    --only-show-errors     : Only show errors, suppressing warnings.
+    --output -o            : Output format.  Allowed values: json, jsonc, none, table, tsv, yaml,
+                             yamlc.  Default: json.
+    --query                : JMESPath query string. See http://jmespath.org/ for more information
+                             and examples.
+    --subscription         : Name or ID of subscription. You can configure the default subscription
+                             using `az account set -s NAME_OR_ID`.
+    --verbose              : Increase logging verbosity. Use --debug for full debug logs.
+
+Examples
+    Log in to an Azure Container Registry
+        az acr login -n myregistry
+
+
+    Get an Azure Container Registry access token
+        az acr login -n myregistry --expose-token
+
+
+    Log in to a specific regional endpoint of an Azure Container Registry. Requires regional
+    endpoints to be enabled on the registry.
+        az acr login -n myregistry --endpoint eastus
+
+

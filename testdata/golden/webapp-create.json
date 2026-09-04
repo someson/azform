@@ -1,0 +1,635 @@
+{
+  "kind": "command",
+  "parse_health": {
+    "params": 43,
+    "unparsed_lines": 0,
+    "sections_ok": true
+  },
+  "command": {
+    "command": "webapp create",
+    "summary": "Create a web app. The web app's name must be able to produce a unique FQDN as AppName.azurewebsites.net. This command creates the web app resource but does not deploy code. Use 'az webapp list-runtimes' to see available runtimes. Suggested next steps after creation: - Deploy your code: az webapp deploy -g MyResourceGroup -n MyAppName --src-path app.zip - For Linux apps loading large models or dependencies at startup, increase the container start time limit (default 230s, max 1800s): az webapp config appsettings set -g MyResourceGroup -n MyAppName --settings WEBSITES_CONTAINER_START_TIME_LIMIT=1800.",
+    "parameters": [
+      {
+        "name": "--name",
+        "aliases": [
+          "-n"
+        ],
+        "required": true,
+        "group": "Required Parameters",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "string",
+        "help": "Name of the new web app. Web app name can contain only allow alphanumeric characters and hyphens, it cannot start or end in a hyphen, and must be less than 64 characters.",
+        "choices": null,
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--plan",
+        "aliases": [
+          "-p"
+        ],
+        "required": true,
+        "group": "Required Parameters",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "string",
+        "help": "Name or resource id of the app service plan. Use 'appservice plan create' to get one.",
+        "choices": null,
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--resource-group",
+        "aliases": [
+          "-g"
+        ],
+        "required": true,
+        "group": "Required Parameters",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "string",
+        "help": "Name of resource group. You can configure the default group using `az configure --defaults group=<name>`.",
+        "choices": null,
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--acr-identity",
+        "aliases": [],
+        "required": false,
+        "group": "Optional Parameters",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "string",
+        "help": "Accept system or user assigned identity which will be set for acr image pull. Use '[system]' to refer system assigned identity, or a resource id to refer user assigned identity.",
+        "choices": null,
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--acr-use-identity",
+        "aliases": [],
+        "required": false,
+        "group": "Optional Parameters",
+        "global": false,
+        "takes_value": false,
+        "value_kind": "bool",
+        "help": "Enable or disable pull image from acr use managed identity.",
+        "choices": null,
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--assign-identity",
+        "aliases": [],
+        "required": false,
+        "group": "Optional Parameters",
+        "global": false,
+        "takes_value": false,
+        "value_kind": "bool",
+        "help": "Accept system or user assigned identities separated by spaces. Use '[system]' to refer system assigned identity, or a resource id to refer user assigned identity. Check out help for more examples.",
+        "choices": null,
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--basic-auth",
+        "aliases": [],
+        "required": false,
+        "group": "Optional Parameters",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "enum",
+        "help": "Enable or disable basic auth for both SCM and FTP Basic Auth Publishing Credentials. Disabled by default for new apps. See https://aka.ms/app-service-basic-auth to learn more.",
+        "choices": [
+          "Disabled",
+          "Enabled"
+        ],
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--container-image-name",
+        "aliases": [
+          "-c"
+        ],
+        "required": false,
+        "group": "Optional Parameters",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "string",
+        "help": "The container custom image name and optionally the tag name (e.g., `<registry- name>/<image-name>:<tag>`). Note: if --container-registry-url is also provided, use `<image-name>:<tag>` without the registry name.",
+        "choices": null,
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--container-registry-password",
+        "aliases": [
+          "-w"
+        ],
+        "required": false,
+        "group": "Optional Parameters",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "string",
+        "help": "The container registry server password. Required for private registries.",
+        "choices": null,
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--container-registry-url",
+        "aliases": [],
+        "required": false,
+        "group": "Optional Parameters",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "string",
+        "help": "The container registry server url.",
+        "choices": null,
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--container-registry-user",
+        "aliases": [
+          "-s"
+        ],
+        "required": false,
+        "group": "Optional Parameters",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "string",
+        "help": "The container registry server username.",
+        "choices": null,
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--deployment-container-image-name",
+        "aliases": [
+          "-i"
+        ],
+        "required": false,
+        "group": "Optional Parameters",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "string",
+        "help": "Container image name from container registry, e.g. publisher/image-name:tag. WARNING: Option '--deployment-container-image-name' has been deprecated and will be removed in a future release.",
+        "choices": null,
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--deployment-local-git",
+        "aliases": [
+          "-l"
+        ],
+        "required": false,
+        "group": "Optional Parameters",
+        "global": false,
+        "takes_value": false,
+        "value_kind": "bool",
+        "help": "Enable local git.",
+        "choices": null,
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--deployment-source-branch",
+        "aliases": [
+          "-b"
+        ],
+        "required": false,
+        "group": "Optional Parameters",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "string",
+        "help": "The branch to deploy.",
+        "choices": null,
+        "default": "master",
+        "values_from": null
+      },
+      {
+        "name": "--deployment-source-url",
+        "aliases": [
+          "-u"
+        ],
+        "required": false,
+        "group": "Optional Parameters",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "string",
+        "help": "Git repository URL to link with manual integration.",
+        "choices": null,
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--docker-registry-server-password",
+        "aliases": [],
+        "required": false,
+        "group": "Optional Parameters",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "string",
+        "help": "The container registry server password. Required for private registries. WARNING: Option '--docker-registry-server-password' has been deprecated and will be removed in a future release. Use '--container-registry-password' instead.",
+        "choices": null,
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--docker-registry-server-user",
+        "aliases": [],
+        "required": false,
+        "group": "Optional Parameters",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "string",
+        "help": "The container registry server username. WARNING: Option '--docker-registry-server-user' has been deprecated and will be removed in a future release. Use '--container-registry-user' instead.",
+        "choices": null,
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--domain-name-scope",
+        "aliases": [],
+        "required": false,
+        "group": "Optional Parameters",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "enum",
+        "help": "Specify the scope of uniqueness for the default hostname during resource creation.",
+        "choices": [
+          "NoReuse",
+          "ResourceGroupReuse",
+          "SubscriptionReuse",
+          "TenantReuse"
+        ],
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--end-to-end-encryption-enabled",
+        "aliases": [
+          "-e"
+        ],
+        "required": false,
+        "group": "Optional Parameters",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "bool",
+        "help": "Enable or disable end-to-end encryption between the Front End and the Workers.",
+        "choices": [
+          "false",
+          "true"
+        ],
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--https-only",
+        "aliases": [],
+        "required": false,
+        "group": "Optional Parameters",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "bool",
+        "help": "Redirect all traffic made to an app using HTTP to HTTPS.",
+        "choices": [
+          "false",
+          "true"
+        ],
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--min-tls-cipher-suite",
+        "aliases": [],
+        "required": false,
+        "group": "Optional Parameters",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "string",
+        "help": "The minimum TLS Cipher Suite required for requests, e.g., 'TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384'.",
+        "choices": null,
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--min-tls-version",
+        "aliases": [],
+        "required": false,
+        "group": "Optional Parameters",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "string",
+        "help": "The minimum version of TLS required for SSL requests, e.g., '1.0', '1.1', '1.2'.",
+        "choices": null,
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--multicontainer-config-file",
+        "aliases": [],
+        "required": false,
+        "group": "Optional Parameters",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "path",
+        "help": "Linux only. Config file for multicontainer apps. (local or remote).",
+        "choices": null,
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--multicontainer-config-type",
+        "aliases": [],
+        "required": false,
+        "group": "Optional Parameters",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "enum",
+        "help": "Linux only.",
+        "choices": [
+          "COMPOSE",
+          "KUBE"
+        ],
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--public-network-access",
+        "aliases": [],
+        "required": false,
+        "group": "Optional Parameters",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "enum",
+        "help": "Enable or disable public access to the web app.",
+        "choices": [
+          "Disabled",
+          "Enabled"
+        ],
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--role",
+        "aliases": [],
+        "required": false,
+        "group": "Optional Parameters",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "string",
+        "help": "Role name or id the system assigned identity will have.",
+        "choices": null,
+        "default": "Contributor",
+        "values_from": null
+      },
+      {
+        "name": "--runtime",
+        "aliases": [
+          "-r"
+        ],
+        "required": false,
+        "group": "Optional Parameters",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "string",
+        "help": "Canonicalized web runtime in the format of Framework:Version, e.g. \"PYTHON:3.14\".Use `az webapp list-runtimes` for available list.",
+        "choices": null,
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--scope",
+        "aliases": [],
+        "required": false,
+        "group": "Optional Parameters",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "string",
+        "help": "Scope that the system assigned identity can access.",
+        "choices": null,
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--site-scoped-certs",
+        "aliases": [],
+        "required": false,
+        "group": "Optional Parameters",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "bool",
+        "help": "Enable or disable site-scoped certificates.",
+        "choices": [
+          "false",
+          "true"
+        ],
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--sitecontainers-app",
+        "aliases": [],
+        "required": false,
+        "group": "Optional Parameters",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "bool",
+        "help": "If true, a webapp which supports sitecontainers will be created.",
+        "choices": [
+          "false",
+          "true"
+        ],
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--startup-file",
+        "aliases": [],
+        "required": false,
+        "group": "Optional Parameters",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "path",
+        "help": "Linux only. The web's startup command or script file. Required for FastAPI and other ASGI frameworks (auto-detection is not supported). Example command: \"gunicorn --bind=0.0.0.0 --timeout 600 app:app\". Example for FastAPI: \"gunicorn -k uvicorn.workers.UvicornWorker app:app\". Example script file: \"startup.sh\".",
+        "choices": null,
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--subnet",
+        "aliases": [],
+        "required": false,
+        "group": "Optional Parameters",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "string",
+        "help": "Name or resource ID of the pre-existing subnet to have the webapp join. The --vnet is argument also needed if specifying subnet by name.",
+        "choices": null,
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--tags",
+        "aliases": [],
+        "required": false,
+        "group": "Optional Parameters",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "keyvalue",
+        "help": "Space-separated tags: key[=value] [key[=value]...]. Use '' to clear existing tags.",
+        "choices": null,
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--vnet",
+        "aliases": [],
+        "required": false,
+        "group": "Optional Parameters",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "string",
+        "help": "Name or resource ID of the regional virtual network. If there are multiple vnets of the same name across different resource groups, use vnet resource id to specify which vnet to use. If vnet name is used, by default, the vnet in the same resource group as the webapp will be used. Must be used with --subnet argument.",
+        "choices": null,
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--acquire-policy-token",
+        "aliases": [],
+        "required": false,
+        "group": "Global Policy Arguments",
+        "global": true,
+        "takes_value": true,
+        "value_kind": "string",
+        "help": "Acquiring an Azure Policy token automatically for this resource operation.",
+        "choices": null,
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--change-reference",
+        "aliases": [],
+        "required": false,
+        "group": "Global Policy Arguments",
+        "global": true,
+        "takes_value": true,
+        "value_kind": "string",
+        "help": "The related change reference ID for this resource operation.",
+        "choices": null,
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--debug",
+        "aliases": [],
+        "required": false,
+        "group": "Global Arguments",
+        "global": true,
+        "takes_value": false,
+        "value_kind": "bool",
+        "help": "Increase logging verbosity to show all debug logs.",
+        "choices": null,
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--help",
+        "aliases": [
+          "-h"
+        ],
+        "required": false,
+        "group": "Global Arguments",
+        "global": true,
+        "takes_value": false,
+        "value_kind": "bool",
+        "help": "Show this help message and exit.",
+        "choices": null,
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--only-show-errors",
+        "aliases": [],
+        "required": false,
+        "group": "Global Arguments",
+        "global": true,
+        "takes_value": false,
+        "value_kind": "bool",
+        "help": "Only show errors, suppressing warnings.",
+        "choices": null,
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--output",
+        "aliases": [
+          "-o"
+        ],
+        "required": false,
+        "group": "Global Arguments",
+        "global": true,
+        "takes_value": true,
+        "value_kind": "enum",
+        "help": "Output format.",
+        "choices": [
+          "json",
+          "jsonc",
+          "none",
+          "table",
+          "tsv",
+          "yaml",
+          "yamlc"
+        ],
+        "default": "json",
+        "values_from": null
+      },
+      {
+        "name": "--query",
+        "aliases": [],
+        "required": false,
+        "group": "Global Arguments",
+        "global": true,
+        "takes_value": true,
+        "value_kind": "string",
+        "help": "JMESPath query string. See http://jmespath.org/ for more information and examples.",
+        "choices": null,
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--subscription",
+        "aliases": [],
+        "required": false,
+        "group": "Global Arguments",
+        "global": true,
+        "takes_value": true,
+        "value_kind": "string",
+        "help": "Name or ID of subscription. You can configure the default subscription using `az account set -s NAME_OR_ID`.",
+        "choices": null,
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--verbose",
+        "aliases": [],
+        "required": false,
+        "group": "Global Arguments",
+        "global": true,
+        "takes_value": false,
+        "value_kind": "bool",
+        "help": "Increase logging verbosity. Use --debug for full debug logs.",
+        "choices": null,
+        "default": null,
+        "values_from": null
+      }
+    ]
+  }
+}

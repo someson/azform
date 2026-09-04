@@ -1,0 +1,203 @@
+{
+  "schema_version": 1,
+  "group": "vm",
+  "summary": "Manage Linux or Windows virtual machines.",
+  "az_version": "embedded",
+  "azform_version": "",
+  "source": "help-parser",
+  "generated_at": "2026-09-02T17:41:57.364225Z",
+  "parse_health": {
+    "params": 46,
+    "unparsed_lines": 0,
+    "sections_ok": true
+  },
+  "subgroups": [
+    {
+      "name": "application",
+      "summary": "Manage applications for VM."
+    },
+    {
+      "name": "availability-set",
+      "summary": "Group resources into availability sets."
+    },
+    {
+      "name": "boot-diagnostics",
+      "summary": "Troubleshoot the startup of an Azure Virtual Machine.         Use this feature to troubleshoot boot failures for custom or platform images."
+    },
+    {
+      "name": "diagnostics",
+      "summary": "Configure the Azure Virtual Machine diagnostics extension."
+    },
+    {
+      "name": "disk",
+      "summary": "Manage the managed data disks attached to a VM."
+    },
+    {
+      "name": "encryption",
+      "summary": "Manage encryption of VM disks."
+    },
+    {
+      "name": "extension",
+      "summary": "Manage extensions on VMs."
+    },
+    {
+      "name": "host",
+      "summary": "Manage Dedicated Hosts for Virtual Machines."
+    },
+    {
+      "name": "identity",
+      "summary": "Manage service identities of a VM."
+    },
+    {
+      "name": "image",
+      "summary": "Information on available virtual machine images."
+    },
+    {
+      "name": "monitor",
+      "summary": "Manage monitor aspect for a vm."
+    },
+    {
+      "name": "nic",
+      "summary": "Manage network interfaces. See also `az network nic`."
+    },
+    {
+      "name": "run-command",
+      "summary": "Manage run commands on a Virtual Machine."
+    },
+    {
+      "name": "secret",
+      "summary": "Manage VM secrets."
+    },
+    {
+      "name": "unmanaged-disk",
+      "summary": "Manage the unmanaged data disks attached to a VM."
+    },
+    {
+      "name": "user",
+      "summary": "Manage user accounts for a VM."
+    }
+  ],
+  "commands": [
+    {
+      "name": "assess-patches",
+      "summary": "Assess patches on a VM."
+    },
+    {
+      "name": "auto-shutdown",
+      "summary": "Manage auto-shutdown for VM."
+    },
+    {
+      "name": "capture",
+      "summary": "Capture information for a stopped VM."
+    },
+    {
+      "name": "convert",
+      "summary": "Convert a VM with unmanaged disks to use managed disks."
+    },
+    {
+      "name": "create",
+      "summary": "Create an Azure Virtual Machine."
+    },
+    {
+      "name": "deallocate",
+      "summary": "Deallocate a VM so that computing resources are no longer allocated (charges no longer apply). The status will change from 'Stopped' to 'Stopped (Deallocated)'."
+    },
+    {
+      "name": "delete",
+      "summary": "Delete operation to delete a virtual machine."
+    },
+    {
+      "name": "generalize",
+      "summary": "Mark a VM as generalized, allowing it to be imaged for multiple deployments."
+    },
+    {
+      "name": "get-instance-view",
+      "summary": "Get instance information about a VM."
+    },
+    {
+      "name": "install-patches",
+      "summary": "Install patches on a VM."
+    },
+    {
+      "name": "list",
+      "summary": "List details of Virtual Machines."
+    },
+    {
+      "name": "list-ip-addresses",
+      "summary": "List IP addresses associated with a VM."
+    },
+    {
+      "name": "list-sizes",
+      "summary": "List available sizes for VMs.",
+      "deprecated": true
+    },
+    {
+      "name": "list-skus",
+      "summary": "Get details for compute-related resource SKUs."
+    },
+    {
+      "name": "list-usage",
+      "summary": "List available usage resources for VMs."
+    },
+    {
+      "name": "list-vm-resize-options",
+      "summary": "List available resizing options for VMs."
+    },
+    {
+      "name": "migrate-to-vmss",
+      "summary": "Migrate a virtual machine from availability set to Flexible Virtual Machine Scale Set."
+    },
+    {
+      "name": "open-port",
+      "summary": "Opens a VM to inbound traffic on specified ports."
+    },
+    {
+      "name": "perform-maintenance",
+      "summary": "The operation to perform maintenance on a virtual machine."
+    },
+    {
+      "name": "reapply",
+      "summary": "Reapply VMs."
+    },
+    {
+      "name": "redeploy",
+      "summary": "Redeploy an existing VM."
+    },
+    {
+      "name": "reimage",
+      "summary": "Reimage (upgrade the operating system) a virtual machine."
+    },
+    {
+      "name": "resize",
+      "summary": "Update a VM's size."
+    },
+    {
+      "name": "restart",
+      "summary": "Restart VMs."
+    },
+    {
+      "name": "show",
+      "summary": "Get the details of a VM."
+    },
+    {
+      "name": "simulate-eviction",
+      "summary": "Simulate the eviction of a Spot VM."
+    },
+    {
+      "name": "start",
+      "summary": "Start a stopped VM."
+    },
+    {
+      "name": "stop",
+      "summary": "Power off (stop) a running VM."
+    },
+    {
+      "name": "update",
+      "summary": "Update the properties of a VM."
+    },
+    {
+      "name": "wait",
+      "summary": "Place the CLI in a waiting state until a condition of the VM is met."
+    }
+  ]
+}

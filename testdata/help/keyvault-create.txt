@@ -1,0 +1,143 @@
+
+Command
+    az keyvault create : Create a Vault or HSM.
+        RBAC authorization is enabled by default. If `--enable-rbac-authorization` is manually
+        specified to `false` and `--no-self-perms` flag is not specified, default permissions are
+        created for the current user or service principal.
+
+        If you want to assign the default permission, you have to change the default subscription
+        with `az account set` first, instead of using `--subscription`.
+
+Arguments
+    --resource-group -g    [Required] : Name of resource group. You can configure the default group
+                                        using `az configure --defaults group=<name>`.
+    --administrators                  : [HSM Only] Administrator role for data plane operations for
+                                        Managed HSM. It accepts a space separated list of OIDs that
+                                        will be assigned.
+    --enable-purge-protection         : Property specifying whether protection against purge is
+                                        enabled for this vault/managed HSM pool. Setting this
+                                        property to true activates protection against purge for this
+                                        vault/managed HSM pool and its content - only the Key
+                                        Vault/Managed HSM service may initiate a hard, irrecoverable
+                                        deletion. The setting is effective only if soft delete is
+                                        also enabled. Enabling this functionality is irreversible.
+                                        Allowed values: false, true.
+    --enable-rbac-authorization       : Property that controls how data actions are authorized. When
+                                        true, the key vault will use Role Based Access Control
+                                        (RBAC) for authorization of data actions, and the access
+                                        policies specified in vault properties will be ignored. When
+                                        false, the key vault will use the access policies specified
+                                        in vault properties, and any policy stored on Azure Resource
+                                        Manager will be ignored. If null or not specified, the vault
+                                        is created with the default value of true. Note that
+                                        management actions are always authorized with RBAC.  Allowed
+                                        values: false, true.  Default: True.
+    --enabled-for-deployment          : [Vault Only] Property to specify whether Azure Virtual
+                                        Machines are permitted to retrieve certificates stored as
+                                        secrets from the key vault.  Allowed values: false, true.
+    --enabled-for-disk-encryption     : [Vault Only] Property to specify whether Azure Disk
+                                        Encryption is permitted to retrieve secrets from the vault
+                                        and unwrap keys.  Allowed values: false, true.
+    --enabled-for-template-deployment : [Vault Only] Property to specify whether Azure Resource
+                                        Manager is permitted to retrieve secrets from the key vault.
+                                        Allowed values: false, true.
+    --hsm-name                        : Name of the HSM. (--hsm-name and --name/-n are mutually
+                                        exclusive, please specify just one of them).
+    --location -l                     : Location. Values from: `az account list-locations`. You can
+                                        configure the default location using `az configure
+                                        --defaults location=<location>`.
+    --mi-user-assigned                : [HSM Only] Enable user-assigned managed identities for
+                                        managed HSM. Accept space-separated list of identity
+                                        resource IDs.
+    --name -n                         : Name of the Vault.
+    --no-self-perms                   : [Vault Only] Don't add permissions for the current
+                                        user/service principal in the new vault.  Allowed values:
+                                        false, true.
+    --no-wait                         : Do not wait for the long-running operation to finish.
+    --public-network-access           : Control permission for data plane traffic coming from public
+                                        networks while private endpoint is enabled.  Allowed values:
+                                        Disabled, Enabled.
+    --retention-days                  : Soft delete data retention days. It accepts >=7 and <=90.
+                                        Defaults to 90 for keyvault creation. Required for MHSM
+                                        creation.
+    --sku                             : Required. SKU details. Allowed values for Vault: premium,
+                                        standard. Default: standard. Allowed values for HSM:
+                                        Standard_B1, Custom_B32, Custom_B6, Custom_C42, Custom_C10.
+                                        Default: Standard_B1.
+    --tags                            : Space-separated tags: key[=value] [key[=value] ...]. Use ''
+                                        to clear existing tags.
+
+Global Policy Arguments
+    --acquire-policy-token            : Acquiring an Azure Policy token automatically for this
+                                        resource operation.
+    --change-reference                : The related change reference ID for this resource operation.
+
+Network Rule Arguments
+    --bypass                          : Bypass traffic for space-separated uses.  Allowed values:
+                                        AzureServices, None.
+    --default-action                  : Default action to apply when no rule matches.  Allowed
+                                        values: Allow, Deny.
+    --network-acls                    : Network ACLs. It accepts a JSON filename or a JSON string.
+                                        JSON format: `{\"ip\":[<ip1>, <ip2>...],\"vnet\":[<vnet_name
+                                        _1>/<subnet_name_1>,<subnet_id2>...]}`.
+    --network-acls-ips                : Network ACLs IP rules. Space-separated list of IP addresses.
+    --network-acls-vnets              : Network ACLS VNet rules. Space-separated list of Vnet/subnet
+                                        pairs or subnet resource ids.
+
+Global Arguments
+    --debug                           : Increase logging verbosity to show all debug logs.
+    --help -h                         : Show this help message and exit.
+    --only-show-errors                : Only show errors, suppressing warnings.
+    --output -o                       : Output format.  Allowed values: json, jsonc, none, table,
+                                        tsv, yaml, yamlc.  Default: json.
+    --query                           : JMESPath query string. See http://jmespath.org/ for more
+                                        information and examples.
+    --subscription                    : Name or ID of subscription. You can configure the default
+                                        subscription using `az account set -s NAME_OR_ID`.
+    --verbose                         : Increase logging verbosity. Use --debug for full debug logs.
+
+Examples
+    Create a key vault with network ACLs specified (use --network-acls to specify IP and VNet rules
+    by using a JSON string).
+        az keyvault create --location westus2 --name MyKeyVault --resource-group MyResourceGroup
+        --network-acls "{\"ip\": [\"1.2.3.4\", \"2.3.4.0/24\"], \"vnet\":
+        [\"vnet_name_1/subnet_name1\", \"vnet_name_2/subnet_name2\", \"/subscriptions/000000-0000-
+        0000/resourceGroups/MyResourceGroup/providers/Microsoft.Network/virtualNetworks/MyVNet/subne
+        ts/MySubnet\"]}"
+
+
+    Create a key vault with network ACLs specified (use --network-acls to specify IP and VNet rules
+    by using a JSON file).
+        az keyvault create --location westus2 --name MyKeyVault --resource-group MyResourceGroup
+        --network-acls network-acls-example.json
+
+
+    Create a key vault with network ACLs specified (use --network-acls-ips to specify IP rules).
+        az keyvault create --location westus2 --name MyKeyVault --resource-group MyResourceGroup
+        --network-acls-ips 3.4.5.0/24 4.5.6.0/24
+
+
+    Create a key vault with network ACLs specified (use --network-acls-vnets to specify VNet rules).
+        az keyvault create --location westus2 --name MyKeyVault --resource-group MyResourceGroup
+        --network-acls-vnets vnet_name_2/subnet_name_2 vnet_name_3/subnet_name_3 /subscriptions/0000
+        00-0000-
+        0000/resourceGroups/MyResourceGroup/providers/Microsoft.Network/virtualNetworks/vnet_name_4/
+        subnets/subnet_name_4
+
+
+    Create a key vault with network ACLs specified (use --network-acls, --network-acls-ips and
+    --network-acls-vnets together, redundant rules will be removed, finally there will be 4 IP rules
+    and 3 VNet rules).
+        az keyvault create --location westus2 --name MyKeyVault --resource-group MyResourceGroup
+        --network-acls "{\"ip\": [\"1.2.3.4\", \"2.3.4.0/24\"], \"vnet\":
+        [\"vnet_name_1/subnet_name1\", \"vnet_name_2/subnet_name2\"]}" --network-acls-ips 3.4.5.0/24
+        4.5.6.0/24 --network-acls-vnets vnet_name_2/subnet_name_2 vnet_name_3/subnet_name_3 /subscri
+        ptions/000000-0000-
+        0000/resourceGroups/MyResourceGroup/providers/Microsoft.Network/virtualNetworks/vnet_name_4/
+        subnets/subnet_name_4
+
+
+    Create a key vault. (autogenerated)
+        az keyvault create --location westus2 --name MyKeyVault --resource-group MyResourceGroup
+
+

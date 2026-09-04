@@ -1,0 +1,173 @@
+
+Command
+    az redis create : Create new Redis Cache instance.
+
+Arguments
+    --location -l                     [Required] : Location. Values from: `az account list-
+                                                   locations`. You can configure the default
+                                                   location using `az configure --defaults
+                                                   location=<location>`.
+    --name -n                         [Required] : Name of the Redis cache.
+    --resource-group -g               [Required] : Name of resource group. You can configure the
+                                                   default group using `az configure --defaults
+                                                   group=<name>`.
+    --sku                             [Required] : Type of Redis cache.  Allowed values: Basic,
+                                                   Premium, Standard.
+    --vm-size                         [Required] : Size of Redis cache to deploy. Basic and Standard
+                                                   Cache sizes start with C. Premium Cache sizes
+                                                   start with P.  Allowed values: c0, c1, c2, c3,
+                                                   c4, c5, c6, p1, p2, p3, p4, p5.
+    --disable-access-keys                        : Authentication to Redis through access keys is
+                                                   disabled when set as true.  Allowed values:
+                                                   false, true.
+    --enable-non-ssl-port                        : If specified, then the non-ssl redis server port
+                                                   (6379) will be enabled.
+    --mi-system-assigned                         : Flag to specify system assigned identity.
+    --mi-user-assigned                           : One or more space separated resource IDs of user
+                                                   assigned identities.
+    --minimum-tls-version                        : Specifies the TLS version required by clients to
+                                                   connect to cache.  Allowed values: 1.0, 1.1, 1.2.
+    --redis-configuration                        : A json file used to set redis-configuration
+                                                   settings. You may encounter parse errors if the
+                                                   json file is invalid.
+        Usage: --redis-configuration @"{config_file.json}"
+
+        An example json file for configuring max-memory policies
+        [
+          {
+            "maxmemory-policy": "allkeys-lru"
+          }
+        ]
+
+        An example json file for enabling the RDB back up data persistence is
+        [
+          {
+            "rdb-storage-connection-string": "DefaultEndpointsProtocol=https;AccountName=mystorageac
+        count;AccountKey=myAccountKey;EndpointSuffix=core.windows.net",
+            "rdb-backup-enabled": "true",
+            "rdb-backup-frequency": "15",
+            "rdb-backup-max-snapshot-count": "1"
+          }
+        ]
+
+        An example json file for enabling the AOF back up data persistence is
+        [
+          {
+            "aof-backup-enabled": "true",
+            "aof-storage-connection-string-0": "DefaultEndpointsProtocol=https;AccountName=mystorage
+        account;AccountKey=myAccountKey;EndpointSuffix=core.windows.net",
+            "aof-storage-connection-string-1": "DefaultEndpointsProtocol=https;AccountName=mystorage
+        account;AccountKey=myAccountKey;EndpointSuffix=core.windows.net"
+          }
+        ]
+
+        The content for a json file for configuring Microsoft Entra Authentication is
+        {
+        "aad-enabled": "true",
+        }.
+    --redis-version                              : Redis version. This should be in the form
+                                                   'major[.minor]' (only 'major' is required) or the
+                                                   value 'latest' which refers to the latest stable
+                                                   Redis version that is available. Supported
+                                                   versions: 4.0, 6.0 (latest). Default value is
+                                                   'latest'.
+    --replicas-per-master                        : The number of replicas to be created per master.
+    --shard-count                                : The number of shards to be created on a Premium
+                                                   Cluster Cache.
+    --static-ip                                  : Specify a static ip if required for the VNET. If
+                                                   you do not specify a static IP then an IP address
+                                                   is chosen automatically.
+    --subnet-id                                  : The full resource ID of a subnet in a virtual
+                                                   network to deploy the redis cache in. Example
+                                                   format /subscriptions/{subid}/resourceGroups/{res
+                                                   ourceGroupName}/providers/Microsoft.{Network|Clas
+                                                   sicNetwork}/virtualNetworks/vnet1/subnets/subnet1
+                                                   .
+    --tags                                       : Space-separated tags: key[=value] [key[=value]
+                                                   ...]. Use '' to clear existing tags.
+    --tenant-settings                            : Space-separated tenant settings in key[=value]
+                                                   format.
+    --update-channel                             : Specifies the update channel for the monthly
+                                                   Redis updates your Redis Cache will receive.
+                                                   Caches using "Preview" update channel get latest
+                                                   Redis updates at least 4 weeks ahead of "Stable"
+                                                   channel caches. Default value is "Stable".
+                                                   Allowed values: Preview, Stable.
+    --zonal-allocation --zonal-allocation-policy : Specifies how availability zones are allocated to
+                                                   the Redis cache. "Automatic" enables zone
+                                                   redundancy and Azure will automatically select
+                                                   zones based on regional availability and
+                                                   capacity. "UserDefined" will select availability
+                                                   zones passed in by you using the "zones"
+                                                   parameter. "NoZones" will produce a non-zonal
+                                                   cache. If "zonal-allocation-policy" is not
+                                                   passed, it will be set to "UserDefined" when
+                                                   zones are passed in, otherwise, it will be set to
+                                                   "Automatic in regions where zones are supported
+                                                   and "NoZones" in regions where zones are not
+                                                   supported.  Allowed values: Automatic, NoZones,
+                                                   UserDefined.
+    --zones -z                                   : Space-separated list of availability zones into
+                                                   which to provision the resource.
+
+Global Policy Arguments
+    --acquire-policy-token                       : Acquiring an Azure Policy token automatically for
+                                                   this resource operation.
+    --change-reference                           : The related change reference ID for this resource
+                                                   operation.
+
+Global Arguments
+    --debug                                      : Increase logging verbosity to show all debug
+                                                   logs.
+    --help -h                                    : Show this help message and exit.
+    --only-show-errors                           : Only show errors, suppressing warnings.
+    --output -o                                  : Output format.  Allowed values: json, jsonc,
+                                                   none, table, tsv, yaml, yamlc.  Default: json.
+    --query                                      : JMESPath query string. See http://jmespath.org/
+                                                   for more information and examples.
+    --subscription                               : Name or ID of subscription. You can configure the
+                                                   default subscription using `az account set -s
+                                                   NAME_OR_ID`.
+    --verbose                                    : Increase logging verbosity. Use --debug for full
+                                                   debug logs.
+
+Examples
+    Create new Redis Cache instance. (autogenerated)
+        az redis create --location westus2 --name MyRedisCache --resource-group MyResourceGroup
+        --sku Basic --vm-size c0
+
+    Configure the multiple zones for new Premium Azure Cache for Redis
+        az redis create --location westus2 --name MyRedisCache --resource-group MyResourceGroup
+        --sku Premium --vm-size p1 --zones 1 2
+
+    Deploying a Premium Azure Cache for Redis with zones automatically allocated
+        az redis create --location westus2 --name MyRedisCache --resource-group MyResourceGroup
+        --sku Premium --vm-size p1 --zonal-allocation-policy Automatic
+
+    Configure the memory policies for the cache.
+        az redis create --resource-group resourceGroupName --name cacheName --location westus2 --sku
+        Standard --vm-size c0 --redis-configuration @"config_max-memory.json"
+
+    Configure and enable the RDB back up data persistence for new Premium Azure Cache for Redis.
+        az redis create --location westus2 --name MyRedisCache --resource-group MyResourceGroup
+        --sku Premium --vm-size p1 --redis-configuration @"config_rdb.json"
+
+    Configure and enable the AOF back up data persistence for new Premium Azure Cache for Redis
+        az redis create --location westus2 --name MyRedisCache --resource-group MyResourceGroup
+        --sku Premium --vm-size p1 --redis-configuration @"config_aof.json"
+
+    Create a Premium Azure Cache for Redis with clustering enabled
+        az redis create --location westus2 --name MyRedisCache --resource-group MyResourceGroup
+        --sku Premium --vm-size p1 --shard-count 2
+
+    Deploying a Premium Azure Cache for Redis inside an existing Azure Virtual Network
+        az redis create --location westus2 --name MyRedisCache --resource-group MyResourceGroup
+        --sku Premium --vm-size p1 --subnet-id "/subscriptions/{subid}/resourceGroups/{resourceGroup
+        Name}/providers/Microsoft.{Network|ClassicNetwork}/virtualNetworks/vnet1/subnets/subnet1"
+
+    Deploying a Premium Azure Cache for Redis with Microsoft Entra Authentication configured and
+    access keys disabled
+        az redis create --location westus2 --name MyRedisCache --resource-group MyResourceGroup
+        --sku Premium --vm-size p1 --disable-access-keys true --redis-configuration @"config_enable-
+        aad.json"
+

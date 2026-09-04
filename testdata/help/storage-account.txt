@@ -1,0 +1,45 @@
+
+Group
+    az storage account : Manage storage accounts.
+
+Subgroups:
+    blob-inventory-policy          [Preview] : Manage storage account Blob Inventory Policy.
+    blob-service-properties                  : Manage the properties of a storage account's blob
+                                               service.
+    encryption-scope                         : Manage encryption scope for a storage account.
+    file-service-properties                  : Manage the properties of file service in storage
+                                               account.
+    hns-migration                            : Manage storage account migration to enable
+                                               hierarchical namespace.
+    keys                                     : Manage storage account keys.
+    local-user                               : Manage storage account local users.
+    management-policy                        : Manage storage account management policies.
+    migration                                : Manage Storage Account Migration.
+    network-rule                             : Manage network rules.
+    network-security-perimeter-configuration : Manage Network Security Perimeter Configuration.
+    or-policy                                : Manage storage account Object Replication Policy.
+    private-endpoint-connection    [Preview] : Manage storage account private endpoint connection.
+    private-link-resource                    : Manage storage account private link resources.
+
+Commands:
+    check-name                               : Check that the storage account name is valid and is
+                                               not already in use.
+    create                                   : Create a storage account.
+    delete                                   : Delete a storage account.
+    failover                                 : Failover request can be triggered for a storage
+                                               account in case of availability issues.
+    file-service-usage                       : Get the usage of file service in storage account
+                                               including account limits, file share limits and
+                                               constants used in recommendations and bursting
+                                               formula.
+    generate-sas                             : Generate a shared access signature for the storage
+                                               account.
+    list                                     : List storage accounts.
+    revoke-delegation-keys                   : Revoke all user delegation keys for a storage
+                                               account.
+    show                                     : Show storage account properties.
+    show-connection-string                   : Get the connection string for a storage account.
+    show-usage                               : Show the current count and limit of the storage
+                                               accounts under the subscription.
+    update                                   : Update the properties of a storage account.
+

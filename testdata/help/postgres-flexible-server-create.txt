@@ -1,0 +1,384 @@
+
+Command
+    az postgres flexible-server create : Create a PostgreSQL flexible server.
+        Create a PostgreSQL flexible server with custom or default configuration. For more
+        information for network configuration, see
+        - Configure public access
+        https://learn.microsoft.com/azure/postgresql/flexible-server/how-to-manage-firewall-cli
+        - Configure private access
+        https://learn.microsoft.com/azure/postgresql/flexible-server/how-to-manage-virtual-network-
+        cli.
+
+Arguments
+    --admin-display-name -m         : Display name of the Microsoft Entra administrator user or
+                                      group.
+    --admin-object-id -i            : The unique identifier of the Microsoft Entra administrator.
+    --admin-type -t                 : Type of the Microsoft Entra administrator.  Allowed values:
+                                      Group, ServicePrincipal, Unknown, User.
+    --allow-same-zone               : Allow primary and standby in the same zone when multi-zone
+                                      capacity is unavailable.
+    --backup-federated-client-id -f : The client ID of the geo backup federated identity.
+    --backup-identity               : The name or resource identifier of the geo backup user
+                                      identity for data encryption. The identity needs to be in the
+                                      same region as the backup region.
+    --backup-key                    : The resource identifier of the geo backup keyvault key for
+                                      data encryption. The key needs to be in the same region as the
+                                      backup region.
+    --backup-retention              : The number of days a backup is retained. Range of 7 to 35
+                                      days. Default is 7 days.  Default: 7.
+    --database-name -d              : The default database name for an elastic cluster. Only
+                                      applicable when --node-count is present.
+    --federated-client-id           : The client ID of the federated identity.
+    --geo-redundant-backup          : Whether or not geo redundant backup is enabled.  Allowed
+                                      values: Disabled, Enabled.  Default: Disabled.
+    --identity                      : The name or resource identifier of the user assigned identity
+                                      for data encryption.
+    --iops                          : Value of IOPS in (operations/sec) to be allocated for this
+                                      server. This value can only be updated if flexible server is
+                                      using Premium SSD v2 Disks.
+    --key                           : The resource identifier of the primary keyvault key for data
+                                      encryption.
+    --location -l                   : Location. Values from: `az account list-locations`. You can
+                                      configure the default location using `az configure --defaults
+                                      location=<location>`.
+    --microsoft-entra-auth          : Whether Microsoft Entra authentication is enabled.  Allowed
+                                      values: Disabled, Enabled.  Default: Disabled.
+    --name -n                       : Name of the server. The name can contain only lowercase
+                                      letters, numbers, and the hyphen (-) character. Minimum 3
+                                      characters and maximum 63 characters.
+    --node-count                    : The number of nodes for elastic cluster.
+    --password-auth                 : Whether password authentication is enabled.  Allowed values:
+                                      Disabled, Enabled.  Default: Enabled.
+    --performance-tier              : Performance tier of the server.
+    --private-dns-zone              : This parameter only applies for a server with private access
+                                      and is required when using --vnet or --subnet. The name or
+                                      resource identifier of an existing private DNS zone. You can
+                                      use a private DNS zone from the same resource group, a
+                                      different resource group, or a different subscription. If you
+                                      want to use a zone from a different resource group or
+                                      subscription, please provide its resource identifier.
+    --public-access                 : Determines the public access. Enter single or range of IP
+                                      addresses to be included in the allowed list of IPs. IP
+                                      address ranges must be dash-separated and not contain any
+                                      spaces. Specifying 0.0.0.0 allows public access from any
+                                      resources deployed within Azure to access your server. Setting
+                                      it to "None" sets the server in public access mode but does
+                                      not create a firewall rule. Acceptable values are 'Disabled',
+                                      'Enabled', 'All', 'None','{startIP}' and
+                                      '{startIP}-{destinationIP}' where startIP and destinationIP
+                                      ranges from 0.0.0.0 to 255.255.255.255.
+    --resource-group -g             : Name of resource group. You can configure the default group
+                                      using `az configure --defaults group=<name>`.
+    --sku-name                      : The name of the compute SKU. Follows the convention
+                                      Standard_{VM name}. Examples: Standard_B1ms.
+    --standby-zone                  : The availability zone information of the standby server when
+                                      high availability is enabled.
+    --storage-auto-grow             : Enable or disable autogrow of the storage. Default value is
+                                      Disabled.  Allowed values: Disabled, Enabled.  Default:
+                                      Disabled.
+    --storage-size                  : The storage capacity of the server. Minimum is 32 GiB and max
+                                      is 16 TiB.  Default: 128.
+    --storage-type                  : Storage type for the server. Allowed values are Premium_LRS
+                                      and PremiumV2_LRS. Default value is Premium_LRS. Must set
+                                      --iops and --throughput if using PremiumV2_LRS.  Allowed
+                                      values: PremiumV2_LRS, Premium_LRS.
+    --subnet                        : Name or identifier of an existing subnet. If you want to use a
+                                      subnet from a different resource group or subscription, please
+                                      provide its resource identifier instead of name.
+    --tags                          : Space-separated tags: key[=value] [key[=value] ...]. Use '' to
+                                      clear existing tags.
+    --throughput                    : Storage throughput in (MB/sec) for the server. This value can
+                                      only be updated if flexible server is using Premium SSD v2
+                                      Disks.
+    --tier                          : Compute tier of the server. Accepted values: Burstable,
+                                      GeneralPurpose, MemoryOptimized.  Default: GeneralPurpose.
+    --version                       : Server major version.
+    --vnet                          : Name or identifier of an existing virtual network. If you want
+                                      to use a vnet from a different resource group or subscription,
+                                      please provide a resource identifier. The name must be between
+                                      2 to 64 characters. The name must begin with a letter or
+                                      number, end with a letter, number or underscore, and may
+                                      contain only letters, numbers, underscores, periods, or
+                                      hyphens.
+    --yes -y                        : Do not prompt for confirmation.
+    --zonal-resiliency              : Enable or disable high availability feature.  Allowed values:
+                                      Disabled, Enabled.  Default: Disabled.
+    --zone -z                       : Availability zone into which to provision the resource.
+
+Authentication Arguments
+    --admin-password -p             : The password of the administrator. Minimum 8 characters and
+                                      maximum 128 characters. Password must contain characters from
+                                      three of the following categories: English uppercase letters,
+                                      English lowercase letters, numbers, and non-alphanumeric
+                                      characters.
+    --admin-user -u                 : Administrator username for the server. Once set, it cannot be
+                                      changed.  Default: unhappygoose6.
+
+Global Policy Arguments
+    --acquire-policy-token          : Acquiring an Azure Policy token automatically for this
+                                      resource operation.
+    --change-reference              : The related change reference ID for this resource operation.
+
+Global Arguments
+    --debug                         : Increase logging verbosity to show all debug logs.
+    --help -h                       : Show this help message and exit.
+    --only-show-errors              : Only show errors, suppressing warnings.
+    --output -o                     : Output format.  Allowed values: json, jsonc, none, table, tsv,
+                                      yaml, yamlc.  Default: json.
+    --query                         : JMESPath query string. See http://jmespath.org/ for more
+                                      information and examples.
+    --subscription                  : Name or ID of subscription. You can configure the default
+                                      subscription using `az account set -s NAME_OR_ID`.
+    --verbose                       : Increase logging verbosity. Use --debug for full debug logs.
+
+Examples
+    Create a PostgreSQL flexible server with custom parameters
+
+        az postgres flexible-server create --location testlocation --resource-group testgroup \
+          --name testserver --admin-user testusername --admin-password testpassword \
+          --sku-name Standard_D2s_v3 --tier GeneralPurpose --public-access 153.24.26.117 --storage-
+        size 128 \
+          --tags "key=value" --version 18 --zonal-resiliency Enabled --zone 1 \
+          --standby-zone 3
+
+
+    Create server with high availability feature enabled that allows primary and standby in the same
+    zone when multi-zone capacity is unavailable.
+
+        az postgres flexible-server create -g testgroup -n testserver --location testlocation
+        --zonal-resiliency Enabled --allow-same-zone
+
+
+    Create a PostgreSQL flexible server using Premium SSD v2 Disks.
+
+        # set storage type to "PremiumV2_LRS" and provide values for Storage size (in GiB), IOPS
+        (operations/sec), and Throughput (MB/sec).
+        az postgres flexible-server create --location testlocation --resource-group testgroup \
+            --name testserver --admin-user testusername --admin-password testpassword \
+            --sku-name Standard_B1ms --tier GeneralPurpose --storage-type PremiumV2_LRS --storage-
+        size 128 --iops 3000 --throughput 125
+
+
+    Create a PostgreSQL flexible server with default parameters and public access enabled by
+    default.       Resource group, server name, username, password, and default database will be
+    created by CLI
+
+        az postgres flexible-server create
+
+
+    Create a PostgreSQL flexible server with public access and add the range of IP address to have
+    access to this server. The --public-access parameter can be 'Disabled', 'Enabled', 'All',
+    'None', <startIpAddress>, or <startIpAddress>-<endIpAddress>
+
+        az postgres flexible-server create --resource-group testgroup --name testserver --public-
+        access 125.23.54.31-125.23.54.35
+
+
+    Create a PostgreSQL flexible server with private access using existing virtual network, subnet
+    and private DNS zone names.
+
+        az postgres flexible-server create --resource-group testgroup --name testserver --vnet
+        testvnet --subnet testsubnet --private-dns-zone testdns.private.postgres.database.azure.com
+
+
+    Create a PostgreSQL flexible server using existing subnet and private DNS zone resource
+    identifiers. The subnet and DNS zone can be in different subscriptions or resource groups.
+
+        az postgres flexible-server create \
+          --resource-group testgroup --name testserver \
+          --subnet /subscriptions/{subscriptionId}/resourceGroups/{resourceGroup}/providers/Microsof
+        t.Network/virtualNetworks/{VNet}/subnets/{Subnet} \
+          --private-dns-zone /subscriptions/{subscriptionId}/resourceGroups/{resourceGroup}/provider
+        s/Microsoft.Network/privateDnsZones/testdns.private.postgres.database.azure.com
+
+
+    Create a PostgreSQL flexible server using existing network resources in the same resource group.
+    The provided subnet and private DNS zone must already exist.
+
+        # create vnet
+        az network vnet create --resource-group testgroup --name testvnet --location testlocation
+        --address-prefixes 172.0.0.0/16
+
+        # create subnet
+        az network vnet subnet create --resource-group testgroup --vnet-name testvnet --address-
+        prefixes 172.0.0.0/24 --name testsubnet
+
+        # create private dns zone
+        az network private-dns zone create -g testgroup -n
+        testdns.private.postgres.database.azure.com
+
+        az postgres flexible-server create --resource-group testgroup \
+          --name testserver --location testlocation \
+          --subnet /subscriptions/{subscriptionId}/resourceGroups/{resourceGroup}/providers/Microsof
+        t.Network/virtualNetworks/testvnet/subnets/testsubnet \
+          --private-dns-zone /subscriptions/{subscriptionId}/resourceGroups/{resourceGroup}/provider
+        s/Microsoft.Network/privateDnsZones/testdns.postgres.database.azure.com\
+
+
+        az postgres flexible-server create --resource-group testGroup --name testserver \
+          --vnet testVnet --subnet testSubnet --location testLocation \
+          --private-dns-zone /subscriptions/{subscriptionId}/resourceGroups/{resourceGroup}/provider
+        s/Microsoft.Network/privateDnsZones/testdns.postgres.database.azure.com
+
+
+    Create a PostgreSQL flexible server using existing network resources in a different resource
+    group / subscription.
+
+        az postgres flexible-server create --resource-group testgroup \
+           --name testserver --location testLocation \
+          --subnet /subscriptions/{subscriptionId2}/resourceGroups/{resourceGroup2}/providers/Micros
+        oft.Network/virtualNetworks/testvnet/subnets/testsubnet \
+          --private-dns-zone /subscriptions/{subscriptionId2}/resourceGroups/{resourceGroup2}/provid
+        ers/Microsoft.Network/privateDnsZones/testdns.postgres.database.azure.com
+
+
+    Create a PostgreSQL flexible server with data encryption.
+
+        # create keyvault
+        az keyvault create -g testgroup -n testvault --location testlocation \
+          --enable-purge-protection true
+
+
+        # create key in keyvault and save its key identifier
+        keyIdentifier=$(az keyvault key create --name testkey -p software \
+          --vault-name testvault --query key.kid -o tsv)
+
+
+        # create identity and save its principalId
+        identityPrincipalId=$(az identity create -g testgroup --name testidentity \
+          --location testlocation --query principalId -o tsv)
+
+
+        # add testIdentity as an access policy with key permissions 'Wrap Key', 'Unwrap Key', 'Get'
+        and 'List' inside testVault
+        az keyvault set-policy -g testgroup -n testvault --object-id $identityPrincipalId \
+          --key-permissions wrapKey unwrapKey get list
+
+
+        # create flexible server with data encryption enabled
+        az postgres flexible-server create -g testgroup -n testserver --location testlocation \
+          --key $keyIdentifier --identity testidentity
+
+
+    Create a PostgreSQL flexible server with Microsoft Entra auth as well as password auth.
+
+        # create flexible server with aad auth and password auth enabled
+        az postgres flexible-server create -g testgroup -n testserver --location testlocation \
+          --microsoft-entra-auth Enabled
+
+
+    Create a PostgreSQL flexible server with Microsoft Entra auth only and primary administrator
+    specified.
+
+        # create flexible server with aad only auth and password auth disabled with primary
+        administrator specified
+        az postgres flexible-server create -g testgroup -n testserver --location testlocation \
+          --microsoft-entra-auth Enabled --password-auth Disabled \
+          --admin-object-id 00000000-0000-0000-0000-000000000000 --admin-display-name
+        john@contoso.com --admin-type User
+
+
+    Create a PostgreSQL flexible server with public access, geo-redundant backup enabled and add the
+    range of IP address to have access to this server. The --public-access parameter can be 'All',
+    'None', <startIpAddress>, or <startIpAddress>-<endIpAddress>
+
+        az postgres flexible-server create --resource-group testgroup --name testserver --geo-
+        redundant-backup Enabled --public-access 125.23.54.31-125.23.54.35
+
+
+    Create a PostgreSQL flexible server with data encryption for geo-rundundant backup enabled
+    server.
+
+        # create keyvault
+        az keyvault create -g testgroup -n testvault --location testlocation \
+          --enable-purge-protection true
+
+
+        # create key in keyvault and save its key identifier
+        keyIdentifier=$(az keyvault key create --name testkey -p software \
+          --vault-name testvault --query key.kid -o tsv)
+
+
+        # create identity and save its principalId
+        identityPrincipalId=$(az identity create -g testgroup --name testidentity \
+          --location testlocation --query principalId -o tsv)
+
+
+        # add testIdentity as an access policy with key permissions 'Wrap Key', 'Unwrap Key', 'Get'
+        and 'List' inside testVault
+        az keyvault set-policy -g testgroup -n testvault --object-id $identityPrincipalId \
+          --key-permissions wrapKey unwrapKey get list
+
+        # create keyvault in geo-paired region
+        az keyvault create -g testgroup -n geovault --location geoPairedLocation \
+          --enable-purge-protection true
+
+
+        # create key in keyvault and save its key identifier
+        geoKeyIdentifier=$(az keyvault key create --name geokey -p software \
+          --vault-name geovault --query key.kid -o tsv)
+
+
+        # create identity in geo-raired location and save its principalId
+        geoIdentityPrincipalId=$(az identity create -g testgroup --name geoidentity \
+          --location geoPairedLocation --query principalId -o tsv)
+
+
+        # add testIdentity as an access policy with key permissions 'Wrap Key', 'Unwrap Key', 'Get'
+        and 'List' inside testVault
+        az keyvault set-policy -g testgroup -n geovault --object-id $geoIdentityPrincipalId \
+          --key-permissions wrapKey unwrapKey get list
+
+
+        # create flexible server with data encryption enabled for geo-backup Enabled server
+        az postgres flexible-server create -g testgroup -n testserver --location testlocation --geo-
+        redundant-backup Enabled \
+          --key $keyIdentifier --identity testidentity --backup-key $geoKeyIdentifier --backup-
+        identity geoidentity
+
+
+    Create server with Azure Key Vault from a different Microsoft Entra tenant using multi-tenant
+    application registration.
+
+        # create multi-tenant application registration for accessing key vault from different tenant
+        testfederatedclientid=$(az ad app create --display-name testmultitenantapp --query appId -o
+        tsv)
+
+        # get key identifier from keyvault in different tenant
+        keyIdentifier=$(az keyvault key show --vault-name testVault --name testKey \
+          --query key.kid -o tsv)
+
+
+        # create flexible server with key from different tenant using multi-tenant app
+        az postgres flexible-server create -g testgroup -n testserver --location testlocation \
+          --key $keyIdentifier --identity testidentity --federated-client-id $testfederatedclientid
+
+
+    Create flexible server with custom storage performance tier. Accepted values "P4", "P6", "P10",
+    "P15", "P20", "P30", \ "P40", "P50", "P60", "P70", "P80". Actual allowed values depend on the
+    --storage-size selection for flexible server creation. \ Default value for storage performance
+    tier depends on the --storage-size selected for flexible server creation.
+
+        az postgres flexible-server create -g testgroup -n testserver --location testlocation
+        --performance-tier P15
+
+
+    Create flexible server with storage auto-grow as Enabled. Accepted values Enabled / Disabled.
+    Default value for storage auto-grow is "Disabled".
+
+        az postgres flexible-server create -g testgroup -n testserver --location testlocation
+        --storage-auto-grow Enabled
+
+
+    Create elastic cluster with node count of 5.
+
+        az postgres flexible-server create -g testgroup -n testcluster --location testlocation
+        --node-count 5
+
+
+    Create elastic cluster with node count of 3 and custom database name.
+
+        az postgres flexible-server create -g testgroup -n testcluster --location testlocation
+        --node-count 3 --database-name testdatabase
+
+

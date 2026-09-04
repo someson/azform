@@ -1,0 +1,795 @@
+{
+  "kind": "command",
+  "parse_health": {
+    "params": 52,
+    "unparsed_lines": 0,
+    "sections_ok": true
+  },
+  "command": {
+    "command": "cosmosdb create",
+    "summary": "Creates a new Azure Cosmos DB database account.",
+    "parameters": [
+      {
+        "name": "--name",
+        "aliases": [
+          "-n"
+        ],
+        "required": true,
+        "group": "Required Parameters",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "string",
+        "help": "Name of the Cosmos DB database account.",
+        "choices": null,
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--resource-group",
+        "aliases": [
+          "-g"
+        ],
+        "required": true,
+        "group": "Required Parameters",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "string",
+        "help": "Name of resource group. You can configure the default group using `az configure --defaults group=<name>`.",
+        "choices": null,
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--assign-identity",
+        "aliases": [],
+        "required": false,
+        "group": "Optional Parameters",
+        "global": false,
+        "takes_value": false,
+        "value_kind": "bool",
+        "help": "Assign system or user assigned identities separated by spaces. Use '[system]' to refer system assigned identity.",
+        "choices": null,
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--capabilities",
+        "aliases": [],
+        "required": false,
+        "group": "Optional Parameters",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "string",
+        "help": "Set custom capabilities on the Cosmos DB database account.",
+        "choices": null,
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--default-consistency-level",
+        "aliases": [],
+        "required": false,
+        "group": "Optional Parameters",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "enum",
+        "help": "Default consistency level of the Cosmos DB database account.",
+        "choices": [
+          "BoundedStaleness",
+          "ConsistentPrefix",
+          "Eventual",
+          "Session",
+          "Strong"
+        ],
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--default-identity",
+        "aliases": [],
+        "required": false,
+        "group": "Optional Parameters",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "string",
+        "help": "The primary identity to access key vault in CMK related features. e.g. 'FirstPartyIdentity', 'SystemAssignedIdentity' and more. User-assigned identities are specified in format `UserAssignedIdentity=<resource ID of the user- assigned identity>`.",
+        "choices": null,
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--default-priority-level",
+        "aliases": [],
+        "required": false,
+        "group": "Optional Parameters",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "enum",
+        "help": "Default Priority Level of Request if not specified.",
+        "choices": [
+          "High",
+          "Low"
+        ],
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--disable-key-based-metadata-write-access",
+        "aliases": [],
+        "required": false,
+        "group": "Optional Parameters",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "bool",
+        "help": "Disable write operations on metadata resources (databases, containers, throughput) via account keys.",
+        "choices": [
+          "false",
+          "true"
+        ],
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--disable-local-auth",
+        "aliases": [],
+        "required": false,
+        "group": "Optional Parameters",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "bool",
+        "help": "Disable key-based authentication on the Cosmos DB account.",
+        "choices": [
+          "false",
+          "true"
+        ],
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--enable-analytical-storage",
+        "aliases": [],
+        "required": false,
+        "group": "Optional Parameters",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "bool",
+        "help": "Flag to enable log storage on the account.",
+        "choices": [
+          "false",
+          "true"
+        ],
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--enable-automatic-failover",
+        "aliases": [],
+        "required": false,
+        "group": "Optional Parameters",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "bool",
+        "help": "Enables automatic failover of the write region in the rare event that the region is unavailable due to an outage. Automatic failover will result in a new write region for the account and is chosen based on the failover priorities configured for the account.",
+        "choices": [
+          "false",
+          "true"
+        ],
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--enable-burst-capacity",
+        "aliases": [],
+        "required": false,
+        "group": "Optional Parameters",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "bool",
+        "help": "Flag to Enable/Disable burst capacity feature. Usage: --enable-burst-capacity true",
+        "choices": [
+          "false",
+          "true"
+        ],
+        "default": "false The accepted values for the enable-burst-capacity are true and false",
+        "values_from": null
+      },
+      {
+        "name": "--enable-free-tier",
+        "aliases": [],
+        "required": false,
+        "group": "Optional Parameters",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "bool",
+        "help": "If enabled the account is free-tier. WARNING: Argument '--enable-free-tier' is in preview and under development. Reference and support levels: https://aka.ms/CLI_refstatus",
+        "choices": [
+          "false",
+          "true"
+        ],
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--enable-multiple-write-locations",
+        "aliases": [],
+        "required": false,
+        "group": "Optional Parameters",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "bool",
+        "help": "Enable Multiple Write Locations.",
+        "choices": [
+          "false",
+          "true"
+        ],
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--enable-partition-merge",
+        "aliases": [],
+        "required": false,
+        "group": "Optional Parameters",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "bool",
+        "help": "Flag to enable partition merge on the account.",
+        "choices": [
+          "false",
+          "true"
+        ],
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--enable-pbe",
+        "aliases": [],
+        "required": false,
+        "group": "Optional Parameters",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "bool",
+        "help": "Flag to enable priority based execution on the account.",
+        "choices": [
+          "false",
+          "true"
+        ],
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--enable-prpp-autoscale",
+        "aliases": [],
+        "required": false,
+        "group": "Optional Parameters",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "bool",
+        "help": "Flag to Enable/Disable burst capacity feature. Usage: --enable-prpp-autoscale true",
+        "choices": [
+          "false",
+          "true"
+        ],
+        "default": "false The accepted values for the --enable-prpp-autoscale are true and false",
+        "values_from": null
+      },
+      {
+        "name": "--enable-virtual-network",
+        "aliases": [],
+        "required": false,
+        "group": "Optional Parameters",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "bool",
+        "help": "Enables virtual network on the Cosmos DB database account.",
+        "choices": [
+          "false",
+          "true"
+        ],
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--ip-range-filter",
+        "aliases": [],
+        "required": false,
+        "group": "Optional Parameters",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "list",
+        "help": "Firewall support. Specifies the set of IP addresses or IP address ranges in CIDR form to be included as the allowed list of client IPs for a given database account. IP addresses/ranges must be comma-separated and must not contain any spaces.",
+        "choices": null,
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--key-uri",
+        "aliases": [],
+        "required": false,
+        "group": "Optional Parameters",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "string",
+        "help": "The URI of the key vault.",
+        "choices": null,
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--kind",
+        "aliases": [],
+        "required": false,
+        "group": "Optional Parameters",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "enum",
+        "help": "The type of Cosmos DB database account to create.",
+        "choices": [
+          "GlobalDocumentDB",
+          "MongoDB",
+          "Parse"
+        ],
+        "default": "GlobalDocumentDB",
+        "values_from": null
+      },
+      {
+        "name": "--locations",
+        "aliases": [],
+        "required": false,
+        "group": "Optional Parameters",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "keyvalue",
+        "help": "Add a location to the Cosmos DB database account. Usage: --locations KEY=VALUE [KEY=VALUE...] Required Keys: regionName, failoverPriority Optional Key: isZoneRedundant Failover priority values are 0 for write regions and greater than 0 for read regions. A failover priority value must be unique and less than the total number of regions. Multiple locations can be specified by using more than one `--locations` argument.",
+        "choices": null,
+        "default": "single region account in the location of the specified resource group",
+        "values_from": null
+      },
+      {
+        "name": "--max-interval",
+        "aliases": [],
+        "required": false,
+        "group": "Optional Parameters",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "int",
+        "help": "When used with Bounded Staleness consistency, this value represents the time amount of staleness (in seconds) tolerated. Accepted range for this value is 5 - 86400.",
+        "choices": null,
+        "default": "5",
+        "values_from": null
+      },
+      {
+        "name": "--max-staleness-prefix",
+        "aliases": [],
+        "required": false,
+        "group": "Optional Parameters",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "int",
+        "help": "When used with Bounded Staleness consistency, this value represents the number of stale requests tolerated. Accepted range for this value is 10 - 2,147,483,647.",
+        "choices": null,
+        "default": "100",
+        "values_from": null
+      },
+      {
+        "name": "--minimal-tls-version",
+        "aliases": [],
+        "required": false,
+        "group": "Optional Parameters",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "enum",
+        "help": "Indicate the minimum allowed TLS version. Usage: --minimal-tls-version TLSVersion",
+        "choices": [
+          "Tls",
+          "Tls11",
+          "Tls12"
+        ],
+        "default": "Tls, except for Cassandra and Mongo APIs, which only work with Tls12 The accepted values for the minimal TLS version are 'Tls', 'Tls11', and 'Tls12', which correspond to the TLS versions 1.0, 1.1, and 1.2",
+        "values_from": null
+      },
+      {
+        "name": "--network-acl-bypass",
+        "aliases": [],
+        "required": false,
+        "group": "Optional Parameters",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "enum",
+        "help": "Flag to enable or disable Network Acl Bypass.",
+        "choices": [
+          "AzureServices",
+          "None"
+        ],
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--network-acl-bypass-resource-ids",
+        "aliases": [
+          "-i"
+        ],
+        "required": false,
+        "group": "Optional Parameters",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "list",
+        "help": "List of Resource Ids to allow Network Acl Bypass.",
+        "choices": null,
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--public-network-access",
+        "aliases": [
+          "-p"
+        ],
+        "required": false,
+        "group": "Optional Parameters",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "enum",
+        "help": "Sets public network access in server to either Enabled, Disabled, or SecuredByPerimeter.",
+        "choices": [
+          "DISABLED",
+          "ENABLED",
+          "SECUREDBYPERIMETER"
+        ],
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--server-version",
+        "aliases": [],
+        "required": false,
+        "group": "Optional Parameters",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "enum",
+        "help": "Valid only for MongoDB accounts.",
+        "choices": [
+          "3.2",
+          "3.6",
+          "4.0",
+          "4.2",
+          "5.0",
+          "6.0",
+          "7.0"
+        ],
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--tags",
+        "aliases": [],
+        "required": false,
+        "group": "Optional Parameters",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "keyvalue",
+        "help": "Space-separated tags: key[=value] [key[=value]...]. Use '' to clear existing tags.",
+        "choices": null,
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--virtual-network-rules",
+        "aliases": [],
+        "required": false,
+        "group": "Optional Parameters",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "string",
+        "help": "ACL's for virtual network.",
+        "choices": null,
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--analytical-storage-schema-type",
+        "aliases": [
+          "--as-schema"
+        ],
+        "required": false,
+        "group": "Analytical Storage Configuration Arguments",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "enum",
+        "help": "Schema type for analytical storage.",
+        "choices": [
+          "FullFidelity",
+          "WellDefined"
+        ],
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--backup-interval",
+        "aliases": [],
+        "required": false,
+        "group": "Backup Policy Arguments",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "string",
+        "help": "The frequency(in minutes) with which backups are taken (only for accounts with periodic mode backups).",
+        "choices": null,
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--backup-policy-type",
+        "aliases": [],
+        "required": false,
+        "group": "Backup Policy Arguments",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "enum",
+        "help": "The type of backup policy of the account to create.",
+        "choices": [
+          "Continuous",
+          "Periodic"
+        ],
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--backup-redundancy",
+        "aliases": [],
+        "required": false,
+        "group": "Backup Policy Arguments",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "enum",
+        "help": "The redundancy type of the backup Storage account.",
+        "choices": [
+          "Geo",
+          "Local",
+          "Zone"
+        ],
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--backup-retention",
+        "aliases": [],
+        "required": false,
+        "group": "Backup Policy Arguments",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "string",
+        "help": "The time(in hours) for which each backup is retained (only for accounts with periodic mode backups).",
+        "choices": null,
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--continuous-tier",
+        "aliases": [],
+        "required": false,
+        "group": "Backup Policy Arguments",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "enum",
+        "help": "The tier of Continuous backup.",
+        "choices": [
+          "Continuous30Days",
+          "Continuous7Days"
+        ],
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--acquire-policy-token",
+        "aliases": [],
+        "required": false,
+        "group": "Global Policy Arguments",
+        "global": true,
+        "takes_value": true,
+        "value_kind": "string",
+        "help": "Acquiring an Azure Policy token automatically for this resource operation.",
+        "choices": null,
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--change-reference",
+        "aliases": [],
+        "required": false,
+        "group": "Global Policy Arguments",
+        "global": true,
+        "takes_value": true,
+        "value_kind": "string",
+        "help": "The related change reference ID for this resource operation.",
+        "choices": null,
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--databases-to-restore",
+        "aliases": [],
+        "required": false,
+        "group": "Restore Arguments",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "string",
+        "help": "Add a database and its collection names to restore. Usage: --databases-to-restore name=DatabaseName collections=collection1 [collection2...].",
+        "choices": null,
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--gremlin-databases-to-restore",
+        "aliases": [],
+        "required": false,
+        "group": "Restore Arguments",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "string",
+        "help": "Add a gremlin database and its graph names to restore. Usage: --gremlin-databases-to-restore name=DatabaseName graphs=graph1 [graph2...].",
+        "choices": null,
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--is-restore-request",
+        "aliases": [
+          "-r"
+        ],
+        "required": false,
+        "group": "Restore Arguments",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "bool",
+        "help": "Restore from an existing/deleted account.",
+        "choices": [
+          "false",
+          "true"
+        ],
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--restore-source",
+        "aliases": [],
+        "required": false,
+        "group": "Restore Arguments",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "string",
+        "help": "The restorable-database-account Id of the source account from which the account has to be restored. Required if --is-restore-request is set to true.",
+        "choices": null,
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--restore-timestamp",
+        "aliases": [],
+        "required": false,
+        "group": "Restore Arguments",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "string",
+        "help": "The timestamp to which the account has to be restored to. Required if --is-restore-request is set to true.",
+        "choices": null,
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--tables-to-restore",
+        "aliases": [],
+        "required": false,
+        "group": "Restore Arguments",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "string",
+        "help": "Add table names to restore. Usage: --tables-to-restore tables=table1 [table2...].",
+        "choices": null,
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--debug",
+        "aliases": [],
+        "required": false,
+        "group": "Global Arguments",
+        "global": true,
+        "takes_value": false,
+        "value_kind": "bool",
+        "help": "Increase logging verbosity to show all debug logs.",
+        "choices": null,
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--help",
+        "aliases": [
+          "-h"
+        ],
+        "required": false,
+        "group": "Global Arguments",
+        "global": true,
+        "takes_value": false,
+        "value_kind": "bool",
+        "help": "Show this help message and exit.",
+        "choices": null,
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--only-show-errors",
+        "aliases": [],
+        "required": false,
+        "group": "Global Arguments",
+        "global": true,
+        "takes_value": false,
+        "value_kind": "bool",
+        "help": "Only show errors, suppressing warnings.",
+        "choices": null,
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--output",
+        "aliases": [
+          "-o"
+        ],
+        "required": false,
+        "group": "Global Arguments",
+        "global": true,
+        "takes_value": true,
+        "value_kind": "enum",
+        "help": "Output format.",
+        "choices": [
+          "json",
+          "jsonc",
+          "none",
+          "table",
+          "tsv",
+          "yaml",
+          "yamlc"
+        ],
+        "default": "json",
+        "values_from": null
+      },
+      {
+        "name": "--query",
+        "aliases": [],
+        "required": false,
+        "group": "Global Arguments",
+        "global": true,
+        "takes_value": true,
+        "value_kind": "string",
+        "help": "JMESPath query string. See http://jmespath.org/ for more information and examples.",
+        "choices": null,
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--subscription",
+        "aliases": [],
+        "required": false,
+        "group": "Global Arguments",
+        "global": true,
+        "takes_value": true,
+        "value_kind": "string",
+        "help": "Name or ID of subscription. You can configure the default subscription using `az account set -s NAME_OR_ID`.",
+        "choices": null,
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--verbose",
+        "aliases": [],
+        "required": false,
+        "group": "Global Arguments",
+        "global": true,
+        "takes_value": false,
+        "value_kind": "bool",
+        "help": "Increase logging verbosity. Use --debug for full debug logs.",
+        "choices": null,
+        "default": null,
+        "values_from": null
+      }
+    ]
+  }
+}

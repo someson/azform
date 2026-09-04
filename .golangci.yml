@@ -1,0 +1,116 @@
+version: "2"
+
+run:
+  timeout: 5m
+  go: "1.26"
+
+linters:
+  enable:
+    - errcheck
+    - govet
+    - staticcheck
+    - revive
+    - ineffassign
+    - unused
+    - misspell
+    - unconvert
+    - gocritic
+    - errname
+    - errorlint
+    - copyloopvar
+    - nilerr
+    - prealloc
+  settings:
+    revive:
+      rules:
+        - name: exported
+          arguments:
+            - "checkPrivateReceivers"
+        - name: blank-imports
+        - name: context-as-argument
+        - name: context-keys-type
+        - name: error-return
+        - name: error-strings
+        - name: error-naming
+        - name: increment-decrement
+        - name: var-naming
+        - name: package-comments
+        - name: range
+        - name: receiver-naming
+        - name: indent-error-flow
+        - name: empty-block
+        - name: superfluous-else
+        - name: unreachable-code
+        - name: redefines-builtin-id
+    gocritic:
+      enabled-tags:
+        - diagnostic
+        - style
+        - performance
+      disabled-checks:
+        - hugeParam           # passing structs by value is intentional in most call sites
+        - rangeValCopy        # micro-optimization, unclear payoff at our sizes
+        - unnamedResult       # bare returns without named results are fine
+        - evalOrder           # false positives: Form is value-receiver but mutates shared []Field backing array
+        - ifElseChain         # switch conversion is stylistic, not a bug
+        - nestingReduce       # invert-and-continue rewrites hurt readability of small blocks
+        - importShadow        # param names shadowing imports are contextual (e.g. `vars []vars.Variable`)
+    errcheck:
+      # Leave fmt.Fprint* / Write* to stdout/stderr / strings.Builder unchecked;
+      # these are the vast majority of "false positives".
+      exclude-functions:
+        - (*strings.Builder).WriteString
+        - (*strings.Builder).WriteRune
+        - (*strings.Builder).WriteByte
+        - (*bytes.Buffer).Write
+        - (*bytes.Buffer).WriteString
+        - fmt.Fprint
+        - fmt.Fprintf
+        - fmt.Fprintln
+        - os.Setenv
+    govet:
+      enable-all: true
+      disable:
+        - shadow              # too noisy for our `err :=` re-declarations
+        - fieldalignment      # struct layout micro-optimization
+  exclusions:
+    rules:
+      - linters:
+          - revive
+        text: "unused-parameter"
+      - linters:
+          - revive
+        text: "exported: exported (const|var|type) .* should have comment"
+      - linters:
+          - revive
+        text: "redefines-builtin-id"     # `max` shadowing is intentional
+      # Rule types in the validate package are deliberately unexported; the
+      # ID/Check methods they export implement the Rule interface. The
+      # interface itself carries the docs — repeating them per implementer
+      # would be noise.
+      - path: internal/validate/builtin\.go
+        linters:
+          - revive
+        text: "exported method (requiredMissing|undefinedVar|escapeError|enumOutOfRange|unknownFlag|unexpectedPositional|duplicateParam)\\.(ID|Check)"
+      - path: _test\.go
+        linters:
+          - revive
+        text: "dot-imports"
+      - path: _test\.go
+        linters:
+          - errcheck
+          - gocritic
+          - prealloc
+          - ineffassign
+
+formatters:
+  enable:
+    - goimports
+  settings:
+    goimports:
+      local-prefixes:
+        - github.com/someson/azform
+
+issues:
+  max-issues-per-linter: 0
+  max-same-issues: 0

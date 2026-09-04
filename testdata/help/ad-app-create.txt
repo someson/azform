@@ -1,0 +1,168 @@
+
+Command
+    az ad app create : Create an application.
+        For more detailed documentation, see
+        https://learn.microsoft.com/graph/api/resources/application.
+
+Arguments
+    --display-name        [Required] : The display name of the application.
+    --identifier-uris                : Space-separated values. Also known as App ID URI, this value
+                                       is set when an application is used as a resource app. The
+                                       identifierUris acts as the prefix for the scopes you'll
+                                       reference in your API's code, and it must be globally unique.
+                                       You can use the default value provided, which is in the form
+                                       `api://<application-client-id>`, or specify a more readable
+                                       URI like https://contoso.com/api.
+    --is-fallback-public-client      : Specifies the fallback application type as public client,
+                                       such as an installed application running on a mobile device.
+                                       The default value is false which means the fallback
+                                       application type is confidential client such as a web app.
+                                       Allowed values: false, true.
+    --service-management-reference   : References application or service contact information from a
+                                       Service or Asset Management database.
+    --sign-in-audience               : Specifies the Microsoft accounts that are supported for the
+                                       current application.  Allowed values: AzureADMultipleOrgs,
+                                       AzureADMyOrg, AzureADandPersonalMicrosoftAccount,
+                                       PersonalMicrosoftAccount.
+
+Global Policy Arguments
+    --acquire-policy-token           : Acquiring an Azure Policy token automatically for this
+                                       resource operation.
+    --change-reference               : The related change reference ID for this resource operation.
+
+JSON property Arguments
+    --app-roles                      : The collection of roles assigned to the application. With app
+                                       role assignments, these roles can be assigned to users,
+                                       groups, or service principals associated with other
+                                       applications. Should be JSON file path or in-line JSON
+                                       string. See examples for details.
+    --optional-claims                : Application developers can configure optional claims in their
+                                       Microsoft Entra applications to specify the claims that are
+                                       sent to their application by the Microsoft security token
+                                       service. For more information, see
+                                       https://learn.microsoft.com/azure/active-
+                                       directory/develop/active-directory-optional-claims. Should be
+                                       JSON file path or in-line JSON string. See examples for
+                                       details.
+    --required-resource-accesses     : Specifies the resources that the application needs to access.
+                                       This property also specifies the set of delegated permissions
+                                       and application roles that it needs for each of those
+                                       resources. This configuration of access to the required
+                                       resources drives the consent experience. Should be JSON file
+                                       path or in-line JSON string. See examples for details.
+
+api Arguments
+    --requested-access-token-version : Specifies the access token version expected by this resource.
+                                       This changes the version and format of the JWT produced
+                                       independent of the endpoint or client used to request the
+                                       access token.
+
+keyCredential Arguments
+    --end-date                       : Date or datetime after which credentials expire (e.g.
+                                       '2017-12-31T11:59:59+00:00' or '2017-12-31'). Default value
+                                       is one year after current time.
+    --key-display-name               : Friendly name for the key.
+    --key-type                       : The type of the key credentials associated with the
+                                       application.  Allowed values: AsymmetricX509Cert, Password,
+                                       Symmetric.  Default: AsymmetricX509Cert.
+    --key-usage                      : The usage of the key credentials associated with the
+                                       application.  Allowed values: Sign, Verify.  Default: Verify.
+    --key-value                      : The value for the key credentials associated with the
+                                       application.
+    --start-date                     : Date or datetime at which credentials become valid (e.g.
+                                       '2017-01-01T01:00:00+00:00' or '2017-01-01'). Default value
+                                       is current time.
+
+publicClient Arguments
+    --public-client-redirect-uris    : Space-separated values. Specifies the URLs where user tokens
+                                       are sent for sign-in, or the redirect URIs where OAuth 2.0
+                                       authorization codes and access tokens are sent.
+
+web Arguments
+    --enable-access-token-issuance   : Specifies whether this web application can request an access
+                                       token using the OAuth 2.0 implicit flow.  Allowed values:
+                                       false, true.
+    --enable-id-token-issuance       : Specifies whether this web application can request an ID
+                                       token using the OAuth 2.0 implicit flow.  Allowed values:
+                                       false, true.
+    --web-home-page-url              : Home page or landing page of the application.
+    --web-redirect-uris              : Space-separated values. Specifies the URLs where user tokens
+                                       are sent for sign-in, or the redirect URIs where OAuth 2.0
+                                       authorization codes and access tokens are sent.
+
+Global Arguments
+    --debug                          : Increase logging verbosity to show all debug logs.
+    --help -h                        : Show this help message and exit.
+    --only-show-errors               : Only show errors, suppressing warnings.
+    --output -o                      : Output format.  Allowed values: json, jsonc, none, table,
+                                       tsv, yaml, yamlc.  Default: json.
+    --query                          : JMESPath query string. See http://jmespath.org/ for more
+                                       information and examples.
+    --verbose                        : Increase logging verbosity. Use --debug for full debug logs.
+
+Examples
+    Create an application.
+        az ad app create --display-name mytestapp
+
+
+    Create an application that can fall back to public client with Microsoft Graph delegated
+    permission User.Read
+        az ad app create --display-name my-public --is-fallback-public-client --required-resource-
+        accesses @manifest.json
+        ("manifest.json" contains the following content)
+        [{
+            "resourceAppId": "00000003-0000-0000-c000-000000000000",
+            "resourceAccess": [
+                {
+                    "id": "e1fe6dd8-ba31-4d61-89e7-88639da4683d",
+                    "type": "Scope"
+                }
+           ]
+        }]
+
+
+    Create an application with a role
+        az ad app create --display-name mytestapp --identifier-uris https://mytestapp.websites.net
+        --app-roles @manifest.json
+        ("manifest.json" contains the following content)
+        [{
+            "allowedMemberTypes": [
+              "User"
+            ],
+            "description": "Approvers can mark documents as approved",
+            "displayName": "Approver",
+            "isEnabled": "true",
+            "value": "approver"
+        }]
+
+
+    Create an application with optional claims
+        az ad app create --display-name mytestapp --optional-claims @manifest.json
+        ("manifest.json" contains the following content)
+        {
+            "idToken": [
+                {
+                    "name": "auth_time",
+                    "essential": false
+                }
+            ],
+            "accessToken": [
+                {
+                    "name": "ipaddr",
+                    "essential": false
+                }
+            ],
+            "saml2Token": [
+                {
+                    "name": "upn",
+                    "essential": false
+                },
+                {
+                    "name": "extension_ab603c56068041afb2f6832e2a17e237_skypeId",
+                    "source": "user",
+                    "essential": false
+                }
+            ]
+        }
+
+

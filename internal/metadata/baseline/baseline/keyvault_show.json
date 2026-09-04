@@ -1,0 +1,162 @@
+{
+  "schema_version": 1,
+  "command": "keyvault show",
+  "summary": "Show details of a Vault or HSM.",
+  "az_version": "embedded",
+  "azform_version": "",
+  "source": "help-parser",
+  "generated_at": "2026-09-02T17:41:57.364225Z",
+  "parse_health": {
+    "params": 10,
+    "unparsed_lines": 0,
+    "sections_ok": true
+  },
+  "parameters": [
+    {
+      "name": "--hsm-name",
+      "aliases": [],
+      "required": false,
+      "group": "Optional Parameters",
+      "global": false,
+      "takes_value": true,
+      "value_kind": "string",
+      "help": "Name of the HSM. (--hsm-name and --name/-n are mutually exclusive, please specify just one of them).",
+      "choices": null,
+      "default": null,
+      "values_from": null
+    },
+    {
+      "name": "--name",
+      "aliases": [
+        "-n"
+      ],
+      "required": false,
+      "group": "Optional Parameters",
+      "global": false,
+      "takes_value": true,
+      "value_kind": "string",
+      "help": "Name of the Vault.",
+      "choices": null,
+      "default": null,
+      "values_from": null
+    },
+    {
+      "name": "--resource-group",
+      "aliases": [
+        "-g"
+      ],
+      "required": false,
+      "group": "Optional Parameters",
+      "global": false,
+      "takes_value": true,
+      "value_kind": "string",
+      "help": "Name of resource group.",
+      "choices": null,
+      "default": null,
+      "values_from": null
+    },
+    {
+      "name": "--debug",
+      "aliases": [],
+      "required": false,
+      "group": "Global Arguments",
+      "global": true,
+      "takes_value": false,
+      "value_kind": "bool",
+      "help": "Increase logging verbosity to show all debug logs.",
+      "choices": null,
+      "default": null,
+      "values_from": null
+    },
+    {
+      "name": "--help",
+      "aliases": [
+        "-h"
+      ],
+      "required": false,
+      "group": "Global Arguments",
+      "global": true,
+      "takes_value": false,
+      "value_kind": "bool",
+      "help": "Show this help message and exit.",
+      "choices": null,
+      "default": null,
+      "values_from": null
+    },
+    {
+      "name": "--only-show-errors",
+      "aliases": [],
+      "required": false,
+      "group": "Global Arguments",
+      "global": true,
+      "takes_value": false,
+      "value_kind": "bool",
+      "help": "Only show errors, suppressing warnings.",
+      "choices": null,
+      "default": null,
+      "values_from": null
+    },
+    {
+      "name": "--output",
+      "aliases": [
+        "-o"
+      ],
+      "required": false,
+      "group": "Global Arguments",
+      "global": true,
+      "takes_value": true,
+      "value_kind": "enum",
+      "help": "Output format.",
+      "choices": [
+        "json",
+        "jsonc",
+        "none",
+        "table",
+        "tsv",
+        "yaml",
+        "yamlc"
+      ],
+      "default": "json",
+      "values_from": null
+    },
+    {
+      "name": "--query",
+      "aliases": [],
+      "required": false,
+      "group": "Global Arguments",
+      "global": true,
+      "takes_value": true,
+      "value_kind": "string",
+      "help": "JMESPath query string. See http://jmespath.org/ for more information and examples.",
+      "choices": null,
+      "default": null,
+      "values_from": null
+    },
+    {
+      "name": "--subscription",
+      "aliases": [],
+      "required": false,
+      "group": "Global Arguments",
+      "global": true,
+      "takes_value": true,
+      "value_kind": "string",
+      "help": "Name or ID of subscription. You can configure the default subscription using `az account set -s NAME_OR_ID`.",
+      "choices": null,
+      "default": null,
+      "values_from": null
+    },
+    {
+      "name": "--verbose",
+      "aliases": [],
+      "required": false,
+      "group": "Global Arguments",
+      "global": true,
+      "takes_value": false,
+      "value_kind": "bool",
+      "help": "Increase logging verbosity. Use --debug for full debug logs.",
+      "choices": null,
+      "default": null,
+      "values_from": null
+    }
+  ]
+}

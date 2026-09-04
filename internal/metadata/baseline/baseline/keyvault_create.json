@@ -1,0 +1,464 @@
+{
+  "schema_version": 1,
+  "command": "keyvault create",
+  "summary": "Create a Vault or HSM. RBAC authorization is enabled by default. If `--enable-rbac-authorization` is manually specified to `false` and `--no-self-perms` flag is not specified, default permissions are created for the current user or service principal. If you want to assign the default permission, you have to change the default subscription with `az account set` first, instead of using `--subscription`.",
+  "az_version": "embedded",
+  "azform_version": "",
+  "source": "help-parser",
+  "generated_at": "2026-09-02T17:41:57.364225Z",
+  "parse_health": {
+    "params": 31,
+    "unparsed_lines": 0,
+    "sections_ok": true
+  },
+  "parameters": [
+    {
+      "name": "--resource-group",
+      "aliases": [
+        "-g"
+      ],
+      "required": true,
+      "group": "Required Parameters",
+      "global": false,
+      "takes_value": true,
+      "value_kind": "string",
+      "help": "Name of resource group. You can configure the default group using `az configure --defaults group=\u003cname\u003e`.",
+      "choices": null,
+      "default": null,
+      "values_from": null
+    },
+    {
+      "name": "--administrators",
+      "aliases": [],
+      "required": false,
+      "group": "Optional Parameters",
+      "global": false,
+      "takes_value": true,
+      "value_kind": "list",
+      "help": "[HSM Only] Administrator role for data plane operations for Managed HSM. It accepts a space separated list of OIDs that will be assigned.",
+      "choices": null,
+      "default": null,
+      "values_from": null
+    },
+    {
+      "name": "--enable-purge-protection",
+      "aliases": [],
+      "required": false,
+      "group": "Optional Parameters",
+      "global": false,
+      "takes_value": true,
+      "value_kind": "bool",
+      "help": "Property specifying whether protection against purge is enabled for this vault/managed HSM pool. Setting this property to true activates protection against purge for this vault/managed HSM pool and its content - only the Key Vault/Managed HSM service may initiate a hard, irrecoverable deletion. The setting is effective only if soft delete is also enabled. Enabling this functionality is irreversible.",
+      "choices": [
+        "false",
+        "true"
+      ],
+      "default": null,
+      "values_from": null
+    },
+    {
+      "name": "--enable-rbac-authorization",
+      "aliases": [],
+      "required": false,
+      "group": "Optional Parameters",
+      "global": false,
+      "takes_value": true,
+      "value_kind": "bool",
+      "help": "Property that controls how data actions are authorized. When true, the key vault will use Role Based Access Control (RBAC) for authorization of data actions, and the access policies specified in vault properties will be ignored. When false, the key vault will use the access policies specified in vault properties, and any policy stored on Azure Resource Manager will be ignored. If null or not specified, the vault is created with the default value of true. Note that management actions are always authorized with RBAC.",
+      "choices": [
+        "false",
+        "true"
+      ],
+      "default": "True",
+      "values_from": null
+    },
+    {
+      "name": "--enabled-for-deployment",
+      "aliases": [],
+      "required": false,
+      "group": "Optional Parameters",
+      "global": false,
+      "takes_value": true,
+      "value_kind": "bool",
+      "help": "[Vault Only] Property to specify whether Azure Virtual Machines are permitted to retrieve certificates stored as secrets from the key vault.",
+      "choices": [
+        "false",
+        "true"
+      ],
+      "default": null,
+      "values_from": null
+    },
+    {
+      "name": "--enabled-for-disk-encryption",
+      "aliases": [],
+      "required": false,
+      "group": "Optional Parameters",
+      "global": false,
+      "takes_value": true,
+      "value_kind": "bool",
+      "help": "[Vault Only] Property to specify whether Azure Disk Encryption is permitted to retrieve secrets from the vault and unwrap keys.",
+      "choices": [
+        "false",
+        "true"
+      ],
+      "default": null,
+      "values_from": null
+    },
+    {
+      "name": "--enabled-for-template-deployment",
+      "aliases": [],
+      "required": false,
+      "group": "Optional Parameters",
+      "global": false,
+      "takes_value": true,
+      "value_kind": "bool",
+      "help": "[Vault Only] Property to specify whether Azure Resource Manager is permitted to retrieve secrets from the key vault.",
+      "choices": [
+        "false",
+        "true"
+      ],
+      "default": null,
+      "values_from": null
+    },
+    {
+      "name": "--hsm-name",
+      "aliases": [],
+      "required": false,
+      "group": "Optional Parameters",
+      "global": false,
+      "takes_value": true,
+      "value_kind": "string",
+      "help": "Name of the HSM. (--hsm-name and --name/-n are mutually exclusive, please specify just one of them).",
+      "choices": null,
+      "default": null,
+      "values_from": null
+    },
+    {
+      "name": "--location",
+      "aliases": [
+        "-l"
+      ],
+      "required": false,
+      "group": "Optional Parameters",
+      "global": false,
+      "takes_value": true,
+      "value_kind": "string",
+      "help": "Location. You can configure the default location using `az configure --defaults location=\u003clocation\u003e`.",
+      "choices": null,
+      "default": null,
+      "values_from": "az account list-locations"
+    },
+    {
+      "name": "--mi-user-assigned",
+      "aliases": [],
+      "required": false,
+      "group": "Optional Parameters",
+      "global": false,
+      "takes_value": true,
+      "value_kind": "list",
+      "help": "[HSM Only] Enable user-assigned managed identities for managed HSM. Accept space-separated list of identity resource IDs.",
+      "choices": null,
+      "default": null,
+      "values_from": null
+    },
+    {
+      "name": "--name",
+      "aliases": [
+        "-n"
+      ],
+      "required": false,
+      "group": "Optional Parameters",
+      "global": false,
+      "takes_value": true,
+      "value_kind": "string",
+      "help": "Name of the Vault.",
+      "choices": null,
+      "default": null,
+      "values_from": null
+    },
+    {
+      "name": "--no-self-perms",
+      "aliases": [],
+      "required": false,
+      "group": "Optional Parameters",
+      "global": false,
+      "takes_value": true,
+      "value_kind": "bool",
+      "help": "[Vault Only] Don't add permissions for the current user/service principal in the new vault.",
+      "choices": [
+        "false",
+        "true"
+      ],
+      "default": null,
+      "values_from": null
+    },
+    {
+      "name": "--no-wait",
+      "aliases": [],
+      "required": false,
+      "group": "Optional Parameters",
+      "global": false,
+      "takes_value": false,
+      "value_kind": "bool",
+      "help": "Do not wait for the long-running operation to finish.",
+      "choices": null,
+      "default": null,
+      "values_from": null
+    },
+    {
+      "name": "--public-network-access",
+      "aliases": [],
+      "required": false,
+      "group": "Optional Parameters",
+      "global": false,
+      "takes_value": true,
+      "value_kind": "enum",
+      "help": "Control permission for data plane traffic coming from public networks while private endpoint is enabled.",
+      "choices": [
+        "Disabled",
+        "Enabled"
+      ],
+      "default": null,
+      "values_from": null
+    },
+    {
+      "name": "--retention-days",
+      "aliases": [],
+      "required": false,
+      "group": "Optional Parameters",
+      "global": false,
+      "takes_value": true,
+      "value_kind": "string",
+      "help": "Soft delete data retention days. It accepts \u003e=7 and \u003c=90. Defaults to 90 for keyvault creation. Required for MHSM creation.",
+      "choices": null,
+      "default": null,
+      "values_from": null
+    },
+    {
+      "name": "--sku",
+      "aliases": [],
+      "required": false,
+      "group": "Optional Parameters",
+      "global": false,
+      "takes_value": true,
+      "value_kind": "string",
+      "help": "Required. SKU details. Allowed values for Vault: premium, standard. Allowed values for HSM: Standard_B1, Custom_B32, Custom_B6, Custom_C42, Custom_C10.",
+      "choices": null,
+      "default": "standard",
+      "values_from": null
+    },
+    {
+      "name": "--tags",
+      "aliases": [],
+      "required": false,
+      "group": "Optional Parameters",
+      "global": false,
+      "takes_value": true,
+      "value_kind": "keyvalue",
+      "help": "Space-separated tags: key[=value] [key[=value]...]. Use '' to clear existing tags.",
+      "choices": null,
+      "default": null,
+      "values_from": null
+    },
+    {
+      "name": "--acquire-policy-token",
+      "aliases": [],
+      "required": false,
+      "group": "Global Policy Arguments",
+      "global": true,
+      "takes_value": true,
+      "value_kind": "string",
+      "help": "Acquiring an Azure Policy token automatically for this resource operation.",
+      "choices": null,
+      "default": null,
+      "values_from": null
+    },
+    {
+      "name": "--change-reference",
+      "aliases": [],
+      "required": false,
+      "group": "Global Policy Arguments",
+      "global": true,
+      "takes_value": true,
+      "value_kind": "string",
+      "help": "The related change reference ID for this resource operation.",
+      "choices": null,
+      "default": null,
+      "values_from": null
+    },
+    {
+      "name": "--bypass",
+      "aliases": [],
+      "required": false,
+      "group": "Network Rule Arguments",
+      "global": false,
+      "takes_value": true,
+      "value_kind": "enum",
+      "help": "Bypass traffic for space-separated uses.",
+      "choices": [
+        "AzureServices",
+        "None"
+      ],
+      "default": null,
+      "values_from": null
+    },
+    {
+      "name": "--default-action",
+      "aliases": [],
+      "required": false,
+      "group": "Network Rule Arguments",
+      "global": false,
+      "takes_value": true,
+      "value_kind": "enum",
+      "help": "Default action to apply when no rule matches.",
+      "choices": [
+        "Allow",
+        "Deny"
+      ],
+      "default": null,
+      "values_from": null
+    },
+    {
+      "name": "--network-acls",
+      "aliases": [],
+      "required": false,
+      "group": "Network Rule Arguments",
+      "global": false,
+      "takes_value": true,
+      "value_kind": "string",
+      "help": "Network ACLs. It accepts a JSON filename or a JSON string. JSON format: `{\\\"ip\\\":[\u003cip1\u003e, \u003cip2\u003e...],\\\"vnet\\\":[\u003cvnet_name _1\u003e/\u003csubnet_name_1\u003e,\u003csubnet_id2\u003e...]}`.",
+      "choices": null,
+      "default": null,
+      "values_from": null
+    },
+    {
+      "name": "--network-acls-ips",
+      "aliases": [],
+      "required": false,
+      "group": "Network Rule Arguments",
+      "global": false,
+      "takes_value": true,
+      "value_kind": "list",
+      "help": "Network ACLs IP rules. Space-separated list of IP addresses.",
+      "choices": null,
+      "default": null,
+      "values_from": null
+    },
+    {
+      "name": "--network-acls-vnets",
+      "aliases": [],
+      "required": false,
+      "group": "Network Rule Arguments",
+      "global": false,
+      "takes_value": true,
+      "value_kind": "list",
+      "help": "Network ACLS VNet rules. Space-separated list of Vnet/subnet pairs or subnet resource ids.",
+      "choices": null,
+      "default": null,
+      "values_from": null
+    },
+    {
+      "name": "--debug",
+      "aliases": [],
+      "required": false,
+      "group": "Global Arguments",
+      "global": true,
+      "takes_value": false,
+      "value_kind": "bool",
+      "help": "Increase logging verbosity to show all debug logs.",
+      "choices": null,
+      "default": null,
+      "values_from": null
+    },
+    {
+      "name": "--help",
+      "aliases": [
+        "-h"
+      ],
+      "required": false,
+      "group": "Global Arguments",
+      "global": true,
+      "takes_value": false,
+      "value_kind": "bool",
+      "help": "Show this help message and exit.",
+      "choices": null,
+      "default": null,
+      "values_from": null
+    },
+    {
+      "name": "--only-show-errors",
+      "aliases": [],
+      "required": false,
+      "group": "Global Arguments",
+      "global": true,
+      "takes_value": false,
+      "value_kind": "bool",
+      "help": "Only show errors, suppressing warnings.",
+      "choices": null,
+      "default": null,
+      "values_from": null
+    },
+    {
+      "name": "--output",
+      "aliases": [
+        "-o"
+      ],
+      "required": false,
+      "group": "Global Arguments",
+      "global": true,
+      "takes_value": true,
+      "value_kind": "enum",
+      "help": "Output format.",
+      "choices": [
+        "json",
+        "jsonc",
+        "none",
+        "table",
+        "tsv",
+        "yaml",
+        "yamlc"
+      ],
+      "default": "json",
+      "values_from": null
+    },
+    {
+      "name": "--query",
+      "aliases": [],
+      "required": false,
+      "group": "Global Arguments",
+      "global": true,
+      "takes_value": true,
+      "value_kind": "string",
+      "help": "JMESPath query string. See http://jmespath.org/ for more information and examples.",
+      "choices": null,
+      "default": null,
+      "values_from": null
+    },
+    {
+      "name": "--subscription",
+      "aliases": [],
+      "required": false,
+      "group": "Global Arguments",
+      "global": true,
+      "takes_value": true,
+      "value_kind": "string",
+      "help": "Name or ID of subscription. You can configure the default subscription using `az account set -s NAME_OR_ID`.",
+      "choices": null,
+      "default": null,
+      "values_from": null
+    },
+    {
+      "name": "--verbose",
+      "aliases": [],
+      "required": false,
+      "group": "Global Arguments",
+      "global": true,
+      "takes_value": false,
+      "value_kind": "bool",
+      "help": "Increase logging verbosity. Use --debug for full debug logs.",
+      "choices": null,
+      "default": null,
+      "values_from": null
+    }
+  ]
+}

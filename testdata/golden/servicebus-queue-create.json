@@ -1,0 +1,481 @@
+{
+  "kind": "command",
+  "parse_health": {
+    "params": 28,
+    "unparsed_lines": 0,
+    "sections_ok": true
+  },
+  "command": {
+    "command": "servicebus queue create",
+    "summary": "Create a Service Bus queue. This operation is idempotent.",
+    "parameters": [
+      {
+        "name": "--name",
+        "aliases": [
+          "--queue-name",
+          "-n"
+        ],
+        "required": true,
+        "group": "Required Parameters",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "string",
+        "help": "The queue name.",
+        "choices": null,
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--namespace-name",
+        "aliases": [],
+        "required": true,
+        "group": "Required Parameters",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "string",
+        "help": "The namespace name.",
+        "choices": null,
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--resource-group",
+        "aliases": [
+          "-g"
+        ],
+        "required": true,
+        "group": "Required Parameters",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "string",
+        "help": "Name of resource group. You can configure the default group using `az configure --defaults group=<name>`.",
+        "choices": null,
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--acquire-policy-token",
+        "aliases": [],
+        "required": false,
+        "group": "Global Policy Arguments",
+        "global": true,
+        "takes_value": true,
+        "value_kind": "string",
+        "help": "Acquiring an Azure Policy token automatically for this resource operation.",
+        "choices": null,
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--change-reference",
+        "aliases": [],
+        "required": false,
+        "group": "Global Policy Arguments",
+        "global": true,
+        "takes_value": true,
+        "value_kind": "string",
+        "help": "The related change reference ID for this resource operation.",
+        "choices": null,
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--auto-delete-on-idle",
+        "aliases": [],
+        "required": false,
+        "group": "Properties Arguments",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "string",
+        "help": "ISO 8061 timeSpan idle interval after which the queue is automatically deleted. The minimum duration is 5 minutes.",
+        "choices": null,
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--default-message-time-to-live",
+        "aliases": [],
+        "required": false,
+        "group": "Properties Arguments",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "string",
+        "help": "ISO 8601 default message timespan to live value. This is the duration after which the message expires, starting from when the message is sent to Service Bus. This is the default value used when TimeToLive is not set on a message itself.",
+        "choices": null,
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--duplicate-detection",
+        "aliases": [
+          "--enable-duplicate-detection"
+        ],
+        "required": false,
+        "group": "Properties Arguments",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "bool",
+        "help": "A value indicating if this queue requires duplicate detection.",
+        "choices": [
+          "0",
+          "1",
+          "f",
+          "false",
+          "n",
+          "no",
+          "t",
+          "true",
+          "y",
+          "yes"
+        ],
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--duplicate-detection-history-time-window",
+        "aliases": [
+          "-d"
+        ],
+        "required": false,
+        "group": "Properties Arguments",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "string",
+        "help": "ISO 8601 timeSpan structure that defines the duration of the duplicate detection history. The default value is 10 minutes.",
+        "choices": null,
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--enable-batched-operations",
+        "aliases": [],
+        "required": false,
+        "group": "Properties Arguments",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "bool",
+        "help": "Value that indicates whether server-side batched operations are enabled.",
+        "choices": [
+          "0",
+          "1",
+          "f",
+          "false",
+          "n",
+          "no",
+          "t",
+          "true",
+          "y",
+          "yes"
+        ],
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--enable-dead-lettering-on-message-expiration",
+        "aliases": [
+          "--message-expiration"
+        ],
+        "required": false,
+        "group": "Properties Arguments",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "bool",
+        "help": "A value that indicates whether this queue has dead letter support when a message expires.",
+        "choices": [
+          "0",
+          "1",
+          "f",
+          "false",
+          "n",
+          "no",
+          "t",
+          "true",
+          "y",
+          "yes"
+        ],
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--enable-express",
+        "aliases": [],
+        "required": false,
+        "group": "Properties Arguments",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "bool",
+        "help": "A value that indicates whether Express Entities are enabled. An express queue holds a message in memory temporarily before writing it to persistent storage.",
+        "choices": [
+          "0",
+          "1",
+          "f",
+          "false",
+          "n",
+          "no",
+          "t",
+          "true",
+          "y",
+          "yes"
+        ],
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--enable-partitioning",
+        "aliases": [],
+        "required": false,
+        "group": "Properties Arguments",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "bool",
+        "help": "A value that indicates whether the queue is to be partitioned across multiple message brokers.",
+        "choices": [
+          "0",
+          "1",
+          "f",
+          "false",
+          "n",
+          "no",
+          "t",
+          "true",
+          "y",
+          "yes"
+        ],
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--enable-session",
+        "aliases": [],
+        "required": false,
+        "group": "Properties Arguments",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "bool",
+        "help": "A value that indicates whether the queue supports the concept of sessions.",
+        "choices": [
+          "0",
+          "1",
+          "f",
+          "false",
+          "n",
+          "no",
+          "t",
+          "true",
+          "y",
+          "yes"
+        ],
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--forward-dead-lettered-messages-to",
+        "aliases": [],
+        "required": false,
+        "group": "Properties Arguments",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "string",
+        "help": "Queue/Topic name to forward the Dead Letter message.",
+        "choices": null,
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--forward-to",
+        "aliases": [],
+        "required": false,
+        "group": "Properties Arguments",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "string",
+        "help": "Queue/Topic name to forward the messages.",
+        "choices": null,
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--lock-duration",
+        "aliases": [],
+        "required": false,
+        "group": "Properties Arguments",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "string",
+        "help": "ISO 8601 timespan duration of a peek-lock; that is, the amount of time that the message is locked for other receivers. The maximum value for LockDuration is 5 minutes; the default value is 1 minute.",
+        "choices": null,
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--max-delivery-count",
+        "aliases": [],
+        "required": false,
+        "group": "Properties Arguments",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "string",
+        "help": "The maximum delivery count. A message is automatically deadlettered after this number of deliveries. default value is 10.",
+        "choices": null,
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--max-message-size",
+        "aliases": [
+          "--max-message-size-in-kilobytes"
+        ],
+        "required": false,
+        "group": "Properties Arguments",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "string",
+        "help": "Maximum size (in KB) of the message payload that can be accepted by the topic. This property is only used in Premium today and default is 1024.",
+        "choices": null,
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--max-size",
+        "aliases": [
+          "--max-size-in-megabytes"
+        ],
+        "required": false,
+        "group": "Properties Arguments",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "string",
+        "help": "The maximum capacity of the queue, denoted in megabytes, signifies the volume of memory assigned to the queue. The permissible values for this parameter are 1024, 2048, 3072, 4096, and 5120 megabytes. By default, the system assigns a capacity of 1024 megabytes. If the ‘enable-partition’ setting is set to true, the specified queue size will be amplified by a factor of 16.",
+        "choices": null,
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--status",
+        "aliases": [],
+        "required": false,
+        "group": "Properties Arguments",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "enum",
+        "help": "Enumerates the possible values for the status of a messaging entity.",
+        "choices": [
+          "Active",
+          "Creating",
+          "Deleting",
+          "Disabled",
+          "ReceiveDisabled",
+          "Renaming",
+          "Restoring",
+          "SendDisabled",
+          "Unknown"
+        ],
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--debug",
+        "aliases": [],
+        "required": false,
+        "group": "Global Arguments",
+        "global": true,
+        "takes_value": false,
+        "value_kind": "bool",
+        "help": "Increase logging verbosity to show all debug logs.",
+        "choices": null,
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--help",
+        "aliases": [
+          "-h"
+        ],
+        "required": false,
+        "group": "Global Arguments",
+        "global": true,
+        "takes_value": false,
+        "value_kind": "bool",
+        "help": "Show this help message and exit.",
+        "choices": null,
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--only-show-errors",
+        "aliases": [],
+        "required": false,
+        "group": "Global Arguments",
+        "global": true,
+        "takes_value": false,
+        "value_kind": "bool",
+        "help": "Only show errors, suppressing warnings.",
+        "choices": null,
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--output",
+        "aliases": [
+          "-o"
+        ],
+        "required": false,
+        "group": "Global Arguments",
+        "global": true,
+        "takes_value": true,
+        "value_kind": "enum",
+        "help": "Output format.",
+        "choices": [
+          "json",
+          "jsonc",
+          "none",
+          "table",
+          "tsv",
+          "yaml",
+          "yamlc"
+        ],
+        "default": "json",
+        "values_from": null
+      },
+      {
+        "name": "--query",
+        "aliases": [],
+        "required": false,
+        "group": "Global Arguments",
+        "global": true,
+        "takes_value": true,
+        "value_kind": "string",
+        "help": "JMESPath query string. See http://jmespath.org/ for more information and examples.",
+        "choices": null,
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--subscription",
+        "aliases": [],
+        "required": false,
+        "group": "Global Arguments",
+        "global": true,
+        "takes_value": true,
+        "value_kind": "string",
+        "help": "Name or ID of subscription. You can configure the default subscription using `az account set -s NAME_OR_ID`.",
+        "choices": null,
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--verbose",
+        "aliases": [],
+        "required": false,
+        "group": "Global Arguments",
+        "global": true,
+        "takes_value": false,
+        "value_kind": "bool",
+        "help": "Increase logging verbosity. Use --debug for full debug logs.",
+        "choices": null,
+        "default": null,
+        "values_from": null
+      }
+    ]
+  }
+}

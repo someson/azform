@@ -1,0 +1,365 @@
+{
+  "schema_version": 1,
+  "command": "login",
+  "summary": "Log in to Azure. By default, this command logs in with a user account. Azure CLI uses Web Account Manager (WAM) on Windows, and browser-based login on Linux and macOS by default. If WAM or a web browser is not available, Azure CLI will fall back to device code login. [WARNING] Authentication with username and password in the command line is strongly discouraged. Use one of the recommended authentication methods based on your requirements. For more details, see https://go.microsoft.com/fwlink/?linkid=2276314 [WARNING] `--password` no longer accepts a service principal certificate. Use `--certificate` to pass a service principal certificate. To log in with a service principal, specify --service-principal. To log in with a managed identity, specify --identity. For more details, see https://learn.microsoft.com/cli/azure/authenticate-azure-cli.",
+  "az_version": "embedded",
+  "azform_version": "",
+  "source": "help-parser",
+  "generated_at": "2026-09-02T17:41:57.364225Z",
+  "parse_health": {
+    "params": 25,
+    "unparsed_lines": 0,
+    "sections_ok": true
+  },
+  "parameters": [
+    {
+      "name": "--allow-no-subscriptions",
+      "aliases": [],
+      "required": false,
+      "group": "Optional Parameters",
+      "global": false,
+      "takes_value": false,
+      "value_kind": "bool",
+      "help": "Support accessing tenants without subscriptions. It's useful to run tenant-level commands, such as 'az ad'.",
+      "choices": null,
+      "default": null,
+      "values_from": null
+    },
+    {
+      "name": "--certificate",
+      "aliases": [],
+      "required": false,
+      "group": "Optional Parameters",
+      "global": false,
+      "takes_value": true,
+      "value_kind": "string",
+      "help": "PEM file with key and public certificate.",
+      "choices": null,
+      "default": null,
+      "values_from": null
+    },
+    {
+      "name": "--claims-challenge",
+      "aliases": [],
+      "required": false,
+      "group": "Optional Parameters",
+      "global": false,
+      "takes_value": true,
+      "value_kind": "string",
+      "help": "Base64-encoded claims challenge requested by a resource API in the WWW-Authenticate header.",
+      "choices": null,
+      "default": null,
+      "values_from": null
+    },
+    {
+      "name": "--federated-token",
+      "aliases": [],
+      "required": false,
+      "group": "Optional Parameters",
+      "global": false,
+      "takes_value": true,
+      "value_kind": "string",
+      "help": "Federated token that can be used for OIDC token exchange.",
+      "choices": null,
+      "default": null,
+      "values_from": null
+    },
+    {
+      "name": "--password",
+      "aliases": [
+        "-p"
+      ],
+      "required": false,
+      "group": "Optional Parameters",
+      "global": false,
+      "takes_value": true,
+      "value_kind": "string",
+      "help": "User password or service principal secret. Will prompt if not given.",
+      "choices": null,
+      "default": null,
+      "values_from": null
+    },
+    {
+      "name": "--scope",
+      "aliases": [],
+      "required": false,
+      "group": "Optional Parameters",
+      "global": false,
+      "takes_value": true,
+      "value_kind": "string",
+      "help": "Used in the /authorize request. It can cover only one static resource.",
+      "choices": null,
+      "default": null,
+      "values_from": null
+    },
+    {
+      "name": "--service-principal",
+      "aliases": [],
+      "required": false,
+      "group": "Optional Parameters",
+      "global": false,
+      "takes_value": false,
+      "value_kind": "bool",
+      "help": "Log in with a service principal.",
+      "choices": null,
+      "default": null,
+      "values_from": null
+    },
+    {
+      "name": "--skip-sub",
+      "aliases": [
+        "--skip-subscription-discovery"
+      ],
+      "required": false,
+      "group": "Optional Parameters",
+      "global": false,
+      "takes_value": false,
+      "value_kind": "bool",
+      "help": "Skip the subscription discovery process during login. Requires --tenant. Use with --subscription to fetch a single subscription without listing all.",
+      "choices": null,
+      "default": null,
+      "values_from": null
+    },
+    {
+      "name": "--subscription",
+      "aliases": [
+        "-s"
+      ],
+      "required": false,
+      "group": "Optional Parameters",
+      "global": false,
+      "takes_value": true,
+      "value_kind": "string",
+      "help": "Subscription ID or name to set as the default. When combined with --skip-subscription-discovery, only this subscription is retrieved via a direct API call (must be a subscription ID, not a name).",
+      "choices": null,
+      "default": null,
+      "values_from": null
+    },
+    {
+      "name": "--tenant",
+      "aliases": [
+        "-t"
+      ],
+      "required": false,
+      "group": "Optional Parameters",
+      "global": false,
+      "takes_value": true,
+      "value_kind": "string",
+      "help": "The Microsoft Entra tenant, must be provided when using a service principal.",
+      "choices": null,
+      "default": null,
+      "values_from": null
+    },
+    {
+      "name": "--use-cert-sn-issuer",
+      "aliases": [],
+      "required": false,
+      "group": "Optional Parameters",
+      "global": false,
+      "takes_value": true,
+      "value_kind": "string",
+      "help": "Use Subject Name + Issuer (SN+I) authentication in order to support automatic certificate rolls.",
+      "choices": null,
+      "default": null,
+      "values_from": null
+    },
+    {
+      "name": "--use-device-code",
+      "aliases": [],
+      "required": false,
+      "group": "Optional Parameters",
+      "global": false,
+      "takes_value": false,
+      "value_kind": "bool",
+      "help": "Use device code flow. Azure CLI will also use this if it can't launch a browser, e.g. in remote SSH or Cloud Shell.",
+      "choices": null,
+      "default": null,
+      "values_from": null
+    },
+    {
+      "name": "--username",
+      "aliases": [
+        "-u"
+      ],
+      "required": false,
+      "group": "Optional Parameters",
+      "global": false,
+      "takes_value": true,
+      "value_kind": "string",
+      "help": "User name or service principal client ID.",
+      "choices": null,
+      "default": null,
+      "values_from": null
+    },
+    {
+      "name": "--acquire-policy-token",
+      "aliases": [],
+      "required": false,
+      "group": "Global Policy Arguments",
+      "global": true,
+      "takes_value": true,
+      "value_kind": "string",
+      "help": "Acquiring an Azure Policy token automatically for this resource operation.",
+      "choices": null,
+      "default": null,
+      "values_from": null
+    },
+    {
+      "name": "--change-reference",
+      "aliases": [],
+      "required": false,
+      "group": "Global Policy Arguments",
+      "global": true,
+      "takes_value": true,
+      "value_kind": "string",
+      "help": "The related change reference ID for this resource operation.",
+      "choices": null,
+      "default": null,
+      "values_from": null
+    },
+    {
+      "name": "--client-id",
+      "aliases": [],
+      "required": false,
+      "group": "Managed Identity Arguments",
+      "global": false,
+      "takes_value": true,
+      "value_kind": "string",
+      "help": "Client ID of the user-assigned managed identity.",
+      "choices": null,
+      "default": null,
+      "values_from": null
+    },
+    {
+      "name": "--identity",
+      "aliases": [
+        "-i"
+      ],
+      "required": false,
+      "group": "Managed Identity Arguments",
+      "global": false,
+      "takes_value": false,
+      "value_kind": "bool",
+      "help": "Log in using managed identity.",
+      "choices": null,
+      "default": null,
+      "values_from": null
+    },
+    {
+      "name": "--object-id",
+      "aliases": [],
+      "required": false,
+      "group": "Managed Identity Arguments",
+      "global": false,
+      "takes_value": true,
+      "value_kind": "string",
+      "help": "Object ID of the user-assigned managed identity.",
+      "choices": null,
+      "default": null,
+      "values_from": null
+    },
+    {
+      "name": "--resource-id",
+      "aliases": [],
+      "required": false,
+      "group": "Managed Identity Arguments",
+      "global": false,
+      "takes_value": true,
+      "value_kind": "string",
+      "help": "Resource ID of the user-assigned managed identity.",
+      "choices": null,
+      "default": null,
+      "values_from": null
+    },
+    {
+      "name": "--debug",
+      "aliases": [],
+      "required": false,
+      "group": "Global Arguments",
+      "global": true,
+      "takes_value": false,
+      "value_kind": "bool",
+      "help": "Increase logging verbosity to show all debug logs.",
+      "choices": null,
+      "default": null,
+      "values_from": null
+    },
+    {
+      "name": "--help",
+      "aliases": [
+        "-h"
+      ],
+      "required": false,
+      "group": "Global Arguments",
+      "global": true,
+      "takes_value": false,
+      "value_kind": "bool",
+      "help": "Show this help message and exit.",
+      "choices": null,
+      "default": null,
+      "values_from": null
+    },
+    {
+      "name": "--only-show-errors",
+      "aliases": [],
+      "required": false,
+      "group": "Global Arguments",
+      "global": true,
+      "takes_value": false,
+      "value_kind": "bool",
+      "help": "Only show errors, suppressing warnings.",
+      "choices": null,
+      "default": null,
+      "values_from": null
+    },
+    {
+      "name": "--output",
+      "aliases": [
+        "-o"
+      ],
+      "required": false,
+      "group": "Global Arguments",
+      "global": true,
+      "takes_value": true,
+      "value_kind": "enum",
+      "help": "Output format.",
+      "choices": [
+        "json",
+        "jsonc",
+        "none",
+        "table",
+        "tsv",
+        "yaml",
+        "yamlc"
+      ],
+      "default": "json",
+      "values_from": null
+    },
+    {
+      "name": "--query",
+      "aliases": [],
+      "required": false,
+      "group": "Global Arguments",
+      "global": true,
+      "takes_value": true,
+      "value_kind": "string",
+      "help": "JMESPath query string. See http://jmespath.org/ for more information and examples.",
+      "choices": null,
+      "default": null,
+      "values_from": null
+    },
+    {
+      "name": "--verbose",
+      "aliases": [],
+      "required": false,
+      "group": "Global Arguments",
+      "global": true,
+      "takes_value": false,
+      "value_kind": "bool",
+      "help": "Increase logging verbosity. Use --debug for full debug logs.",
+      "choices": null,
+      "default": null,
+      "values_from": null
+    }
+  ]
+}

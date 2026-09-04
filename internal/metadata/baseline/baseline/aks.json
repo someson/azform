@@ -1,0 +1,161 @@
+{
+  "schema_version": 1,
+  "group": "aks",
+  "summary": "Azure Kubernetes Service.",
+  "az_version": "embedded",
+  "azform_version": "",
+  "source": "help-parser",
+  "generated_at": "2026-09-02T17:41:57.364225Z",
+  "parse_health": {
+    "params": 35,
+    "unparsed_lines": 0,
+    "sections_ok": true
+  },
+  "subgroups": [
+    {
+      "name": "approuting",
+      "summary": "Commands to manage App Routing addon."
+    },
+    {
+      "name": "command",
+      "summary": "See detail usage in 'az aks command invoke', 'az aks command result'."
+    },
+    {
+      "name": "connection",
+      "summary": "Commands to manage aks connections.",
+      "preview": true
+    },
+    {
+      "name": "identity-binding",
+      "summary": "Commands to manage identity bindings in Azure Kubernetes Service."
+    },
+    {
+      "name": "machine",
+      "summary": "Get information about machines in a nodepool of a managed clusters."
+    },
+    {
+      "name": "maintenanceconfiguration",
+      "summary": "Commands to manage maintenance configurations in managed Kubernetes cluster."
+    },
+    {
+      "name": "mesh",
+      "summary": "Commands to manage Azure Service Mesh."
+    },
+    {
+      "name": "namespace",
+      "summary": "Commands to manage namespace in managed Kubernetes cluster."
+    },
+    {
+      "name": "nodepool",
+      "summary": "Commands to manage node pools in Kubernetes kubernetes cluster."
+    },
+    {
+      "name": "oidc-issuer",
+      "summary": "Oidc issuer related commands."
+    },
+    {
+      "name": "safeguards",
+      "summary": "Manage Deployment Safeguards."
+    },
+    {
+      "name": "trustedaccess",
+      "summary": "Commands to manage trusted access security features."
+    }
+  ],
+  "commands": [
+    {
+      "name": "browse",
+      "summary": "Show the dashboard for a Kubernetes cluster in a web browser."
+    },
+    {
+      "name": "check-acr",
+      "summary": "Validate an ACR is accessible from an AKS cluster."
+    },
+    {
+      "name": "create",
+      "summary": "Create a new managed Kubernetes cluster."
+    },
+    {
+      "name": "delete",
+      "summary": "Delete a managed Kubernetes cluster."
+    },
+    {
+      "name": "disable-addons",
+      "summary": "Disable Kubernetes addons."
+    },
+    {
+      "name": "enable-addons",
+      "summary": "Enable Kubernetes addons."
+    },
+    {
+      "name": "get-credentials",
+      "summary": "Get access credentials for a managed Kubernetes cluster."
+    },
+    {
+      "name": "get-upgrades",
+      "summary": "Get the upgrade versions available for a managed Kubernetes cluster."
+    },
+    {
+      "name": "get-versions",
+      "summary": "Get the versions available for creating a managed Kubernetes cluster."
+    },
+    {
+      "name": "install-cli",
+      "summary": "Download and install kubectl, the Kubernetes command-line tool. Download and install kubelogin, a client-go credential (exec) plugin implementing azure authentication."
+    },
+    {
+      "name": "list",
+      "summary": "List managed Kubernetes clusters."
+    },
+    {
+      "name": "operation-abort",
+      "summary": "Abort last running operation on managed cluster."
+    },
+    {
+      "name": "remove-dev-spaces",
+      "summary": "Remove Azure Dev Spaces from a managed Kubernetes cluster.",
+      "deprecated": true
+    },
+    {
+      "name": "rotate-certs",
+      "summary": "Rotate certificates and keys on a managed Kubernetes cluster."
+    },
+    {
+      "name": "scale",
+      "summary": "Scale the node pool in a managed Kubernetes cluster."
+    },
+    {
+      "name": "show",
+      "summary": "Show the details for a managed Kubernetes cluster."
+    },
+    {
+      "name": "start",
+      "summary": "Starts a previously stopped Managed Cluster."
+    },
+    {
+      "name": "stop",
+      "summary": "Stop a managed cluster."
+    },
+    {
+      "name": "update",
+      "summary": "Update a managed Kubernetes cluster. When called with no optional arguments this attempts to move the cluster to its goal state without changing the current cluster configuration. This can be used to move out of a non succeeded state."
+    },
+    {
+      "name": "update-credentials",
+      "summary": "Update credentials for a managed Kubernetes cluster, like service principal."
+    },
+    {
+      "name": "upgrade",
+      "summary": "Upgrade a managed Kubernetes cluster to a newer version."
+    },
+    {
+      "name": "use-dev-spaces",
+      "summary": "Use Azure Dev Spaces with a managed Kubernetes cluster.",
+      "deprecated": true
+    },
+    {
+      "name": "wait",
+      "summary": "Wait for a managed Kubernetes cluster to reach a desired state."
+    }
+  ]
+}

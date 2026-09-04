@@ -1,0 +1,33 @@
+name: Missing or awkward
+description: You gave up and typed the command by hand, or the form got in your way.
+labels: [enhancement]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        The most useful report is the one where you stopped using the form and went
+        back to typing. That tells me more than anything else.
+
+  - type: textarea
+    id: situation
+    attributes:
+      label: What were you trying to do?
+      placeholder: Creating a storage account with a set of tags I reuse across projects.
+    validations:
+      required: true
+
+  - type: textarea
+    id: friction
+    attributes:
+      label: Where did it break down?
+      description: Be blunt. "It was faster to type it" is a complete answer.
+    validations:
+      required: true
+
+  - type: textarea
+    id: idea
+    attributes:
+      label: What would have helped?
+      description: Optional — describing the problem is enough, the solution is my job.
+    validations:
+      required: false

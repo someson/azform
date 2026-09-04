@@ -1,0 +1,129 @@
+{
+  "kind": "group",
+  "parse_health": {
+    "params": 28,
+    "unparsed_lines": 0,
+    "sections_ok": true
+  },
+  "group": {
+    "group": "keyvault",
+    "summary": "Manage KeyVault keys, secrets, and certificates.",
+    "subgroups": [
+      {
+        "name": "backup",
+        "summary": "Manage full HSM backup."
+      },
+      {
+        "name": "certificate",
+        "summary": "Manage certificates."
+      },
+      {
+        "name": "ekm-connection",
+        "summary": "Manage External Key Manager (EKM) connection for a Managed HSM.",
+        "preview": true
+      },
+      {
+        "name": "key",
+        "summary": "Manage keys."
+      },
+      {
+        "name": "network-rule",
+        "summary": "Manage network ACLs for vault or managed hsm."
+      },
+      {
+        "name": "private-endpoint-connection",
+        "summary": "Manage vault/HSM private endpoint connections."
+      },
+      {
+        "name": "private-link-resource",
+        "summary": "Manage vault/HSM private link resources."
+      },
+      {
+        "name": "region",
+        "summary": "Manage MHSM multi-regions."
+      },
+      {
+        "name": "restore",
+        "summary": "Manage full HSM restore."
+      },
+      {
+        "name": "role",
+        "summary": "Manage user roles for access control."
+      },
+      {
+        "name": "secret",
+        "summary": "Manage secrets."
+      },
+      {
+        "name": "security-domain",
+        "summary": "Manage security domain operations."
+      },
+      {
+        "name": "setting",
+        "summary": "Manage MHSM settings."
+      }
+    ],
+    "commands": [
+      {
+        "name": "check-name",
+        "summary": "Check that the given name is valid and is not already in use."
+      },
+      {
+        "name": "create",
+        "summary": "Create a Vault or HSM."
+      },
+      {
+        "name": "delete",
+        "summary": "Delete a Vault or HSM."
+      },
+      {
+        "name": "delete-policy",
+        "summary": "Delete security policy settings for a Key Vault."
+      },
+      {
+        "name": "list",
+        "summary": "List Vaults and/or HSMs."
+      },
+      {
+        "name": "list-deleted",
+        "summary": "Get information about the deleted Vaults or HSMs in a subscription."
+      },
+      {
+        "name": "purge",
+        "summary": "Permanently delete the specified Vault or HSM. Aka Purges the deleted Vault or HSM."
+      },
+      {
+        "name": "recover",
+        "summary": "Recover a Vault or HSM."
+      },
+      {
+        "name": "set-policy",
+        "summary": "Update security policy settings for a Key Vault."
+      },
+      {
+        "name": "show",
+        "summary": "Show details of a Vault or HSM."
+      },
+      {
+        "name": "show-deleted",
+        "summary": "Show details of a deleted Vault or HSM."
+      },
+      {
+        "name": "update",
+        "summary": "Update the properties of a Vault."
+      },
+      {
+        "name": "update-hsm",
+        "summary": "Update the properties of a HSM."
+      },
+      {
+        "name": "wait",
+        "summary": "Place the CLI in a waiting state until a condition of the Vault is met."
+      },
+      {
+        "name": "wait-hsm",
+        "summary": "Place the CLI in a waiting state until a condition of the HSM is met."
+      }
+    ]
+  }
+}

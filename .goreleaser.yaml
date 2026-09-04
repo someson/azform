@@ -1,0 +1,67 @@
+# Run `goreleaser check` after editing — the config schema changes between
+# major versions and errors here only surface at release time otherwise.
+version: 2
+
+project_name: azform
+
+before:
+  hooks:
+    - go mod tidy
+
+builds:
+  - id: azform
+    main: ./cmd/azform
+    binary: azform
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - darwin
+      - linux
+    goarch:
+      - amd64
+      - arm64
+    ldflags:
+      - -s -w
+      - -X main.version={{ .Version }}
+      - -X main.commit={{ .ShortCommit }}
+      - -X main.date={{ .CommitDate }}
+    mod_timestamp: "{{ .CommitTimestamp }}"
+
+archives:
+  - id: default
+    # Matches the artifact names documented in the spec (section 14.3).
+    name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+    files:
+      - LICENSE
+      - README.md
+      - THIRD_PARTY_LICENSES.md
+      - src: licenses/**/*
+        dst: licenses
+
+checksum:
+  name_template: "checksums.txt"
+
+snapshot:
+  version_template: "{{ incpatch .Version }}-next"
+
+changelog:
+  use: github
+  sort: asc
+  filters:
+    exclude:
+      - "^docs:"
+      - "^test:"
+      - "^chore:"
+      - "^ci:"
+      - Merge pull request
+
+release:
+  draft: false
+  # Anything below v1.0.0 is marked as a pre-release automatically.
+  prerelease: auto
+  footer: |
+    Install:
+
+    ```sh
+    curl -fsSL https://raw.githubusercontent.com/{{ .Env.GITHUB_REPOSITORY }}/main/install.sh | sh
+    ```

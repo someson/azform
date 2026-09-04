@@ -1,0 +1,172 @@
+
+Command
+    az network application-gateway create : Create an application gateway.
+
+Arguments
+    --name -n                  [Required] : Name of the application gateway.
+    --resource-group -g        [Required] : Name of resource group. You can configure the default
+                                            group using `az configure --defaults group=<name>`.
+    --custom-error-pages                  : Space-separated list of custom error pages in
+                                            `STATUS_CODE=URL` format.
+    --location -l                         : Location. Values from: `az account list-locations`. You
+                                            can configure the default location using `az configure
+                                            --defaults location=<location>`.
+    --max-capacity                        : Upper bound on the number of application gateway
+                                            instances.
+    --min-capacity                        : Lower bound on the number of application gateway
+                                            instances.
+    --no-wait                             : Do not wait for the long-running operation to finish.
+    --priority                            : Priority of the request routing rule. Supported SKU
+                                            tiers are Standard_v2, WAF_v2.
+    --tags                                : Space-separated tags: key[=value] [key[=value] ...]. Use
+                                            '' to clear existing tags.
+    --validate                            : Generate and validate the ARM template without creating
+                                            any resources.
+    --waf-policy                          : Name or ID of a web application firewall (WAF) policy.
+    --zones -z                            : Space-separated list of availability zones into which to
+                                            provision the resource.
+
+Gateway Arguments
+    --capacity                            : The number of instances to use with the application
+                                            gateway.  Default: 2.
+    --cert-file                           : The path to the PFX certificate file.
+    --cert-password                       : The certificate password.
+    --connection-draining-timeout         : The time in seconds after a backend server is removed
+                                            during which on open connection remains active. Range: 0
+                                            (disabled) to 3600.
+    --enable-fips                         : Whether FIPS is enabled on the application gateway
+                                            resource.  Allowed values: false, true.
+    --frontend-port                       : The front end port number.
+    --http-settings-cookie-based-affinity : Enable or disable HTTP settings cookie-based affinity.
+                                            Allowed values: Disabled, Enabled.  Default: disabled.
+    --http-settings-port                  : The HTTP settings port.  Default: 80.
+    --http-settings-protocol              : The HTTP settings protocol.  Allowed values: Http,
+                                            Https, Tcp, Tls.  Default: Http.
+    --http2                               : Use HTTP2 for the application gateway.  Allowed values:
+                                            Disabled, Enabled.
+    --key-vault-secret-id                 : Secret Id of (base-64 encoded unencrypted pfx) 'Secret'
+                                            or 'Certificate' object stored in Azure KeyVault. You
+                                            need enable soft delete for keyvault to use this
+                                            feature.
+    --routing-rule-type                   : The request routing rule type.  Allowed values: Basic,
+                                            PathBasedRouting.  Default: Basic.
+    --servers                             : Space-separated list of IP addresses or DNS names
+                                            corresponding to backend servers.
+    --sku                                 : The name of the SKU.  Allowed values: Standard_Medium,
+                                            Standard_Small, Standard_v2, WAF_Large, WAF_Medium,
+                                            WAF_v2.  Default: Standard_Medium.
+    --ssl-certificate-name                : The certificate name. Default will be `<application-
+                                            gateway-name>SslCert`.
+    --ssl-profile-id            [Preview] : SSL profile resource of the application gateway.
+        WARNING: Argument '--ssl-profile-id' is in preview and under development. Reference and
+        support levels: https://aka.ms/CLI_refstatus
+
+Global Policy Arguments
+    --acquire-policy-token                : Acquiring an Azure Policy token automatically for this
+                                            resource operation.
+    --change-reference                    : The related change reference ID for this resource
+                                            operation.
+
+Identity Arguments
+    --identity                            : Name or ID of the ManagedIdentity Resource.
+
+Mutual Authentication Support Arguments
+    --trusted-client-cert       [Preview] : The application gateway trusted client certificate.
+        Usage: --trusted-client-certificates name=client1 data=client.cer
+
+        name: Required. Name of the trusted client certificate that is unique within an Application
+        Gateway
+        data: Required. Certificate public data.
+
+        Multiple trusted client certificates can be specified by using more than one `--trusted-
+        client-certificates` argument. WARNING: Argument '--trusted-client-cert' is in preview and
+        under development. Reference and support levels: https://aka.ms/CLI_refstatus
+
+Network Arguments
+    --private-ip-address                  : Static private IP address to use.
+    --public-ip-address                   : Name or ID of a public IP address. Uses existing
+                                            resource or creates new if specified, or none if
+                                            omitted.
+    --public-ip-address-allocation        : The kind of IP allocation to use when creating a new
+                                            public IP.  Default: Dynamic.
+    --subnet                              : Name or ID of the subnet. Will create resource if it
+                                            does not exist. If name specified, also specify --vnet-
+                                            name. If you want to use an existing subnet in other
+                                            resource group or subscription, please provide the ID
+                                            instead of the name of the subnet.  Default: default.
+    --subnet-address-prefix               : The CIDR prefix to use when creating a new subnet.
+                                            Default: 10.0.0.0/24.
+    --vnet-address-prefix                 : The CIDR prefix to use when creating a new VNet.
+                                            Default: 10.0.0.0/16.
+    --vnet-name                           : The virtual network (VNet) name.
+
+Private Link Configuration Arguments
+    --enable-private-link                 : Enable Private Link feature for this application
+                                            gateway. If both public IP and private IP are enbaled,
+                                            taking effect only in public frontend IP.
+    --private-link-ip-address             : The static private IP address of a subnet for Private
+                                            Link. If omitting, a dynamic one will be created.
+    --private-link-primary                : Whether the IP configuration is primary or not.  Allowed
+                                            values: false, true.
+    --private-link-subnet                 : The name of the subnet within the same vnet of an
+                                            application gateway.  Default: PrivateLinkDefaultSubnet.
+    --private-link-subnet-prefix          : The CIDR prefix to use when creating a new subnet.
+                                            Default: 10.0.1.0/24.
+
+SSL Profile Arguments
+    --ssl-profile               [Preview] : The application gateway ssl profiles.
+        Usage: --ssl-profile name=MySslProfile client-auth-configuration=True cipher-
+        suites=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256 policy-type=Custom min-protocol-version=TLSv1_0
+
+        name: Required. Name of the SSL profile that is unique within an Application Gateway.
+        polic-name: Name of Ssl Policy.
+        policy-type: Type of Ssl Policy.
+        min-protocol-version: Minimum version of Ssl protocol to be supported on application
+        gateway.
+        cipher-suites: Ssl cipher suites to be enabled in the specified order to application
+        gateway.
+        disabled-ssl-protocols: Space-separated list of protocols to disable.
+        trusted-client-certificates: Array of references to application gateway trusted client
+        certificates.
+        client-auth-configuration: Client authentication configuration of the application gateway
+        resource.
+
+        Multiple ssl profiles can be specified by using more than one `--ssl-profile` argument.
+        WARNING: Argument '--ssl-profile' is in preview and under development. Reference and support
+        levels: https://aka.ms/CLI_refstatus
+
+Global Arguments
+    --debug                               : Increase logging verbosity to show all debug logs.
+    --help -h                             : Show this help message and exit.
+    --only-show-errors                    : Only show errors, suppressing warnings.
+    --output -o                           : Output format.  Allowed values: json, jsonc, none,
+                                            table, tsv, yaml, yamlc.  Default: json.
+    --query                               : JMESPath query string. See http://jmespath.org/ for more
+                                            information and examples.
+    --subscription                        : Name or ID of subscription. You can configure the
+                                            default subscription using `az account set -s
+                                            NAME_OR_ID`.
+    --verbose                             : Increase logging verbosity. Use --debug for full debug
+                                            logs.
+
+Examples
+    Create an application gateway.
+        az network application-gateway create --capacity 2 --frontend-port MyFrontendPort --http-
+        settings-cookie-based-affinity Enabled --http-settings-port 80 --http-settings-protocol Http
+        --location westus2 --name MyAppGateway --public-ip-address MyAppGatewayPublicIp --resource-
+        group MyResourceGroup --sku Standard_Small --subnet MySubnet --vnet-name MyVNet
+
+
+    Create an application gateway with VMs as backend servers.
+        az network application-gateway create -g MyResourceGroup -n MyAppGateway --capacity 2 --sku
+        Standard_Medium --vnet-name MyVNet --subnet MySubnet --http-settings-cookie-based-affinity
+        Enabled --public-ip-address MyAppGatewayPublicIp --servers 10.0.0.4 10.0.0.5
+
+
+    Create an application gateway with SSL profile.
+        az network application-gateway create -n MyAppGateway -g MyResourceGroup --public-ip-address
+        MyPublicIP --sku Standard_v2 --priority 1001 --ssl-profile name=MyProfile min-protocol-
+        version=TLSv1_0 cipher-suites=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256 policy-type=Custom
+        client-auth-configuration=True
+
+

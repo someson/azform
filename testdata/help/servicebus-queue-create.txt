@@ -1,0 +1,151 @@
+
+Command
+    az servicebus queue create : Create a Service Bus queue. This operation is idempotent.
+
+Arguments
+    --name --queue-name -n                                  [Required] : The queue name.
+    --namespace-name                                        [Required] : The namespace name.
+    --resource-group -g                                     [Required] : Name of resource group. You
+                                                                         can configure the default
+                                                                         group using `az configure
+                                                                         --defaults group=<name>`.
+
+Global Policy Arguments
+    --acquire-policy-token                                             : Acquiring an Azure Policy
+                                                                         token automatically for
+                                                                         this resource operation.
+    --change-reference                                                 : The related change
+                                                                         reference ID for this
+                                                                         resource operation.
+
+Properties Arguments
+    --auto-delete-on-idle                                              : ISO 8061 timeSpan idle
+                                                                         interval after which the
+                                                                         queue is automatically
+                                                                         deleted. The minimum
+                                                                         duration is 5 minutes.
+    --default-message-time-to-live                                     : ISO 8601 default message
+                                                                         timespan to live value.
+                                                                         This is the duration after
+                                                                         which the message expires,
+                                                                         starting from when the
+                                                                         message is sent to Service
+                                                                         Bus. This is the default
+                                                                         value used when TimeToLive
+                                                                         is not set on a message
+                                                                         itself.
+    --duplicate-detection --enable-duplicate-detection                 : A value indicating if this
+                                                                         queue requires duplicate
+                                                                         detection.  Allowed values:
+                                                                         0, 1, f, false, n, no, t,
+                                                                         true, y, yes.
+    --duplicate-detection-history-time-window -d                       : ISO 8601 timeSpan structure
+                                                                         that defines the duration
+                                                                         of the duplicate detection
+                                                                         history. The default value
+                                                                         is 10 minutes.
+    --enable-batched-operations                                        : Value that indicates
+                                                                         whether server-side batched
+                                                                         operations are enabled.
+                                                                         Allowed values: 0, 1, f,
+                                                                         false, n, no, t, true, y,
+                                                                         yes.
+    --enable-dead-lettering-on-message-expiration --message-expiration : A value that indicates
+                                                                         whether this queue has dead
+                                                                         letter support when a
+                                                                         message expires.  Allowed
+                                                                         values: 0, 1, f, false, n,
+                                                                         no, t, true, y, yes.
+    --enable-express                                                   : A value that indicates
+                                                                         whether Express Entities
+                                                                         are enabled. An express
+                                                                         queue holds a message in
+                                                                         memory temporarily before
+                                                                         writing it to persistent
+                                                                         storage.  Allowed values:
+                                                                         0, 1, f, false, n, no, t,
+                                                                         true, y, yes.
+    --enable-partitioning                                              : A value that indicates
+                                                                         whether the queue is to be
+                                                                         partitioned across multiple
+                                                                         message brokers.  Allowed
+                                                                         values: 0, 1, f, false, n,
+                                                                         no, t, true, y, yes.
+    --enable-session                                                   : A value that indicates
+                                                                         whether the queue supports
+                                                                         the concept of sessions.
+                                                                         Allowed values: 0, 1, f,
+                                                                         false, n, no, t, true, y,
+                                                                         yes.
+    --forward-dead-lettered-messages-to                                : Queue/Topic name to forward
+                                                                         the Dead Letter message.
+    --forward-to                                                       : Queue/Topic name to forward
+                                                                         the messages.
+    --lock-duration                                                    : ISO 8601 timespan duration
+                                                                         of a peek-lock; that is,
+                                                                         the amount of time that the
+                                                                         message is locked for other
+                                                                         receivers. The maximum
+                                                                         value for LockDuration is 5
+                                                                         minutes; the default value
+                                                                         is 1 minute.
+    --max-delivery-count                                               : The maximum delivery count.
+                                                                         A message is automatically
+                                                                         deadlettered after this
+                                                                         number of deliveries.
+                                                                         default value is 10.
+    --max-message-size --max-message-size-in-kilobytes                 : Maximum size (in KB) of the
+                                                                         message payload that can be
+                                                                         accepted by the topic. This
+                                                                         property is only used in
+                                                                         Premium today and default
+                                                                         is 1024.
+    --max-size --max-size-in-megabytes                                 : The maximum capacity of the
+                                                                         queue, denoted in
+                                                                         megabytes, signifies the
+                                                                         volume of memory assigned
+                                                                         to the queue. The
+                                                                         permissible values for this
+                                                                         parameter are 1024, 2048,
+                                                                         3072, 4096, and 5120
+                                                                         megabytes. By default, the
+                                                                         system assigns a capacity
+                                                                         of 1024 megabytes. If the
+                                                                         ‘enable-partition’ setting
+                                                                         is set to true, the
+                                                                         specified queue size will
+                                                                         be amplified by a factor of
+                                                                         16.
+    --status                                                           : Enumerates the possible
+                                                                         values for the status of a
+                                                                         messaging entity.  Allowed
+                                                                         values: Active, Creating,
+                                                                         Deleting, Disabled,
+                                                                         ReceiveDisabled, Renaming,
+                                                                         Restoring, SendDisabled,
+                                                                         Unknown.
+
+Global Arguments
+    --debug                                                            : Increase logging verbosity
+                                                                         to show all debug logs.
+    --help -h                                                          : Show this help message and
+                                                                         exit.
+    --only-show-errors                                                 : Only show errors,
+                                                                         suppressing warnings.
+    --output -o                                                        : Output format.  Allowed
+                                                                         values: json, jsonc, none,
+                                                                         table, tsv, yaml, yamlc.
+                                                                         Default: json.
+    --query                                                            : JMESPath query string. See
+                                                                         http://jmespath.org/ for
+                                                                         more information and
+                                                                         examples.
+    --subscription                                                     : Name or ID of subscription.
+                                                                         You can configure the
+                                                                         default subscription using
+                                                                         `az account set -s
+                                                                         NAME_OR_ID`.
+    --verbose                                                          : Increase logging verbosity.
+                                                                         Use --debug for full debug
+                                                                         logs.
+

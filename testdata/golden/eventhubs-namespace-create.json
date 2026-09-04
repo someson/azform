@@ -1,0 +1,459 @@
+{
+  "kind": "command",
+  "parse_health": {
+    "params": 30,
+    "unparsed_lines": 0,
+    "sections_ok": true
+  },
+  "command": {
+    "command": "eventhubs namespace create",
+    "summary": "Creates the EventHubs Namespace.",
+    "parameters": [
+      {
+        "name": "--name",
+        "aliases": [
+          "-n"
+        ],
+        "required": true,
+        "group": "Required Parameters",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "string",
+        "help": "Name of Namespace.",
+        "choices": null,
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--resource-group",
+        "aliases": [
+          "-g"
+        ],
+        "required": true,
+        "group": "Required Parameters",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "string",
+        "help": "Name of resource group. You can configure the default group using `az configure --defaults group=<name>`.",
+        "choices": null,
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--alternate-name",
+        "aliases": [],
+        "required": false,
+        "group": "Optional Parameters",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "string",
+        "help": "Alternate name specified when alias and namespace names are same.",
+        "choices": null,
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--capacity",
+        "aliases": [],
+        "required": false,
+        "group": "Optional Parameters",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "string",
+        "help": "Capacity for Sku.",
+        "choices": null,
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--cluster-arm-id",
+        "aliases": [],
+        "required": false,
+        "group": "Optional Parameters",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "string",
+        "help": "Cluster ARM ID of the Namespace.",
+        "choices": null,
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--disable-local-auth",
+        "aliases": [],
+        "required": false,
+        "group": "Optional Parameters",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "bool",
+        "help": "A boolean value that indicates whether SAS authentication is enabled/disabled for the Event Hubs.",
+        "choices": [
+          "false",
+          "true"
+        ],
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--enable-auto-inflate",
+        "aliases": [],
+        "required": false,
+        "group": "Optional Parameters",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "bool",
+        "help": "A boolean value that indicates whether AutoInflate is enabled for eventhub namespace.",
+        "choices": [
+          "false",
+          "true"
+        ],
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--enable-kafka",
+        "aliases": [],
+        "required": false,
+        "group": "Optional Parameters",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "bool",
+        "help": "A boolean value that indicates whether Kafka is enabled for eventhub namespace.",
+        "choices": [
+          "false",
+          "true"
+        ],
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--encryption-config",
+        "aliases": [],
+        "required": false,
+        "group": "Optional Parameters",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "list",
+        "help": "List of KeyVaultProperties objects.",
+        "choices": null,
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--geo-data-replication-config",
+        "aliases": [
+          "--replica-config"
+        ],
+        "required": false,
+        "group": "Optional Parameters",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "list",
+        "help": "A list of regions where replicas of the namespace are maintained Object.",
+        "choices": null,
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--infra-encryption",
+        "aliases": [],
+        "required": false,
+        "group": "Optional Parameters",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "bool",
+        "help": "A boolean value that indicates whether Infrastructure Encryption (Double Encryption) is enabled/disabled.",
+        "choices": [
+          "false",
+          "true"
+        ],
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--location",
+        "aliases": [
+          "-l"
+        ],
+        "required": false,
+        "group": "Optional Parameters",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "string",
+        "help": "Location. You can configure the default location using `az configure --defaults location=<location>`.",
+        "choices": null,
+        "default": null,
+        "values_from": "az account list- locations"
+      },
+      {
+        "name": "--max-lag",
+        "aliases": [
+          "--max-replication-lag-duration-in-seconds"
+        ],
+        "required": false,
+        "group": "Optional Parameters",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "string",
+        "help": "The maximum acceptable lag for data replication operations from the primary replica to a quorum of secondary replicas.",
+        "choices": null,
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--maximum-throughput-units",
+        "aliases": [],
+        "required": false,
+        "group": "Optional Parameters",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "string",
+        "help": "Upper limit of throughput units when AutoInflate is enabled, vaule should be within 0 to 20 throughput units. ( 0 if AutoInflateEnabled = true).",
+        "choices": null,
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--min-tls",
+        "aliases": [
+          "--minimum-tls-version"
+        ],
+        "required": false,
+        "group": "Optional Parameters",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "enum",
+        "help": "The minimum TLS version for the cluster to support, e.g. 1.2.",
+        "choices": [
+          "1.0",
+          "1.1",
+          "1.2"
+        ],
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--public-network",
+        "aliases": [
+          "--public-network-access"
+        ],
+        "required": false,
+        "group": "Optional Parameters",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "enum",
+        "help": "This determines if traffic is allowed over public network. By default it is enabled. If value is SecuredByPerimeter then Inbound and Outbound communication is controlled by the network security perimeter and profile' access rules.",
+        "choices": [
+          "Disabled",
+          "Enabled"
+        ],
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--sku",
+        "aliases": [],
+        "required": false,
+        "group": "Optional Parameters",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "enum",
+        "help": "Namespace SKU.",
+        "choices": [
+          "Basic",
+          "Premium",
+          "Standard"
+        ],
+        "default": "Standard",
+        "values_from": null
+      },
+      {
+        "name": "--tags",
+        "aliases": [],
+        "required": false,
+        "group": "Optional Parameters",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "keyvalue",
+        "help": "Space-separated tags: key[=value] [key[=value]...]. Use '' to clear existing tags.",
+        "choices": null,
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--zone-redundant",
+        "aliases": [],
+        "required": false,
+        "group": "Optional Parameters",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "bool",
+        "help": "Enabling this property creates a Standard EventHubs Namespace in regions supported availability zones.",
+        "choices": [
+          "false",
+          "true"
+        ],
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--acquire-policy-token",
+        "aliases": [],
+        "required": false,
+        "group": "Global Policy Arguments",
+        "global": true,
+        "takes_value": true,
+        "value_kind": "string",
+        "help": "Acquiring an Azure Policy token automatically for this resource operation.",
+        "choices": null,
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--change-reference",
+        "aliases": [],
+        "required": false,
+        "group": "Global Policy Arguments",
+        "global": true,
+        "takes_value": true,
+        "value_kind": "string",
+        "help": "The related change reference ID for this resource operation.",
+        "choices": null,
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--mi-system-assigned",
+        "aliases": [],
+        "required": false,
+        "group": "Managed Identity Arguments",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "bool",
+        "help": "Enable System Assigned Identity.",
+        "choices": [
+          "false",
+          "true"
+        ],
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--mi-user-assigned",
+        "aliases": [],
+        "required": false,
+        "group": "Managed Identity Arguments",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "list",
+        "help": "List of User Assigned Identity ids.",
+        "choices": null,
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--debug",
+        "aliases": [],
+        "required": false,
+        "group": "Global Arguments",
+        "global": true,
+        "takes_value": false,
+        "value_kind": "bool",
+        "help": "Increase logging verbosity to show all debug logs.",
+        "choices": null,
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--help",
+        "aliases": [
+          "-h"
+        ],
+        "required": false,
+        "group": "Global Arguments",
+        "global": true,
+        "takes_value": false,
+        "value_kind": "bool",
+        "help": "Show this help message and exit.",
+        "choices": null,
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--only-show-errors",
+        "aliases": [],
+        "required": false,
+        "group": "Global Arguments",
+        "global": true,
+        "takes_value": false,
+        "value_kind": "bool",
+        "help": "Only show errors, suppressing warnings.",
+        "choices": null,
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--output",
+        "aliases": [
+          "-o"
+        ],
+        "required": false,
+        "group": "Global Arguments",
+        "global": true,
+        "takes_value": true,
+        "value_kind": "enum",
+        "help": "Output format.",
+        "choices": [
+          "json",
+          "jsonc",
+          "none",
+          "table",
+          "tsv",
+          "yaml",
+          "yamlc"
+        ],
+        "default": "json",
+        "values_from": null
+      },
+      {
+        "name": "--query",
+        "aliases": [],
+        "required": false,
+        "group": "Global Arguments",
+        "global": true,
+        "takes_value": true,
+        "value_kind": "string",
+        "help": "JMESPath query string. See http://jmespath.org/ for more information and examples.",
+        "choices": null,
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--subscription",
+        "aliases": [],
+        "required": false,
+        "group": "Global Arguments",
+        "global": true,
+        "takes_value": true,
+        "value_kind": "string",
+        "help": "Name or ID of subscription. You can configure the default subscription using `az account set -s NAME_OR_ID`.",
+        "choices": null,
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--verbose",
+        "aliases": [],
+        "required": false,
+        "group": "Global Arguments",
+        "global": true,
+        "takes_value": false,
+        "value_kind": "bool",
+        "help": "Increase logging verbosity. Use --debug for full debug logs.",
+        "choices": null,
+        "default": null,
+        "values_from": null
+      }
+    ]
+  }
+}

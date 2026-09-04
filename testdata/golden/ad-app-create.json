@@ -1,0 +1,411 @@
+{
+  "kind": "command",
+  "parse_health": {
+    "params": 28,
+    "unparsed_lines": 0,
+    "sections_ok": true
+  },
+  "command": {
+    "command": "ad app create",
+    "summary": "Create an application. For more detailed documentation, see https://learn.microsoft.com/graph/api/resources/application.",
+    "parameters": [
+      {
+        "name": "--display-name",
+        "aliases": [],
+        "required": true,
+        "group": "Required Parameters",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "string",
+        "help": "The display name of the application.",
+        "choices": null,
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--identifier-uris",
+        "aliases": [],
+        "required": false,
+        "group": "Optional Parameters",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "list",
+        "help": "Space-separated values. Also known as App ID URI, this value is set when an application is used as a resource app. The identifierUris acts as the prefix for the scopes you'll reference in your API's code, and it must be globally unique. You can use the default value provided, which is in the form `api://<application-client-id>`, or specify a more readable URI like https://contoso.com/api.",
+        "choices": null,
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--is-fallback-public-client",
+        "aliases": [],
+        "required": false,
+        "group": "Optional Parameters",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "bool",
+        "help": "Specifies the fallback application type as public client, such as an installed application running on a mobile device. The default value is false which means the fallback application type is confidential client such as a web app.",
+        "choices": [
+          "false",
+          "true"
+        ],
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--service-management-reference",
+        "aliases": [],
+        "required": false,
+        "group": "Optional Parameters",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "string",
+        "help": "References application or service contact information from a Service or Asset Management database.",
+        "choices": null,
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--sign-in-audience",
+        "aliases": [],
+        "required": false,
+        "group": "Optional Parameters",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "enum",
+        "help": "Specifies the Microsoft accounts that are supported for the current application.",
+        "choices": [
+          "AzureADMultipleOrgs",
+          "AzureADMyOrg",
+          "AzureADandPersonalMicrosoftAccount",
+          "PersonalMicrosoftAccount"
+        ],
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--acquire-policy-token",
+        "aliases": [],
+        "required": false,
+        "group": "Global Policy Arguments",
+        "global": true,
+        "takes_value": true,
+        "value_kind": "string",
+        "help": "Acquiring an Azure Policy token automatically for this resource operation.",
+        "choices": null,
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--change-reference",
+        "aliases": [],
+        "required": false,
+        "group": "Global Policy Arguments",
+        "global": true,
+        "takes_value": true,
+        "value_kind": "string",
+        "help": "The related change reference ID for this resource operation.",
+        "choices": null,
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--app-roles",
+        "aliases": [],
+        "required": false,
+        "group": "JSON property Arguments",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "path",
+        "help": "The collection of roles assigned to the application. With app role assignments, these roles can be assigned to users, groups, or service principals associated with other applications. Should be JSON file path or in-line JSON string. See examples for details.",
+        "choices": null,
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--optional-claims",
+        "aliases": [],
+        "required": false,
+        "group": "JSON property Arguments",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "path",
+        "help": "Application developers can configure optional claims in their Microsoft Entra applications to specify the claims that are sent to their application by the Microsoft security token service. For more information, see https://learn.microsoft.com/azure/active- directory/develop/active-directory-optional-claims. Should be JSON file path or in-line JSON string. See examples for details.",
+        "choices": null,
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--required-resource-accesses",
+        "aliases": [],
+        "required": false,
+        "group": "JSON property Arguments",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "path",
+        "help": "Specifies the resources that the application needs to access. This property also specifies the set of delegated permissions and application roles that it needs for each of those resources. This configuration of access to the required resources drives the consent experience. Should be JSON file path or in-line JSON string. See examples for details.",
+        "choices": null,
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--requested-access-token-version",
+        "aliases": [],
+        "required": false,
+        "group": "api Arguments",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "string",
+        "help": "Specifies the access token version expected by this resource. This changes the version and format of the JWT produced independent of the endpoint or client used to request the access token.",
+        "choices": null,
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--end-date",
+        "aliases": [],
+        "required": false,
+        "group": "keyCredential Arguments",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "string",
+        "help": "Date or datetime after which credentials expire (e.g. '2017-12-31T11:59:59+00:00' or '2017-12-31'). Default value is one year after current time.",
+        "choices": null,
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--key-display-name",
+        "aliases": [],
+        "required": false,
+        "group": "keyCredential Arguments",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "string",
+        "help": "Friendly name for the key.",
+        "choices": null,
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--key-type",
+        "aliases": [],
+        "required": false,
+        "group": "keyCredential Arguments",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "enum",
+        "help": "The type of the key credentials associated with the application.",
+        "choices": [
+          "AsymmetricX509Cert",
+          "Password",
+          "Symmetric"
+        ],
+        "default": "AsymmetricX509Cert",
+        "values_from": null
+      },
+      {
+        "name": "--key-usage",
+        "aliases": [],
+        "required": false,
+        "group": "keyCredential Arguments",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "enum",
+        "help": "The usage of the key credentials associated with the application.",
+        "choices": [
+          "Sign",
+          "Verify"
+        ],
+        "default": "Verify",
+        "values_from": null
+      },
+      {
+        "name": "--key-value",
+        "aliases": [],
+        "required": false,
+        "group": "keyCredential Arguments",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "string",
+        "help": "The value for the key credentials associated with the application.",
+        "choices": null,
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--start-date",
+        "aliases": [],
+        "required": false,
+        "group": "keyCredential Arguments",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "string",
+        "help": "Date or datetime at which credentials become valid (e.g. '2017-01-01T01:00:00+00:00' or '2017-01-01'). Default value is current time.",
+        "choices": null,
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--public-client-redirect-uris",
+        "aliases": [],
+        "required": false,
+        "group": "publicClient Arguments",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "list",
+        "help": "Space-separated values. Specifies the URLs where user tokens are sent for sign-in, or the redirect URIs where OAuth 2.0 authorization codes and access tokens are sent.",
+        "choices": null,
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--enable-access-token-issuance",
+        "aliases": [],
+        "required": false,
+        "group": "web Arguments",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "bool",
+        "help": "Specifies whether this web application can request an access token using the OAuth 2.0 implicit flow.",
+        "choices": [
+          "false",
+          "true"
+        ],
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--enable-id-token-issuance",
+        "aliases": [],
+        "required": false,
+        "group": "web Arguments",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "bool",
+        "help": "Specifies whether this web application can request an ID token using the OAuth 2.0 implicit flow.",
+        "choices": [
+          "false",
+          "true"
+        ],
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--web-home-page-url",
+        "aliases": [],
+        "required": false,
+        "group": "web Arguments",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "string",
+        "help": "Home page or landing page of the application.",
+        "choices": null,
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--web-redirect-uris",
+        "aliases": [],
+        "required": false,
+        "group": "web Arguments",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "list",
+        "help": "Space-separated values. Specifies the URLs where user tokens are sent for sign-in, or the redirect URIs where OAuth 2.0 authorization codes and access tokens are sent.",
+        "choices": null,
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--debug",
+        "aliases": [],
+        "required": false,
+        "group": "Global Arguments",
+        "global": true,
+        "takes_value": false,
+        "value_kind": "bool",
+        "help": "Increase logging verbosity to show all debug logs.",
+        "choices": null,
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--help",
+        "aliases": [
+          "-h"
+        ],
+        "required": false,
+        "group": "Global Arguments",
+        "global": true,
+        "takes_value": false,
+        "value_kind": "bool",
+        "help": "Show this help message and exit.",
+        "choices": null,
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--only-show-errors",
+        "aliases": [],
+        "required": false,
+        "group": "Global Arguments",
+        "global": true,
+        "takes_value": false,
+        "value_kind": "bool",
+        "help": "Only show errors, suppressing warnings.",
+        "choices": null,
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--output",
+        "aliases": [
+          "-o"
+        ],
+        "required": false,
+        "group": "Global Arguments",
+        "global": true,
+        "takes_value": true,
+        "value_kind": "enum",
+        "help": "Output format.",
+        "choices": [
+          "json",
+          "jsonc",
+          "none",
+          "table",
+          "tsv",
+          "yaml",
+          "yamlc"
+        ],
+        "default": "json",
+        "values_from": null
+      },
+      {
+        "name": "--query",
+        "aliases": [],
+        "required": false,
+        "group": "Global Arguments",
+        "global": true,
+        "takes_value": true,
+        "value_kind": "string",
+        "help": "JMESPath query string. See http://jmespath.org/ for more information and examples.",
+        "choices": null,
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--verbose",
+        "aliases": [],
+        "required": false,
+        "group": "Global Arguments",
+        "global": true,
+        "takes_value": false,
+        "value_kind": "bool",
+        "help": "Increase logging verbosity. Use --debug for full debug logs.",
+        "choices": null,
+        "default": null,
+        "values_from": null
+      }
+    ]
+  }
+}

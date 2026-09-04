@@ -1,0 +1,166 @@
+{
+  "kind": "group",
+  "parse_health": {
+    "params": 37,
+    "unparsed_lines": 0,
+    "sections_ok": true
+  },
+  "group": {
+    "group": "network",
+    "summary": "Manage Azure Network resources.",
+    "subgroups": [
+      {
+        "name": "application-gateway",
+        "summary": "Manage application-level routing and load balancing services."
+      },
+      {
+        "name": "asg",
+        "summary": "Manage application security groups (ASGs)."
+      },
+      {
+        "name": "bastion",
+        "summary": "Manage Azure Bastion host machines."
+      },
+      {
+        "name": "cross-region-lb",
+        "summary": "Manage and configure cross-region load balancers."
+      },
+      {
+        "name": "custom-ip",
+        "summary": "Manage custom IP."
+      },
+      {
+        "name": "ddos-custom-policy",
+        "summary": "Manage Ddos Custom Policy."
+      },
+      {
+        "name": "ddos-protection",
+        "summary": "Manage DDoS Protection Plans."
+      },
+      {
+        "name": "dns",
+        "summary": "Manage DNS domains in Azure."
+      },
+      {
+        "name": "express-route",
+        "summary": "Manage Express Route Circuit."
+      },
+      {
+        "name": "lb",
+        "summary": "Manage and configure load balancers."
+      },
+      {
+        "name": "local-gateway",
+        "summary": "Manage local gateways."
+      },
+      {
+        "name": "nat",
+        "summary": "Manage NAT resources."
+      },
+      {
+        "name": "network-watcher",
+        "summary": "Manage network watcher and its sub-resources."
+      },
+      {
+        "name": "nic",
+        "summary": "Manage network interfaces."
+      },
+      {
+        "name": "nsg",
+        "summary": "Manage Azure Network Security Groups (NSGs)."
+      },
+      {
+        "name": "private-dns",
+        "summary": "Manage Private DNS domains in Azure."
+      },
+      {
+        "name": "private-endpoint",
+        "summary": "Manage private endpoints."
+      },
+      {
+        "name": "private-endpoint-connection",
+        "summary": "Manage private endpoint connections."
+      },
+      {
+        "name": "private-link-resource",
+        "summary": "Manage private link resources."
+      },
+      {
+        "name": "private-link-service",
+        "summary": "Manage private link services."
+      },
+      {
+        "name": "profile",
+        "summary": "Manage network profiles."
+      },
+      {
+        "name": "public-ip",
+        "summary": "Manage public IP addresses."
+      },
+      {
+        "name": "route-filter",
+        "summary": "Manage route filters.",
+        "preview": true
+      },
+      {
+        "name": "route-table",
+        "summary": "Manage route tables."
+      },
+      {
+        "name": "routeserver",
+        "summary": "Manage the route server."
+      },
+      {
+        "name": "security-partner-provider",
+        "summary": "Manage Azure security partner provider.",
+        "preview": true
+      },
+      {
+        "name": "service-endpoint",
+        "summary": "Manage policies related to service endpoints."
+      },
+      {
+        "name": "traffic-manager",
+        "summary": "Manage the routing of incoming traffic."
+      },
+      {
+        "name": "virtual-appliance",
+        "summary": "Manage Azure Network Virtual Appliance."
+      },
+      {
+        "name": "virtual-network-appliance",
+        "summary": "Manage Virtual Network Appliance."
+      },
+      {
+        "name": "vnet",
+        "summary": "Check if a private IP address is available for use within a virtual network."
+      },
+      {
+        "name": "vnet-gateway",
+        "summary": "Use an Azure Virtual Network Gateway to establish secure, cross-premises connectivity."
+      },
+      {
+        "name": "vpn-connection",
+        "summary": "Manage VPN connections."
+      },
+      {
+        "name": "watcher",
+        "summary": "Manage the Azure Network Watcher. Network Watcher assists with monitoring and diagnosing conditions at a network scenario level. To learn more visit https://learn.microsoft.com/azure/network-watcher/."
+      }
+    ],
+    "commands": [
+      {
+        "name": "list-service-aliases",
+        "summary": "List available service aliases in the region which can be used for Service Endpoint Policies."
+      },
+      {
+        "name": "list-service-tags",
+        "summary": "List all service tags which are below to different resources."
+      },
+      {
+        "name": "list-usages",
+        "summary": "List the number of network resources in a region that are used against a subscription quota."
+      }
+    ]
+  }
+}

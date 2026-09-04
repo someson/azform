@@ -1,0 +1,343 @@
+{
+  "kind": "command",
+  "parse_health": {
+    "params": 23,
+    "unparsed_lines": 0,
+    "sections_ok": true
+  },
+  "command": {
+    "command": "storage container create",
+    "summary": "Create a container in a storage account. By default, container data is private (\"off\") to the account owner. Use \"blob\" to allow public read access for blobs. Use \"container\" to allow public read and list access to the entire container. You can configure the --public-access using `az storage container set- permission -n CONTAINER_NAME --public-access blob/container/off`.",
+    "parameters": [
+      {
+        "name": "--name",
+        "aliases": [
+          "-n"
+        ],
+        "required": true,
+        "group": "Required Parameters",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "string",
+        "help": "The container name.",
+        "choices": null,
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--auth-mode",
+        "aliases": [],
+        "required": false,
+        "group": "Optional Parameters",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "enum",
+        "help": "The mode in which to run the command. \"login\" mode will directly use your login credentials for the authentication. The legacy \"key\" mode will attempt to query for an account key if no authentication parameters for the account are provided. Environment variable: AZURE_STORAGE_AUTH_MODE.",
+        "choices": [
+          "key",
+          "login"
+        ],
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--fail-on-exist",
+        "aliases": [],
+        "required": false,
+        "group": "Optional Parameters",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "string",
+        "help": "Throw an exception if the container already exists.",
+        "choices": null,
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--metadata",
+        "aliases": [],
+        "required": false,
+        "group": "Optional Parameters",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "keyvalue",
+        "help": "Metadata in space-separated key=value pairs. This overwrites any existing metadata.",
+        "choices": null,
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--public-access",
+        "aliases": [],
+        "required": false,
+        "group": "Optional Parameters",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "enum",
+        "help": "Specifies whether data in the container may be accessed publicly.",
+        "choices": [
+          "blob",
+          "container",
+          "off"
+        ],
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--resource-group",
+        "aliases": [
+          "-g"
+        ],
+        "required": false,
+        "group": "Optional Parameters",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "string",
+        "help": "Name of resource group. You can configure the default group using `az configure --defaults group=<name>`. WARNING: Argument 'resource_group_name' has been deprecated and will be removed in a future release.",
+        "choices": null,
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--timeout",
+        "aliases": [],
+        "required": false,
+        "group": "Optional Parameters",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "string",
+        "help": "Request timeout in seconds. Applies to each call to the service.",
+        "choices": null,
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--default-encryption-scope",
+        "aliases": [
+          "-d"
+        ],
+        "required": false,
+        "group": "Encryption Policy Arguments",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "string",
+        "help": "Default the container to use specified encryption scope for all writes. WARNING: Argument '--default-encryption-scope' is in preview and under development. Reference and support levels: https://aka.ms/CLI_refstatus",
+        "choices": null,
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--prevent-encryption-scope-override",
+        "aliases": [
+          "-p"
+        ],
+        "required": false,
+        "group": "Encryption Policy Arguments",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "bool",
+        "help": "Block override of encryption scope from the container default. WARNING: Argument '--prevent-encryption-scope-override' is in preview and under development. Reference and support levels: https://aka.ms/CLI_refstatus",
+        "choices": [
+          "false",
+          "true"
+        ],
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--acquire-policy-token",
+        "aliases": [],
+        "required": false,
+        "group": "Global Policy Arguments",
+        "global": true,
+        "takes_value": true,
+        "value_kind": "string",
+        "help": "Acquiring an Azure Policy token automatically for this resource operation.",
+        "choices": null,
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--change-reference",
+        "aliases": [],
+        "required": false,
+        "group": "Global Policy Arguments",
+        "global": true,
+        "takes_value": true,
+        "value_kind": "string",
+        "help": "The related change reference ID for this resource operation.",
+        "choices": null,
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--account-key",
+        "aliases": [],
+        "required": false,
+        "group": "Storage Account Arguments",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "string",
+        "help": "Storage account key. Must be used in conjunction with storage account name or service endpoint. Environment variable: AZURE_STORAGE_KEY.",
+        "choices": null,
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--account-name",
+        "aliases": [],
+        "required": false,
+        "group": "Storage Account Arguments",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "string",
+        "help": "Storage account name. Related environment variable: AZURE_STORAGE_ACCOUNT.",
+        "choices": null,
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--blob-endpoint",
+        "aliases": [],
+        "required": false,
+        "group": "Storage Account Arguments",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "string",
+        "help": "Storage data service endpoint. Must be used in conjunction with either storage account key or a SAS token. You can find each service primary endpoint with `az storage account show`. Environment variable: AZURE_STORAGE_SERVICE_ENDPOINT.",
+        "choices": null,
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--connection-string",
+        "aliases": [],
+        "required": false,
+        "group": "Storage Account Arguments",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "string",
+        "help": "Storage account connection string. Environment variable: AZURE_STORAGE_CONNECTION_STRING.",
+        "choices": null,
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--sas-token",
+        "aliases": [],
+        "required": false,
+        "group": "Storage Account Arguments",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "string",
+        "help": "A Shared Access Signature (SAS). Must be used in conjunction with storage account name or service endpoint. Environment variable: AZURE_STORAGE_SAS_TOKEN.",
+        "choices": null,
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--debug",
+        "aliases": [],
+        "required": false,
+        "group": "Global Arguments",
+        "global": true,
+        "takes_value": false,
+        "value_kind": "bool",
+        "help": "Increase logging verbosity to show all debug logs.",
+        "choices": null,
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--help",
+        "aliases": [
+          "-h"
+        ],
+        "required": false,
+        "group": "Global Arguments",
+        "global": true,
+        "takes_value": false,
+        "value_kind": "bool",
+        "help": "Show this help message and exit.",
+        "choices": null,
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--only-show-errors",
+        "aliases": [],
+        "required": false,
+        "group": "Global Arguments",
+        "global": true,
+        "takes_value": false,
+        "value_kind": "bool",
+        "help": "Only show errors, suppressing warnings.",
+        "choices": null,
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--output",
+        "aliases": [
+          "-o"
+        ],
+        "required": false,
+        "group": "Global Arguments",
+        "global": true,
+        "takes_value": true,
+        "value_kind": "enum",
+        "help": "Output format.",
+        "choices": [
+          "json",
+          "jsonc",
+          "none",
+          "table",
+          "tsv",
+          "yaml",
+          "yamlc"
+        ],
+        "default": "json",
+        "values_from": null
+      },
+      {
+        "name": "--query",
+        "aliases": [],
+        "required": false,
+        "group": "Global Arguments",
+        "global": true,
+        "takes_value": true,
+        "value_kind": "string",
+        "help": "JMESPath query string. See http://jmespath.org/ for more information and examples.",
+        "choices": null,
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--subscription",
+        "aliases": [],
+        "required": false,
+        "group": "Global Arguments",
+        "global": true,
+        "takes_value": true,
+        "value_kind": "string",
+        "help": "Name or ID of subscription. You can configure the default subscription using `az account set -s NAME_OR_ID`.",
+        "choices": null,
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--verbose",
+        "aliases": [],
+        "required": false,
+        "group": "Global Arguments",
+        "global": true,
+        "takes_value": false,
+        "value_kind": "bool",
+        "help": "Increase logging verbosity. Use --debug for full debug logs.",
+        "choices": null,
+        "default": null,
+        "values_from": null
+      }
+    ]
+  }
+}

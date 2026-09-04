@@ -1,0 +1,1200 @@
+{
+  "kind": "command",
+  "parse_health": {
+    "params": 76,
+    "unparsed_lines": 0,
+    "sections_ok": true
+  },
+  "command": {
+    "command": "storage account create",
+    "summary": "Create a storage account. The SKU of the storage account defaults to 'Standard_RAGRS'.",
+    "parameters": [
+      {
+        "name": "--name",
+        "aliases": [
+          "-n"
+        ],
+        "required": true,
+        "group": "Required Parameters",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "string",
+        "help": "The storage account name.",
+        "choices": null,
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--resource-group",
+        "aliases": [
+          "-g"
+        ],
+        "required": true,
+        "group": "Required Parameters",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "string",
+        "help": "Name of resource group. You can configure the default group using `az configure --defaults group=<name>`.",
+        "choices": null,
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--access-tier",
+        "aliases": [],
+        "required": false,
+        "group": "Optional Parameters",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "enum",
+        "help": "Required for storage accounts where kind = BlobStorage. The access tier is used for billing. The \"Premium\" access tier is the default value for premium block blobs storage account type and it cannot be changed for the premium block blobs storage account type.",
+        "choices": [
+          "Cold",
+          "Cool",
+          "Hot",
+          "Premium",
+          "Smart"
+        ],
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--allow-blob-public-access",
+        "aliases": [],
+        "required": false,
+        "group": "Optional Parameters",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "bool",
+        "help": "Allow or disallow public access to all blobs or containers in the storage account. If not specified, the default value is false for new accounts to follow best security practices. When true, containers in the account may be configured for public access. Note that setting this property to true does not enable anonymous access to any data in the account. The additional step of configuring the public access setting for a container is required to enable anonymous access.",
+        "choices": [
+          "false",
+          "true"
+        ],
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--allow-cross-tenant-replication",
+        "aliases": [
+          "-r"
+        ],
+        "required": false,
+        "group": "Optional Parameters",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "bool",
+        "help": "Allow or disallow cross AAD tenant object replication. Set this property to true for new or existing accounts only if object replication policies will involve storage accounts in different AAD tenants. If not specified, the default value is false for new accounts to follow best security practices.",
+        "choices": [
+          "false",
+          "true"
+        ],
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--allow-shared-key-access",
+        "aliases": [
+          "-k"
+        ],
+        "required": false,
+        "group": "Optional Parameters",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "bool",
+        "help": "Indicate whether the storage account permits requests to be authorized with the account access key via Shared Key. If false, then all requests, including shared access signatures, must be authorized with Azure Active Directory (Azure AD). The default value is null, which is equivalent to true.",
+        "choices": [
+          "false",
+          "true"
+        ],
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--allowed-copy-scope",
+        "aliases": [],
+        "required": false,
+        "group": "Optional Parameters",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "enum",
+        "help": "Restrict copy to and from Storage Accounts within an AAD tenant or with Private Links to the same VNet.",
+        "choices": [
+          "AAD",
+          "All",
+          "PrivateLink"
+        ],
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--assign-identity",
+        "aliases": [],
+        "required": false,
+        "group": "Optional Parameters",
+        "global": false,
+        "takes_value": false,
+        "value_kind": "bool",
+        "help": "Generate and assign a new Storage Account Identity for this storage account for use with key management services like Azure KeyVault.",
+        "choices": null,
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--blob-geo-sla",
+        "aliases": [
+          "--enable-blob-geo-priority-replication"
+        ],
+        "required": false,
+        "group": "Optional Parameters",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "bool",
+        "help": "Indicates whether Blob Geo Priority Replication is enabled for the storage account.",
+        "choices": [
+          "false",
+          "true"
+        ],
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--custom-domain",
+        "aliases": [],
+        "required": false,
+        "group": "Optional Parameters",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "string",
+        "help": "User domain assigned to the storage account. Name is the CNAME source.",
+        "choices": null,
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--dns-endpoint-type",
+        "aliases": [
+          "--endpoint"
+        ],
+        "required": false,
+        "group": "Optional Parameters",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "enum",
+        "help": "Allow you to specify the type of endpoint. Set this to AzureDNSZone to create a large number of accounts in a single subscription, which creates accounts in an Azure DNS Zone and the endpoint URL will have an alphanumeric DNS Zone identifier.",
+        "choices": [
+          "AzureDnsZone",
+          "Standard"
+        ],
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--edge-zone",
+        "aliases": [],
+        "required": false,
+        "group": "Optional Parameters",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "string",
+        "help": "The name of edge zone.",
+        "choices": null,
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--enable-hierarchical-namespace",
+        "aliases": [
+          "--hns"
+        ],
+        "required": false,
+        "group": "Optional Parameters",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "bool",
+        "help": "Allow the blob service to exhibit filesystem semantics. This property can be enabled only when storage account kind is StorageV2.",
+        "choices": [
+          "false",
+          "true"
+        ],
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--enable-large-file-share",
+        "aliases": [],
+        "required": false,
+        "group": "Optional Parameters",
+        "global": false,
+        "takes_value": false,
+        "value_kind": "bool",
+        "help": "Enable the capability to support large file shares with more than 5 TiB capacity for storage account.Once the property is enabled, the feature cannot be disabled. Currently only supported for LRS and ZRS replication types, hence account conversions to geo-redundant accounts would not be possible. For more information, please refer to https://go.microsoft. com/fwlink/?linkid=2086047.",
+        "choices": null,
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--enable-local-user",
+        "aliases": [],
+        "required": false,
+        "group": "Optional Parameters",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "bool",
+        "help": "Enable local user features.",
+        "choices": [
+          "false",
+          "true"
+        ],
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--enable-nfs-v3",
+        "aliases": [],
+        "required": false,
+        "group": "Optional Parameters",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "bool",
+        "help": "NFS 3.0 protocol support enabled if sets to true.",
+        "choices": [
+          "false",
+          "true"
+        ],
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--enable-sftp",
+        "aliases": [],
+        "required": false,
+        "group": "Optional Parameters",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "bool",
+        "help": "Enable Secure File Transfer Protocol.",
+        "choices": [
+          "false",
+          "true"
+        ],
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--encryption-key-type-for-queue",
+        "aliases": [
+          "-q"
+        ],
+        "required": false,
+        "group": "Optional Parameters",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "enum",
+        "help": "Set the encryption key type for Queue service. \"Account\": Queue will be encrypted with account-scoped encryption key. \"Service\": Queue will always be encrypted with service- scoped keys. Currently the default encryption key type is \"Service\".",
+        "choices": [
+          "Account",
+          "Service"
+        ],
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--encryption-key-type-for-table",
+        "aliases": [
+          "-t"
+        ],
+        "required": false,
+        "group": "Optional Parameters",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "enum",
+        "help": "Set the encryption key type for Table service. \"Account\": Table will be encrypted with account-scoped encryption key. \"Service\": Table will always be encrypted with service- scoped keys. Currently the default encryption key type is \"Service\".",
+        "choices": [
+          "Account",
+          "Service"
+        ],
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--encryption-services",
+        "aliases": [],
+        "required": false,
+        "group": "Optional Parameters",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "enum",
+        "help": "Specifies which service(s) to encrypt.",
+        "choices": [
+          "blob",
+          "file",
+          "queue",
+          "table"
+        ],
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--https-only",
+        "aliases": [],
+        "required": false,
+        "group": "Optional Parameters",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "bool",
+        "help": "Allow https traffic only to storage service if set to true. The default value is true.",
+        "choices": [
+          "false",
+          "true"
+        ],
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--key-exp-days",
+        "aliases": [
+          "--key-expiration-period-in-days"
+        ],
+        "required": false,
+        "group": "Optional Parameters",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "string",
+        "help": "Expiration period in days of the Key Policy assigned to the storage account. WARNING: Argument '--key-expiration-period-in-days' is in preview and under development. Reference and support levels: https://aka.ms/CLI_refstatus",
+        "choices": null,
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--kind",
+        "aliases": [],
+        "required": false,
+        "group": "Optional Parameters",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "enum",
+        "help": "Indicate the type of storage account.",
+        "choices": [
+          "BlobStorage",
+          "BlockBlobStorage",
+          "FileStorage",
+          "Storage",
+          "StorageV2"
+        ],
+        "default": "StorageV2",
+        "values_from": null
+      },
+      {
+        "name": "--location",
+        "aliases": [
+          "-l"
+        ],
+        "required": false,
+        "group": "Optional Parameters",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "string",
+        "help": "Location. You can configure the default location using `az configure --defaults location=<location>`.",
+        "choices": null,
+        "default": null,
+        "values_from": "az account list-locations"
+      },
+      {
+        "name": "--min-tls-version",
+        "aliases": [],
+        "required": false,
+        "group": "Optional Parameters",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "enum",
+        "help": "The minimum TLS version to be permitted on requests to storage. TLS1_3 is not yet supported. Microsoft recommends setting MinimumTlsVersion to TLS1_2.",
+        "choices": [
+          "TLS1_0",
+          "TLS1_1",
+          "TLS1_2",
+          "TLS1_3"
+        ],
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--public-network-access",
+        "aliases": [],
+        "required": false,
+        "group": "Optional Parameters",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "enum",
+        "help": "Enable or disable public network access to the storage account.",
+        "choices": [
+          "Disabled",
+          "Enabled",
+          "SecuredByPerimeter"
+        ],
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--require-infrastructure-encryption",
+        "aliases": [
+          "-i"
+        ],
+        "required": false,
+        "group": "Optional Parameters",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "bool",
+        "help": "A boolean indicating whether or not the service applies a secondary layer of encryption with platform managed keys for data at rest.",
+        "choices": [
+          "false",
+          "true"
+        ],
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--sas-exp",
+        "aliases": [
+          "--sas-expiration-period"
+        ],
+        "required": false,
+        "group": "Optional Parameters",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "string",
+        "help": "Expiration period of the SAS Policy assigned to the storage account, DD.HH:MM:SS.",
+        "choices": null,
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--sas-exp-action",
+        "aliases": [
+          "--sas-expiration-action"
+        ],
+        "required": false,
+        "group": "Optional Parameters",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "enum",
+        "help": "The action to be performed when --sas-expiration-period is violated. The 'Log' action can be used for audit purposes and the 'Block' action can be used to block and deny the usage of SAS tokens that do not adhere to the sas policy expiration period. The default action is 'Log'.",
+        "choices": [
+          "Block",
+          "Log"
+        ],
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--sku",
+        "aliases": [],
+        "required": false,
+        "group": "Optional Parameters",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "enum",
+        "help": "The storage account SKU.",
+        "choices": [
+          "PremiumV2_LRS",
+          "PremiumV2_ZRS",
+          "Premium_LRS",
+          "Premium_ZRS",
+          "StandardV2_GRS",
+          "StandardV2_GZRS",
+          "StandardV2_LRS",
+          "StandardV2_ZRS",
+          "Standard_GRS",
+          "Standard_GZRS",
+          "Standard_LRS",
+          "Standard_RAGRS",
+          "Standard_RAGZRS",
+          "Standard_ZRS"
+        ],
+        "default": "Standard_RAGRS",
+        "values_from": null
+      },
+      {
+        "name": "--tags",
+        "aliases": [],
+        "required": false,
+        "group": "Optional Parameters",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "keyvalue",
+        "help": "Space-separated tags: key[=value] [key[=value]...]. Use '' to clear existing tags.",
+        "choices": null,
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--zone-placement-policy",
+        "aliases": [],
+        "required": false,
+        "group": "Optional Parameters",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "enum",
+        "help": "The availability zone pinning policy for the storage account.",
+        "choices": [
+          "Any",
+          "None"
+        ],
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--zones",
+        "aliases": [],
+        "required": false,
+        "group": "Optional Parameters",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "string",
+        "help": "Describes the available zones for the product where storage account resource can be created.",
+        "choices": null,
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--allow-append",
+        "aliases": [
+          "--allow-protected-append-writes",
+          "-w"
+        ],
+        "required": false,
+        "group": "Account Level Immutability Arguments",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "bool",
+        "help": "This property can only be changed for disabled and unlocked time-based retention policies. When enabled, new blocks can be written to an append blob while maintaining immutability protection and compliance. Only new blocks can be added and any existing blocks cannot be modified or deleted.",
+        "choices": [
+          "false",
+          "true"
+        ],
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--enable-alw",
+        "aliases": [],
+        "required": false,
+        "group": "Account Level Immutability Arguments",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "bool",
+        "help": "The account level immutability property. The property is immutable and can only be set to true at the account creation time. When set to true, it enables object level immutability for all the containers in the account by default.",
+        "choices": [
+          "false",
+          "true"
+        ],
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--immutability-period",
+        "aliases": [
+          "--immutability-period-in-days"
+        ],
+        "required": false,
+        "group": "Account Level Immutability Arguments",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "string",
+        "help": "The immutability period for the blobs in the container since the policy creation, in days.",
+        "choices": null,
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--immutability-state",
+        "aliases": [],
+        "required": false,
+        "group": "Account Level Immutability Arguments",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "enum",
+        "help": "Defines the mode of the policy. Disabled state disables the policy, Unlocked state allows increase and decrease of immutability retention time and also allows toggling allow- protected-append-write property, Locked state only allows the increase of the immutability retention time. A policy can only be created in a Disabled or Unlocked state and can be toggled between the two states. Only a policy in an Unlocked state can transition to a Locked state which cannot be reverted.",
+        "choices": [
+          "Disabled",
+          "Locked",
+          "Unlocked"
+        ],
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--account-type",
+        "aliases": [],
+        "required": false,
+        "group": "Azure Active Directory Properties Arguments",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "enum",
+        "help": "Specify the Active Directory account type for Azure Storage.",
+        "choices": [
+          "Computer",
+          "User"
+        ],
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--azure-storage-sid",
+        "aliases": [],
+        "required": false,
+        "group": "Azure Active Directory Properties Arguments",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "string",
+        "help": "Specify the security identifier (SID) for Azure Storage. Required when --enable-files-adds is set to True.",
+        "choices": null,
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--domain-guid",
+        "aliases": [],
+        "required": false,
+        "group": "Azure Active Directory Properties Arguments",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "string",
+        "help": "Specify the domain GUID. Required when --enable-files-adds is set to True.",
+        "choices": null,
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--domain-name",
+        "aliases": [],
+        "required": false,
+        "group": "Azure Active Directory Properties Arguments",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "string",
+        "help": "Specify the primary domain that the AD DNS server is authoritative for. Required when --enable-files-adds is set to True.",
+        "choices": null,
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--domain-sid",
+        "aliases": [],
+        "required": false,
+        "group": "Azure Active Directory Properties Arguments",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "string",
+        "help": "Specify the security identifier (SID). Required when --enable-files- adds is set to True.",
+        "choices": null,
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--forest-name",
+        "aliases": [],
+        "required": false,
+        "group": "Azure Active Directory Properties Arguments",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "string",
+        "help": "Specify the Active Directory forest to get. Required when --enable-files- adds is set to True.",
+        "choices": null,
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--net-bios-domain-name",
+        "aliases": [],
+        "required": false,
+        "group": "Azure Active Directory Properties Arguments",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "string",
+        "help": "Specify the NetBIOS domain name. Required when --enable-files-adds is set to True.",
+        "choices": null,
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--sam-account-name",
+        "aliases": [],
+        "required": false,
+        "group": "Azure Active Directory Properties Arguments",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "string",
+        "help": "Specify the Active Directory SAMAccountName for Azure Storage.",
+        "choices": null,
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--default-share-permission",
+        "aliases": [
+          "-d"
+        ],
+        "required": false,
+        "group": "Azure Files Identity Based Authentication Arguments",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "enum",
+        "help": "Default share permission for users using Kerberos authentication if RBAC role is not assigned.",
+        "choices": [
+          "None",
+          "StorageFileDataSmbShareContributor",
+          "S torageFileDataSmbShareElevatedContrib utor",
+          "StorageFileDataSmbShareReader"
+        ],
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--enable-files-aadds",
+        "aliases": [],
+        "required": false,
+        "group": "Azure Files Identity Based Authentication Arguments",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "bool",
+        "help": "Enable Azure Active Directory Domain Services authentication for Azure Files.",
+        "choices": [
+          "false",
+          "true"
+        ],
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--enable-files-aadkerb",
+        "aliases": [],
+        "required": false,
+        "group": "Azure Files Identity Based Authentication Arguments",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "bool",
+        "help": "Enable Azure Files Active Directory Domain Service Kerberos Authentication for the storage account.",
+        "choices": [
+          "false",
+          "true"
+        ],
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--enable-files-adds",
+        "aliases": [],
+        "required": false,
+        "group": "Azure Files Identity Based Authentication Arguments",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "bool",
+        "help": "Enable Azure Files Active Directory Domain Service Authentication for storage account. When --enable-files- adds is set to true, Azure Active Directory Properties arguments must be provided.",
+        "choices": [
+          "false",
+          "true"
+        ],
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--enable-smb-oauth",
+        "aliases": [],
+        "required": false,
+        "group": "Azure Files Identity Based Authentication Arguments",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "bool",
+        "help": "Specifies if managed identities can access SMB shares using OAuth. The default interpretation is false for this property.",
+        "choices": [
+          "false",
+          "true"
+        ],
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--encryption-key-name",
+        "aliases": [],
+        "required": false,
+        "group": "Customer managed key Arguments",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "string",
+        "help": "The name of the KeyVault key.",
+        "choices": null,
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--encryption-key-source",
+        "aliases": [],
+        "required": false,
+        "group": "Customer managed key Arguments",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "enum",
+        "help": "The default encryption key source.",
+        "choices": [
+          "Microsoft.Keyvault",
+          "Microsoft.Storage"
+        ],
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--encryption-key-vault",
+        "aliases": [],
+        "required": false,
+        "group": "Customer managed key Arguments",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "string",
+        "help": "The Uri of the KeyVault.",
+        "choices": null,
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--encryption-key-version",
+        "aliases": [],
+        "required": false,
+        "group": "Customer managed key Arguments",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "string",
+        "help": "The version of the KeyVault key to use, which will opt out of implicit key rotation. Please use \"\" to opt in key auto-rotation again.",
+        "choices": null,
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--key-vault-federated-client-id",
+        "aliases": [
+          "-f"
+        ],
+        "required": false,
+        "group": "Customer managed key Arguments",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "string",
+        "help": "ClientId of the multi-tenant application to be used in conjunction with the user-assigned identity for cross-tenant customer-managed-keys server-side encryption on the storage account.",
+        "choices": null,
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--key-vault-user-identity-id",
+        "aliases": [
+          "-u"
+        ],
+        "required": false,
+        "group": "Customer managed key Arguments",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "string",
+        "help": "Resource identifier of the UserAssigned identity to be associated with server-side encryption on the storage account.",
+        "choices": null,
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--acquire-policy-token",
+        "aliases": [],
+        "required": false,
+        "group": "Global Policy Arguments",
+        "global": true,
+        "takes_value": true,
+        "value_kind": "string",
+        "help": "Acquiring an Azure Policy token automatically for this resource operation.",
+        "choices": null,
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--change-reference",
+        "aliases": [],
+        "required": false,
+        "group": "Global Policy Arguments",
+        "global": true,
+        "takes_value": true,
+        "value_kind": "string",
+        "help": "The related change reference ID for this resource operation.",
+        "choices": null,
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--publish-ipv6-endpoint",
+        "aliases": [],
+        "required": false,
+        "group": "IPv6 Endpoint Arguments",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "bool",
+        "help": "A boolean flag which indicates whether IPv6 storage endpoints are to be published. WARNING: Argument '--publish-ipv6-endpoint' is in preview and under development. Reference and support levels: https://aka.ms/CLI_refstatus",
+        "choices": [
+          "false",
+          "true"
+        ],
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--identity-type",
+        "aliases": [],
+        "required": false,
+        "group": "Identity Arguments",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "enum",
+        "help": "The identity type.",
+        "choices": [
+          "None",
+          "SystemAssigned",
+          "UserAssigned"
+        ],
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--user-identity-id",
+        "aliases": [],
+        "required": false,
+        "group": "Identity Arguments",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "string",
+        "help": "The key is the ARM resource identifier of the identity. Only 1 User Assigned identity is permitted here.",
+        "choices": null,
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--action",
+        "aliases": [],
+        "required": false,
+        "group": "Network Rule Arguments",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "string",
+        "help": "The action of virtual network rule. Possible value is Allow.",
+        "choices": null,
+        "default": "Allow",
+        "values_from": null
+      },
+      {
+        "name": "--bypass",
+        "aliases": [],
+        "required": false,
+        "group": "Network Rule Arguments",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "enum",
+        "help": "Bypass traffic for space-separated uses.",
+        "choices": [
+          "AzureServices",
+          "Logging",
+          "Metrics",
+          "None"
+        ],
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--default-action",
+        "aliases": [],
+        "required": false,
+        "group": "Network Rule Arguments",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "enum",
+        "help": "Default action to apply when no rule matches.",
+        "choices": [
+          "Allow",
+          "Deny"
+        ],
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--subnet",
+        "aliases": [],
+        "required": false,
+        "group": "Network Rule Arguments",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "string",
+        "help": "Name or ID of subnet. If name is supplied, `--vnet-name` must be supplied.",
+        "choices": null,
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--vnet-name",
+        "aliases": [],
+        "required": false,
+        "group": "Network Rule Arguments",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "string",
+        "help": "Name of a virtual network.",
+        "choices": null,
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--publish-internet-endpoints",
+        "aliases": [],
+        "required": false,
+        "group": "Routing Preference Arguments",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "bool",
+        "help": "A boolean flag which indicates whether internet routing storage endpoints are to be published.",
+        "choices": [
+          "false",
+          "true"
+        ],
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--publish-microsoft-endpoints",
+        "aliases": [],
+        "required": false,
+        "group": "Routing Preference Arguments",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "bool",
+        "help": "A boolean flag which indicates whether microsoft routing storage endpoints are to be published.",
+        "choices": [
+          "false",
+          "true"
+        ],
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--routing-choice",
+        "aliases": [],
+        "required": false,
+        "group": "Routing Preference Arguments",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "enum",
+        "help": "Routing Choice defines the kind of network routing opted by the user.",
+        "choices": [
+          "InternetRouting",
+          "MicrosoftRouting"
+        ],
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--debug",
+        "aliases": [],
+        "required": false,
+        "group": "Global Arguments",
+        "global": true,
+        "takes_value": false,
+        "value_kind": "bool",
+        "help": "Increase logging verbosity to show all debug logs.",
+        "choices": null,
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--help",
+        "aliases": [
+          "-h"
+        ],
+        "required": false,
+        "group": "Global Arguments",
+        "global": true,
+        "takes_value": false,
+        "value_kind": "bool",
+        "help": "Show this help message and exit.",
+        "choices": null,
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--only-show-errors",
+        "aliases": [],
+        "required": false,
+        "group": "Global Arguments",
+        "global": true,
+        "takes_value": false,
+        "value_kind": "bool",
+        "help": "Only show errors, suppressing warnings.",
+        "choices": null,
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--output",
+        "aliases": [
+          "-o"
+        ],
+        "required": false,
+        "group": "Global Arguments",
+        "global": true,
+        "takes_value": true,
+        "value_kind": "enum",
+        "help": "Output format.",
+        "choices": [
+          "json",
+          "jsonc",
+          "none",
+          "table",
+          "tsv",
+          "yaml",
+          "yamlc"
+        ],
+        "default": "json",
+        "values_from": null
+      },
+      {
+        "name": "--query",
+        "aliases": [],
+        "required": false,
+        "group": "Global Arguments",
+        "global": true,
+        "takes_value": true,
+        "value_kind": "string",
+        "help": "JMESPath query string. See http://jmespath.org/ for more information and examples.",
+        "choices": null,
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--subscription",
+        "aliases": [],
+        "required": false,
+        "group": "Global Arguments",
+        "global": true,
+        "takes_value": true,
+        "value_kind": "string",
+        "help": "Name or ID of subscription. You can configure the default subscription using `az account set -s NAME_OR_ID`.",
+        "choices": null,
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--verbose",
+        "aliases": [],
+        "required": false,
+        "group": "Global Arguments",
+        "global": true,
+        "takes_value": false,
+        "value_kind": "bool",
+        "help": "Increase logging verbosity. Use --debug for full debug logs.",
+        "choices": null,
+        "default": null,
+        "values_from": null
+      }
+    ]
+  }
+}

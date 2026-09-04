@@ -1,0 +1,457 @@
+{
+  "kind": "command",
+  "parse_health": {
+    "params": 30,
+    "unparsed_lines": 0,
+    "sections_ok": true
+  },
+  "command": {
+    "command": "redis create",
+    "summary": "Create new Redis Cache instance.",
+    "parameters": [
+      {
+        "name": "--location",
+        "aliases": [
+          "-l"
+        ],
+        "required": true,
+        "group": "Required Parameters",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "string",
+        "help": "Location. You can configure the default location using `az configure --defaults location=<location>`.",
+        "choices": null,
+        "default": null,
+        "values_from": "az account list- locations"
+      },
+      {
+        "name": "--name",
+        "aliases": [
+          "-n"
+        ],
+        "required": true,
+        "group": "Required Parameters",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "string",
+        "help": "Name of the Redis cache.",
+        "choices": null,
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--resource-group",
+        "aliases": [
+          "-g"
+        ],
+        "required": true,
+        "group": "Required Parameters",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "string",
+        "help": "Name of resource group. You can configure the default group using `az configure --defaults group=<name>`.",
+        "choices": null,
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--sku",
+        "aliases": [],
+        "required": true,
+        "group": "Required Parameters",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "enum",
+        "help": "Type of Redis cache.",
+        "choices": [
+          "Basic",
+          "Premium",
+          "Standard"
+        ],
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--vm-size",
+        "aliases": [],
+        "required": true,
+        "group": "Required Parameters",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "enum",
+        "help": "Size of Redis cache to deploy. Basic and Standard Cache sizes start with C. Premium Cache sizes start with P.",
+        "choices": [
+          "c0",
+          "c1",
+          "c2",
+          "c3",
+          "c4",
+          "c5",
+          "c6",
+          "p1",
+          "p2",
+          "p3",
+          "p4",
+          "p5"
+        ],
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--disable-access-keys",
+        "aliases": [],
+        "required": false,
+        "group": "Optional Parameters",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "bool",
+        "help": "Authentication to Redis through access keys is disabled when set as true.",
+        "choices": [
+          "false",
+          "true"
+        ],
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--enable-non-ssl-port",
+        "aliases": [],
+        "required": false,
+        "group": "Optional Parameters",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "string",
+        "help": "If specified, then the non-ssl redis server port (6379) will be enabled.",
+        "choices": null,
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--mi-system-assigned",
+        "aliases": [],
+        "required": false,
+        "group": "Optional Parameters",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "string",
+        "help": "Flag to specify system assigned identity.",
+        "choices": null,
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--mi-user-assigned",
+        "aliases": [],
+        "required": false,
+        "group": "Optional Parameters",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "list",
+        "help": "One or more space separated resource IDs of user assigned identities.",
+        "choices": null,
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--minimum-tls-version",
+        "aliases": [],
+        "required": false,
+        "group": "Optional Parameters",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "enum",
+        "help": "Specifies the TLS version required by clients to connect to cache.",
+        "choices": [
+          "1.0",
+          "1.1",
+          "1.2"
+        ],
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--redis-configuration",
+        "aliases": [],
+        "required": false,
+        "group": "Optional Parameters",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "string",
+        "help": "A json file used to set redis-configuration settings. You may encounter parse errors if the json file is invalid. Usage: --redis-configuration @\"{config_file.json}\" An example json file for configuring max-memory policies [ { \"maxmemory-policy\": \"allkeys-lru\" } ] An example json file for enabling the RDB back up data persistence is [ { \"rdb-storage-connection-string\": \"DefaultEndpointsProtocol=https;AccountName=mystorageac count;AccountKey=myAccountKey;EndpointSuffix=core.windows.net\", \"rdb-backup-enabled\": \"true\", \"rdb-backup-frequency\": \"15\", \"rdb-backup-max-snapshot-count\": \"1\" } ] An example json file for enabling the AOF back up data persistence is [ { \"aof-backup-enabled\": \"true\", \"aof-storage-connection-string-0\": \"DefaultEndpointsProtocol=https;AccountName=mystorage account;AccountKey=myAccountKey;EndpointSuffix=core.windows.net\", \"aof-storage-connection-string-1\": \"DefaultEndpointsProtocol=https;AccountName=mystorage account;AccountKey=myAccountKey;EndpointSuffix=core.windows.net\" } ] The content for a json file for configuring Microsoft Entra Authentication is { \"aad-enabled\": \"true\", }.",
+        "choices": null,
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--redis-version",
+        "aliases": [],
+        "required": false,
+        "group": "Optional Parameters",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "string",
+        "help": "Redis version. This should be in the form 'major[.minor]' (only 'major' is required) or the value 'latest' which refers to the latest stable Redis version that is available. Supported versions: 4.0, 6.0 (latest). Default value is 'latest'.",
+        "choices": null,
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--replicas-per-master",
+        "aliases": [],
+        "required": false,
+        "group": "Optional Parameters",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "int",
+        "help": "The number of replicas to be created per master.",
+        "choices": null,
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--shard-count",
+        "aliases": [],
+        "required": false,
+        "group": "Optional Parameters",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "int",
+        "help": "The number of shards to be created on a Premium Cluster Cache.",
+        "choices": null,
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--static-ip",
+        "aliases": [],
+        "required": false,
+        "group": "Optional Parameters",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "string",
+        "help": "Specify a static ip if required for the VNET. If you do not specify a static IP then an IP address is chosen automatically.",
+        "choices": null,
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--subnet-id",
+        "aliases": [],
+        "required": false,
+        "group": "Optional Parameters",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "string",
+        "help": "The full resource ID of a subnet in a virtual network to deploy the redis cache in. Example format /subscriptions/{subid}/resourceGroups/{res ourceGroupName}/providers/Microsoft.{Network|Clas sicNetwork}/virtualNetworks/vnet1/subnets/subnet1.",
+        "choices": null,
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--tags",
+        "aliases": [],
+        "required": false,
+        "group": "Optional Parameters",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "keyvalue",
+        "help": "Space-separated tags: key[=value] [key[=value]...]. Use '' to clear existing tags.",
+        "choices": null,
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--tenant-settings",
+        "aliases": [],
+        "required": false,
+        "group": "Optional Parameters",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "keyvalue",
+        "help": "Space-separated tenant settings in key[=value] format.",
+        "choices": null,
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--update-channel",
+        "aliases": [],
+        "required": false,
+        "group": "Optional Parameters",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "enum",
+        "help": "Specifies the update channel for the monthly Redis updates your Redis Cache will receive. Caches using \"Preview\" update channel get latest Redis updates at least 4 weeks ahead of \"Stable\" channel caches. Default value is \"Stable\".",
+        "choices": [
+          "Preview",
+          "Stable"
+        ],
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--zonal-allocation",
+        "aliases": [
+          "--zonal-allocation-policy"
+        ],
+        "required": false,
+        "group": "Optional Parameters",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "enum",
+        "help": "Specifies how availability zones are allocated to the Redis cache. \"Automatic\" enables zone redundancy and Azure will automatically select zones based on regional availability and capacity. \"UserDefined\" will select availability zones passed in by you using the \"zones\" parameter. \"NoZones\" will produce a non-zonal cache. If \"zonal-allocation-policy\" is not passed, it will be set to \"UserDefined\" when zones are passed in, otherwise, it will be set to \"Automatic in regions where zones are supported and \"NoZones\" in regions where zones are not supported.",
+        "choices": [
+          "Automatic",
+          "NoZones",
+          "UserDefined"
+        ],
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--zones",
+        "aliases": [
+          "-z"
+        ],
+        "required": false,
+        "group": "Optional Parameters",
+        "global": false,
+        "takes_value": true,
+        "value_kind": "list",
+        "help": "Space-separated list of availability zones into which to provision the resource.",
+        "choices": null,
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--acquire-policy-token",
+        "aliases": [],
+        "required": false,
+        "group": "Global Policy Arguments",
+        "global": true,
+        "takes_value": true,
+        "value_kind": "string",
+        "help": "Acquiring an Azure Policy token automatically for this resource operation.",
+        "choices": null,
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--change-reference",
+        "aliases": [],
+        "required": false,
+        "group": "Global Policy Arguments",
+        "global": true,
+        "takes_value": true,
+        "value_kind": "string",
+        "help": "The related change reference ID for this resource operation.",
+        "choices": null,
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--debug",
+        "aliases": [],
+        "required": false,
+        "group": "Global Arguments",
+        "global": true,
+        "takes_value": false,
+        "value_kind": "bool",
+        "help": "Increase logging verbosity to show all debug logs.",
+        "choices": null,
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--help",
+        "aliases": [
+          "-h"
+        ],
+        "required": false,
+        "group": "Global Arguments",
+        "global": true,
+        "takes_value": false,
+        "value_kind": "bool",
+        "help": "Show this help message and exit.",
+        "choices": null,
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--only-show-errors",
+        "aliases": [],
+        "required": false,
+        "group": "Global Arguments",
+        "global": true,
+        "takes_value": false,
+        "value_kind": "bool",
+        "help": "Only show errors, suppressing warnings.",
+        "choices": null,
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--output",
+        "aliases": [
+          "-o"
+        ],
+        "required": false,
+        "group": "Global Arguments",
+        "global": true,
+        "takes_value": true,
+        "value_kind": "enum",
+        "help": "Output format.",
+        "choices": [
+          "json",
+          "jsonc",
+          "none",
+          "table",
+          "tsv",
+          "yaml",
+          "yamlc"
+        ],
+        "default": "json",
+        "values_from": null
+      },
+      {
+        "name": "--query",
+        "aliases": [],
+        "required": false,
+        "group": "Global Arguments",
+        "global": true,
+        "takes_value": true,
+        "value_kind": "string",
+        "help": "JMESPath query string. See http://jmespath.org/ for more information and examples.",
+        "choices": null,
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--subscription",
+        "aliases": [],
+        "required": false,
+        "group": "Global Arguments",
+        "global": true,
+        "takes_value": true,
+        "value_kind": "string",
+        "help": "Name or ID of subscription. You can configure the default subscription using `az account set -s NAME_OR_ID`.",
+        "choices": null,
+        "default": null,
+        "values_from": null
+      },
+      {
+        "name": "--verbose",
+        "aliases": [],
+        "required": false,
+        "group": "Global Arguments",
+        "global": true,
+        "takes_value": false,
+        "value_kind": "bool",
+        "help": "Increase logging verbosity. Use --debug for full debug logs.",
+        "choices": null,
+        "default": null,
+        "values_from": null
+      }
+    ]
+  }
+}

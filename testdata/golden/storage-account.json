@@ -1,0 +1,122 @@
+{
+  "kind": "group",
+  "parse_health": {
+    "params": 26,
+    "unparsed_lines": 0,
+    "sections_ok": true
+  },
+  "group": {
+    "group": "storage account",
+    "summary": "Manage storage accounts.",
+    "subgroups": [
+      {
+        "name": "blob-inventory-policy",
+        "summary": "Manage storage account Blob Inventory Policy.",
+        "preview": true
+      },
+      {
+        "name": "blob-service-properties",
+        "summary": "Manage the properties of a storage account's blob service."
+      },
+      {
+        "name": "encryption-scope",
+        "summary": "Manage encryption scope for a storage account."
+      },
+      {
+        "name": "file-service-properties",
+        "summary": "Manage the properties of file service in storage account."
+      },
+      {
+        "name": "hns-migration",
+        "summary": "Manage storage account migration to enable hierarchical namespace."
+      },
+      {
+        "name": "keys",
+        "summary": "Manage storage account keys."
+      },
+      {
+        "name": "local-user",
+        "summary": "Manage storage account local users."
+      },
+      {
+        "name": "management-policy",
+        "summary": "Manage storage account management policies."
+      },
+      {
+        "name": "migration",
+        "summary": "Manage Storage Account Migration."
+      },
+      {
+        "name": "network-rule",
+        "summary": "Manage network rules."
+      },
+      {
+        "name": "network-security-perimeter-configuration",
+        "summary": "Manage Network Security Perimeter Configuration."
+      },
+      {
+        "name": "or-policy",
+        "summary": "Manage storage account Object Replication Policy."
+      },
+      {
+        "name": "private-endpoint-connection",
+        "summary": "Manage storage account private endpoint connection.",
+        "preview": true
+      },
+      {
+        "name": "private-link-resource",
+        "summary": "Manage storage account private link resources."
+      }
+    ],
+    "commands": [
+      {
+        "name": "check-name",
+        "summary": "Check that the storage account name is valid and is not already in use."
+      },
+      {
+        "name": "create",
+        "summary": "Create a storage account."
+      },
+      {
+        "name": "delete",
+        "summary": "Delete a storage account."
+      },
+      {
+        "name": "failover",
+        "summary": "Failover request can be triggered for a storage account in case of availability issues."
+      },
+      {
+        "name": "file-service-usage",
+        "summary": "Get the usage of file service in storage account including account limits, file share limits and constants used in recommendations and bursting formula."
+      },
+      {
+        "name": "generate-sas",
+        "summary": "Generate a shared access signature for the storage account."
+      },
+      {
+        "name": "list",
+        "summary": "List storage accounts."
+      },
+      {
+        "name": "revoke-delegation-keys",
+        "summary": "Revoke all user delegation keys for a storage account."
+      },
+      {
+        "name": "show",
+        "summary": "Show storage account properties."
+      },
+      {
+        "name": "show-connection-string",
+        "summary": "Get the connection string for a storage account."
+      },
+      {
+        "name": "show-usage",
+        "summary": "Show the current count and limit of the storage accounts under the subscription."
+      },
+      {
+        "name": "update",
+        "summary": "Update the properties of a storage account."
+      }
+    ]
+  }
+}

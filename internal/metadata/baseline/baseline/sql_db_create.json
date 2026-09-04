@@ -1,0 +1,671 @@
+{
+  "schema_version": 1,
+  "command": "sql db create",
+  "summary": "Create a database. A full list of performance level options can be seen by executing `az sql db list-editions -a -o table -l LOCATION`.",
+  "az_version": "embedded",
+  "azform_version": "",
+  "source": "help-parser",
+  "generated_at": "2026-09-02T17:41:57.364225Z",
+  "parse_health": {
+    "params": 44,
+    "unparsed_lines": 0,
+    "sections_ok": true
+  },
+  "parameters": [
+    {
+      "name": "--name",
+      "aliases": [
+        "-n"
+      ],
+      "required": true,
+      "group": "Required Parameters",
+      "global": false,
+      "takes_value": true,
+      "value_kind": "string",
+      "help": "Name of the Azure SQL Database.",
+      "choices": null,
+      "default": null,
+      "values_from": null
+    },
+    {
+      "name": "--resource-group",
+      "aliases": [
+        "-g"
+      ],
+      "required": true,
+      "group": "Required Parameters",
+      "global": false,
+      "takes_value": true,
+      "value_kind": "string",
+      "help": "Name of resource group. You can configure the default group using `az configure --defaults group=\u003cname\u003e`.",
+      "choices": null,
+      "default": null,
+      "values_from": null
+    },
+    {
+      "name": "--server",
+      "aliases": [
+        "-s"
+      ],
+      "required": true,
+      "group": "Required Parameters",
+      "global": false,
+      "takes_value": true,
+      "value_kind": "string",
+      "help": "Name of the Azure SQL Server. You can configure the default using `az configure --defaults sql-server=\u003cname\u003e`.",
+      "choices": null,
+      "default": null,
+      "values_from": null
+    },
+    {
+      "name": "--assign-identity",
+      "aliases": [
+        "-i"
+      ],
+      "required": false,
+      "group": "Optional Parameters",
+      "global": false,
+      "takes_value": true,
+      "value_kind": "bool",
+      "help": "Assign identity for database.",
+      "choices": [
+        "false",
+        "true"
+      ],
+      "default": null,
+      "values_from": null
+    },
+    {
+      "name": "--availability-zone",
+      "aliases": [],
+      "required": false,
+      "group": "Optional Parameters",
+      "global": false,
+      "takes_value": true,
+      "value_kind": "string",
+      "help": "Availability zone.",
+      "choices": null,
+      "default": null,
+      "values_from": null
+    },
+    {
+      "name": "--backup-storage-redundancy",
+      "aliases": [
+        "--bsr"
+      ],
+      "required": false,
+      "group": "Optional Parameters",
+      "global": false,
+      "takes_value": true,
+      "value_kind": "string",
+      "help": "Backup storage redundancy used to store backups. Allowed values include: Local, Zone, Geo, GeoZone.",
+      "choices": null,
+      "default": null,
+      "values_from": null
+    },
+    {
+      "name": "--encryption-protector",
+      "aliases": [],
+      "required": false,
+      "group": "Optional Parameters",
+      "global": false,
+      "takes_value": true,
+      "value_kind": "string",
+      "help": "Specifies the Azure key vault key to be used as database encryption protector key.",
+      "choices": null,
+      "default": null,
+      "values_from": null
+    },
+    {
+      "name": "--encryption-protector-auto-rotation",
+      "aliases": [
+        "--epauto"
+      ],
+      "required": false,
+      "group": "Optional Parameters",
+      "global": false,
+      "takes_value": true,
+      "value_kind": "bool",
+      "help": "Specifies the database encryption protector key auto rotation flag. Can be either true, false or null.",
+      "choices": [
+        "false",
+        "true"
+      ],
+      "default": null,
+      "values_from": null
+    },
+    {
+      "name": "--exhaustion-behavior",
+      "aliases": [
+        "--fleb",
+        "--free-limit-exhaustion-behavior"
+      ],
+      "required": false,
+      "group": "Optional Parameters",
+      "global": false,
+      "takes_value": true,
+      "value_kind": "enum",
+      "help": "Specifies the behavior when monthly free limits are exhausted for the free database.AutoPause: The database will be auto paused upon exhaustion of free limits for remainder of the month.BillForUsage: The database will continue to be online upon exhaustion of free limitsand any overage will be billed.",
+      "choices": [
+        "AutoPause",
+        "BillOverUsage"
+      ],
+      "default": null,
+      "values_from": null
+    },
+    {
+      "name": "--federated-client-id",
+      "aliases": [],
+      "required": false,
+      "group": "Optional Parameters",
+      "global": false,
+      "takes_value": true,
+      "value_kind": "string",
+      "help": "The federated client id for the SQL Database. It is used for cross tenant CMK scenario.",
+      "choices": null,
+      "default": null,
+      "values_from": null
+    },
+    {
+      "name": "--free-limit",
+      "aliases": [
+        "--use-free-limit"
+      ],
+      "required": false,
+      "group": "Optional Parameters",
+      "global": false,
+      "takes_value": true,
+      "value_kind": "bool",
+      "help": "Whether or not the database uses free monthly limits. Allowed on one database in a subscription.",
+      "choices": [
+        "false",
+        "true"
+      ],
+      "default": null,
+      "values_from": null
+    },
+    {
+      "name": "--ha-replicas",
+      "aliases": [
+        "--read-replicas"
+      ],
+      "required": false,
+      "group": "Optional Parameters",
+      "global": false,
+      "takes_value": true,
+      "value_kind": "int",
+      "help": "The number of high availability replicas to provision for the database. Only settable for Hyperscale edition.",
+      "choices": null,
+      "default": null,
+      "values_from": null
+    },
+    {
+      "name": "--keys",
+      "aliases": [],
+      "required": false,
+      "group": "Optional Parameters",
+      "global": false,
+      "takes_value": true,
+      "value_kind": "list",
+      "help": "The list of AKV keys for the SQL Database.",
+      "choices": null,
+      "default": null,
+      "values_from": null
+    },
+    {
+      "name": "--ledger-on",
+      "aliases": [],
+      "required": false,
+      "group": "Optional Parameters",
+      "global": false,
+      "takes_value": true,
+      "value_kind": "enum",
+      "help": "Create a ledger database, in which the integrity of all data is protected by the ledger feature. All tables in the ledger database must be ledger tables. Note: the value of this property cannot be changed after the database has been created.",
+      "choices": [
+        "Disabled",
+        "Enabled"
+      ],
+      "default": null,
+      "values_from": null
+    },
+    {
+      "name": "--license-type",
+      "aliases": [],
+      "required": false,
+      "group": "Optional Parameters",
+      "global": false,
+      "takes_value": true,
+      "value_kind": "enum",
+      "help": "The license type to apply for this database.``LicenseIncluded`` if you need a license, or ``BasePrice``if you have a license and are eligible for the Azure HybridBenefit.",
+      "choices": [
+        "BasePrice",
+        "LicenseIncluded"
+      ],
+      "default": null,
+      "values_from": null
+    },
+    {
+      "name": "--maint-config-id",
+      "aliases": [
+        "-m"
+      ],
+      "required": false,
+      "group": "Optional Parameters",
+      "global": false,
+      "takes_value": true,
+      "value_kind": "string",
+      "help": "Specified maintenance configuration id or name for this resource.",
+      "choices": null,
+      "default": null,
+      "values_from": null
+    },
+    {
+      "name": "--max-size",
+      "aliases": [],
+      "required": false,
+      "group": "Optional Parameters",
+      "global": false,
+      "takes_value": true,
+      "value_kind": "string",
+      "help": "The max storage size. If no unit is specified, defaults to bytes (B).",
+      "choices": null,
+      "default": null,
+      "values_from": null
+    },
+    {
+      "name": "--no-wait",
+      "aliases": [],
+      "required": false,
+      "group": "Optional Parameters",
+      "global": false,
+      "takes_value": false,
+      "value_kind": "bool",
+      "help": "Do not wait for the long-running operation to finish.",
+      "choices": null,
+      "default": null,
+      "values_from": null
+    },
+    {
+      "name": "--preferred-enclave-type",
+      "aliases": [],
+      "required": false,
+      "group": "Optional Parameters",
+      "global": false,
+      "takes_value": true,
+      "value_kind": "enum",
+      "help": "Specifies type of enclave for this resource.",
+      "choices": [
+        "Default",
+        "VBS"
+      ],
+      "default": null,
+      "values_from": null
+    },
+    {
+      "name": "--read-scale",
+      "aliases": [],
+      "required": false,
+      "group": "Optional Parameters",
+      "global": false,
+      "takes_value": true,
+      "value_kind": "enum",
+      "help": "If enabled, connections that have application intent set to readonly in their connection string may be routed to a readonly secondary replica. This property is only settable for Premium and Business Critical databases.",
+      "choices": [
+        "Disabled",
+        "Enabled"
+      ],
+      "default": null,
+      "values_from": null
+    },
+    {
+      "name": "--tags",
+      "aliases": [],
+      "required": false,
+      "group": "Optional Parameters",
+      "global": false,
+      "takes_value": true,
+      "value_kind": "keyvalue",
+      "help": "Space-separated tags: key[=value] [key[=value]...]. Use '' to clear existing tags.",
+      "choices": null,
+      "default": null,
+      "values_from": null
+    },
+    {
+      "name": "--umi",
+      "aliases": [
+        "--user-assigned-identity-id"
+      ],
+      "required": false,
+      "group": "Optional Parameters",
+      "global": false,
+      "takes_value": true,
+      "value_kind": "list",
+      "help": "The list of user assigned identity for the SQL Database.",
+      "choices": null,
+      "default": null,
+      "values_from": null
+    },
+    {
+      "name": "--yes",
+      "aliases": [
+        "-y"
+      ],
+      "required": false,
+      "group": "Optional Parameters",
+      "global": false,
+      "takes_value": false,
+      "value_kind": "bool",
+      "help": "Do not prompt for confirmation.",
+      "choices": null,
+      "default": null,
+      "values_from": null
+    },
+    {
+      "name": "--zone-redundant",
+      "aliases": [
+        "-z"
+      ],
+      "required": false,
+      "group": "Optional Parameters",
+      "global": false,
+      "takes_value": true,
+      "value_kind": "bool",
+      "help": "Specifies whether to enable zone redundancy. Default is true if no value is specified.",
+      "choices": [
+        "false",
+        "true"
+      ],
+      "default": null,
+      "values_from": null
+    },
+    {
+      "name": "--catalog-collation",
+      "aliases": [],
+      "required": false,
+      "group": "Creation Arguments",
+      "global": false,
+      "takes_value": true,
+      "value_kind": "enum",
+      "help": "Collation of the metadata catalog.",
+      "choices": [
+        "DATABASE_DEFAULT",
+        "SQL_Latin1_General_CP1_CI_AS"
+      ],
+      "default": null,
+      "values_from": null
+    },
+    {
+      "name": "--collation",
+      "aliases": [],
+      "required": false,
+      "group": "Creation Arguments",
+      "global": false,
+      "takes_value": true,
+      "value_kind": "string",
+      "help": "The collation of the database.",
+      "choices": null,
+      "default": null,
+      "values_from": null
+    },
+    {
+      "name": "--sample-name",
+      "aliases": [],
+      "required": false,
+      "group": "Creation Arguments",
+      "global": false,
+      "takes_value": true,
+      "value_kind": "enum",
+      "help": "The name of the sample schema to apply when creating thisdatabase.",
+      "choices": [
+        "AdventureWorksLT"
+      ],
+      "default": null,
+      "values_from": null
+    },
+    {
+      "name": "--acquire-policy-token",
+      "aliases": [],
+      "required": false,
+      "group": "Global Policy Arguments",
+      "global": true,
+      "takes_value": true,
+      "value_kind": "string",
+      "help": "Acquiring an Azure Policy token automatically for this resource operation.",
+      "choices": null,
+      "default": null,
+      "values_from": null
+    },
+    {
+      "name": "--change-reference",
+      "aliases": [],
+      "required": false,
+      "group": "Global Policy Arguments",
+      "global": true,
+      "takes_value": true,
+      "value_kind": "string",
+      "help": "The related change reference ID for this resource operation.",
+      "choices": null,
+      "default": null,
+      "values_from": null
+    },
+    {
+      "name": "--capacity",
+      "aliases": [
+        "-c"
+      ],
+      "required": false,
+      "group": "Performance Level (components) Arguments",
+      "global": false,
+      "takes_value": true,
+      "value_kind": "string",
+      "help": "The capacity component of the sku in integer number of DTUs or vcores.",
+      "choices": null,
+      "default": null,
+      "values_from": null
+    },
+    {
+      "name": "--edition",
+      "aliases": [
+        "--tier",
+        "-e"
+      ],
+      "required": false,
+      "group": "Performance Level (components) Arguments",
+      "global": false,
+      "takes_value": true,
+      "value_kind": "string",
+      "help": "The edition component of the sku. Allowed values include: Basic, Standard, Premium, GeneralPurpose, BusinessCritical, Hyperscale.",
+      "choices": null,
+      "default": null,
+      "values_from": null
+    },
+    {
+      "name": "--family",
+      "aliases": [
+        "-f"
+      ],
+      "required": false,
+      "group": "Performance Level (components) Arguments",
+      "global": false,
+      "takes_value": true,
+      "value_kind": "string",
+      "help": "The compute generation component of the sku (for vcore skus only). Allowed values include: Gen4, Gen5.",
+      "choices": null,
+      "default": null,
+      "values_from": null
+    },
+    {
+      "name": "--elastic-pool",
+      "aliases": [],
+      "required": false,
+      "group": "Performance Level Arguments",
+      "global": false,
+      "takes_value": true,
+      "value_kind": "string",
+      "help": "The name or resource id of the elastic pool to create the database in.",
+      "choices": null,
+      "default": null,
+      "values_from": null
+    },
+    {
+      "name": "--service-level-objective",
+      "aliases": [
+        "--service-objective"
+      ],
+      "required": false,
+      "group": "Performance Level Arguments",
+      "global": false,
+      "takes_value": true,
+      "value_kind": "string",
+      "help": "The service objective for the new database. For example: Basic, S0, P1, GP_Gen4_1, GP_S_Gen5_8, BC_Gen5_2, HS_Gen5_32.",
+      "choices": null,
+      "default": null,
+      "values_from": null
+    },
+    {
+      "name": "--auto-pause-delay",
+      "aliases": [],
+      "required": false,
+      "group": "Serverless offering Arguments",
+      "global": false,
+      "takes_value": true,
+      "value_kind": "string",
+      "help": "Time in minutes after which database is automatically paused. A value of -1 means that automatic pause is disabled.",
+      "choices": null,
+      "default": null,
+      "values_from": null
+    },
+    {
+      "name": "--compute-model",
+      "aliases": [],
+      "required": false,
+      "group": "Serverless offering Arguments",
+      "global": false,
+      "takes_value": true,
+      "value_kind": "enum",
+      "help": "The compute model of the database.",
+      "choices": [
+        "Provisioned",
+        "Serverless"
+      ],
+      "default": null,
+      "values_from": null
+    },
+    {
+      "name": "--min-capacity",
+      "aliases": [],
+      "required": false,
+      "group": "Serverless offering Arguments",
+      "global": false,
+      "takes_value": true,
+      "value_kind": "string",
+      "help": "Minimal capacity that database will always have allocated, if not paused.",
+      "choices": null,
+      "default": null,
+      "values_from": null
+    },
+    {
+      "name": "--debug",
+      "aliases": [],
+      "required": false,
+      "group": "Global Arguments",
+      "global": true,
+      "takes_value": false,
+      "value_kind": "bool",
+      "help": "Increase logging verbosity to show all debug logs.",
+      "choices": null,
+      "default": null,
+      "values_from": null
+    },
+    {
+      "name": "--help",
+      "aliases": [
+        "-h"
+      ],
+      "required": false,
+      "group": "Global Arguments",
+      "global": true,
+      "takes_value": false,
+      "value_kind": "bool",
+      "help": "Show this help message and exit.",
+      "choices": null,
+      "default": null,
+      "values_from": null
+    },
+    {
+      "name": "--only-show-errors",
+      "aliases": [],
+      "required": false,
+      "group": "Global Arguments",
+      "global": true,
+      "takes_value": false,
+      "value_kind": "bool",
+      "help": "Only show errors, suppressing warnings.",
+      "choices": null,
+      "default": null,
+      "values_from": null
+    },
+    {
+      "name": "--output",
+      "aliases": [
+        "-o"
+      ],
+      "required": false,
+      "group": "Global Arguments",
+      "global": true,
+      "takes_value": true,
+      "value_kind": "enum",
+      "help": "Output format.",
+      "choices": [
+        "json",
+        "jsonc",
+        "none",
+        "table",
+        "tsv",
+        "yaml",
+        "yamlc"
+      ],
+      "default": "json",
+      "values_from": null
+    },
+    {
+      "name": "--query",
+      "aliases": [],
+      "required": false,
+      "group": "Global Arguments",
+      "global": true,
+      "takes_value": true,
+      "value_kind": "string",
+      "help": "JMESPath query string. See http://jmespath.org/ for more information and examples.",
+      "choices": null,
+      "default": null,
+      "values_from": null
+    },
+    {
+      "name": "--subscription",
+      "aliases": [],
+      "required": false,
+      "group": "Global Arguments",
+      "global": true,
+      "takes_value": true,
+      "value_kind": "string",
+      "help": "Name or ID of subscription. You can configure the default subscription using `az account set -s NAME_OR_ID`.",
+      "choices": null,
+      "default": null,
+      "values_from": null
+    },
+    {
+      "name": "--verbose",
+      "aliases": [],
+      "required": false,
+      "group": "Global Arguments",
+      "global": true,
+      "takes_value": false,
+      "value_kind": "bool",
+      "help": "Increase logging verbosity. Use --debug for full debug logs.",
+      "choices": null,
+      "default": null,
+      "values_from": null
+    }
+  ]
+}

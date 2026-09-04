@@ -1,0 +1,105 @@
+
+Command
+    az eventhubs namespace create : Creates the EventHubs Namespace.
+
+Arguments
+    --name -n                                [Required] : Name of Namespace.
+    --resource-group -g                      [Required] : Name of resource group. You can configure
+                                                          the default group using `az configure
+                                                          --defaults group=<name>`.
+    --alternate-name                                    : Alternate name specified when alias and
+                                                          namespace names are same.
+    --capacity                                          : Capacity for Sku.
+    --cluster-arm-id                                    : Cluster ARM ID of the Namespace.
+    --disable-local-auth                                : A boolean value that indicates whether SAS
+                                                          authentication is enabled/disabled for the
+                                                          Event Hubs.  Allowed values: false, true.
+    --enable-auto-inflate                               : A boolean value that indicates whether
+                                                          AutoInflate is enabled for eventhub
+                                                          namespace.  Allowed values: false, true.
+    --enable-kafka                                      : A boolean value that indicates whether
+                                                          Kafka is enabled for eventhub namespace.
+                                                          Allowed values: false, true.
+    --encryption-config                                 : List of KeyVaultProperties objects.
+    --geo-data-replication-config --replica-config      : A list of regions where replicas of the
+                                                          namespace are maintained Object.
+    --infra-encryption                                  : A boolean value that indicates whether
+                                                          Infrastructure Encryption (Double
+                                                          Encryption) is enabled/disabled.  Allowed
+                                                          values: false, true.
+    --location -l                                       : Location. Values from: `az account list-
+                                                          locations`. You can configure the default
+                                                          location using `az configure --defaults
+                                                          location=<location>`.
+    --max-lag --max-replication-lag-duration-in-seconds : The maximum acceptable lag for data
+                                                          replication operations from the primary
+                                                          replica to a quorum of secondary replicas.
+    --maximum-throughput-units                          : Upper limit of throughput units when
+                                                          AutoInflate is enabled, vaule should be
+                                                          within 0 to 20 throughput units. ( 0 if
+                                                          AutoInflateEnabled = true).
+    --min-tls --minimum-tls-version                     : The minimum TLS version for the cluster to
+                                                          support, e.g. 1.2.  Allowed values: 1.0,
+                                                          1.1, 1.2.
+    --public-network --public-network-access            : This determines if traffic is allowed over
+                                                          public network. By default it is enabled.
+                                                          If value is SecuredByPerimeter then
+                                                          Inbound and Outbound communication is
+                                                          controlled by the network security
+                                                          perimeter and profile' access rules.
+                                                          Allowed values: Disabled, Enabled.
+    --sku                                               : Namespace SKU.  Allowed values: Basic,
+                                                          Premium, Standard.  Default: Standard.
+    --tags                                              : Space-separated tags: key[=value]
+                                                          [key[=value] ...]. Use '' to clear
+                                                          existing tags.
+    --zone-redundant                                    : Enabling this property creates a Standard
+                                                          EventHubs Namespace in regions supported
+                                                          availability zones.  Allowed values:
+                                                          false, true.
+
+Global Policy Arguments
+    --acquire-policy-token                              : Acquiring an Azure Policy token
+                                                          automatically for this resource operation.
+    --change-reference                                  : The related change reference ID for this
+                                                          resource operation.
+
+Managed Identity Arguments
+    --mi-system-assigned                                : Enable System Assigned Identity.  Allowed
+                                                          values: false, true.
+    --mi-user-assigned                                  : List of User Assigned Identity ids.
+
+Global Arguments
+    --debug                                             : Increase logging verbosity to show all
+                                                          debug logs.
+    --help -h                                           : Show this help message and exit.
+    --only-show-errors                                  : Only show errors, suppressing warnings.
+    --output -o                                         : Output format.  Allowed values: json,
+                                                          jsonc, none, table, tsv, yaml, yamlc.
+                                                          Default: json.
+    --query                                             : JMESPath query string. See
+                                                          http://jmespath.org/ for more information
+                                                          and examples.
+    --subscription                                      : Name or ID of subscription. You can
+                                                          configure the default subscription using
+                                                          `az account set -s NAME_OR_ID`.
+    --verbose                                           : Increase logging verbosity. Use --debug
+                                                          for full debug logs.
+
+Examples
+    Creates a new namespace.
+        az eventhubs namespace create --resource-group myresourcegroup --name mynamespace --location
+        westus --tags tag1=value1 tag2=value2 --sku Standard --enable-auto-inflate --maximum-
+        throughput-units 20
+
+    Create a new namespace with Identity and Encryption enabled.
+        az eventhubs namespace create --resource-group myresourcegroup --name mynamespace --location
+        westus --sku Premium --mi-user-assigned /subscriptions/{subscriptionId}/resourceGroups/{reso
+        urcegroup}/providers/Microsoft.ManagedIdentity/userAssignedIdentities/MSIName --encryption-
+        config key-name=key1 key-vault-uri=https://mykeyvault.vault.azure.net/ user-assigned-identit
+        y=/subscriptions/{subscriptionId}}/resourceGroups/{resourcegroup}/providers/Microsoft.Manage
+        dIdentity/userAssignedIdentities/MSIName --encryption-config key-name=key1 key-vault-
+        uri=https://mykeyvault.vault.azure.net/ user-assigned-identity=/subscriptions/{subscriptionI
+        d}}/resourceGroups/{resourcegroup}/providers/Microsoft.ManagedIdentity/userAssignedIdentitie
+        s/MSIName
+
