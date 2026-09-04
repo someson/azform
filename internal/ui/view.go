@@ -340,7 +340,7 @@ func (m Form) renderHelp() string {
 			rows: [][2]string{
 				{"enter", "edit field / open enum popup / confirm"},
 				{"space", "toggle optional field on/off (required fields show a hint)"},
-				{"ctrl+v", "insert variable reference ($NAME) at cursor (edit mode)"},
+				{"ctrl+g", "insert variable reference ($NAME) at cursor (edit mode)"},
 				{"esc", "close popup / cancel edit"},
 				{"/", "fuzzy filter visible fields"},
 				{"g", "toggle Global Arguments section"},

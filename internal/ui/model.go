@@ -32,7 +32,7 @@ const (
 	FormModeDone                    // Tab → Done button focused
 	FormModeCancel                  // Tab → Cancel button focused
 	FormModeHelp                    // ? cheatsheet overlay open
-	FormModeVarPick                 // Ctrl+V → variable picker popup open
+	FormModeVarPick                 // Ctrl+G → variable picker popup open
 )
 
 // LoadState tracks async metadata fetch.

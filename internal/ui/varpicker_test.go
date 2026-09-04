@@ -31,10 +31,10 @@ func makePickerForm(t *testing.T, names []string, termWidth int) ui.Form {
 	f = m.(ui.Form)
 	m, _ = f.Update(tea.KeyMsg{Type: tea.KeyEnter})
 	f = m.(ui.Form)
-	m, _ = f.Update(tea.KeyMsg{Type: tea.KeyCtrlV})
+	m, _ = f.Update(tea.KeyMsg{Type: tea.KeyCtrlG})
 	f = m.(ui.Form)
 	if f.Mode() != ui.FormModeVarPick {
-		t.Fatalf("mode after Ctrl+V = %v, want FormModeVarPick", f.Mode())
+		t.Fatalf("mode after Ctrl+G = %v, want FormModeVarPick", f.Mode())
 	}
 	return f
 }

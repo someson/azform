@@ -34,15 +34,12 @@ func (m Form) handleKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 			m.declaring = false
 			m.mode = FormModeList
 			return m, nil
-		case "ctrl+v":
-			// Open the variable picker. The textinput keeps its current
-			// value; on pick we splice `$NAME` at the cursor and return
-			// to edit mode. On cancel we return with everything intact.
-			// Ctrl+V is chosen over Alt+V because Alt+V depends on the
-			// terminal sending Option as Meta key — Terminal.app's
-			// default is to type the √ character instead, so the
-			// widget never sees the keystroke. Ctrl+V passes through
-			// every TTY without configuration.
+		case "ctrl+g":
+			// Open the variable picker ("g" for "get variable"). Avoids
+			// Ctrl+V so the user's terminal paste binding keeps working.
+			// The textinput keeps its current value; on pick we splice
+			// `$NAME` at the cursor and return to edit mode. On cancel
+			// we return with everything intact.
 			names := uniqueVarNames(m.src.Vars, m.sessionVars)
 			m.varEditCursor = m.textInput.Position()
 			m.varPop = NewVarPicker(names, m.width)

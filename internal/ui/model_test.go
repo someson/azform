@@ -259,8 +259,8 @@ func TestEnumOverlayAnchorsAtFocusedColumn(t *testing.T) {
 	}
 }
 
-// TestVarPickerInsertAndReturnToEdit covers the Ctrl+V → pick →
-// insert cycle end-to-end: edit mode → Ctrl+V opens the picker →
+// TestVarPickerInsertAndReturnToEdit covers the Ctrl+G → pick →
+// insert cycle end-to-end: edit mode → Ctrl+G opens the picker →
 // j/j to the LOC entry → Enter splices "$LOC" into the textinput at
 // the saved cursor. Mode returns to FormModeEdit.
 func TestVarPickerInsertAndReturnToEdit(t *testing.T) {
@@ -290,12 +290,12 @@ func TestVarPickerInsertAndReturnToEdit(t *testing.T) {
 		f = m.(ui.Form)
 	}
 
-	// Ctrl+V → opens FormModeVarPick.
-	km := tea.KeyMsg{Type: tea.KeyCtrlV}
+	// Ctrl+G → opens FormModeVarPick.
+	km := tea.KeyMsg{Type: tea.KeyCtrlG}
 	m, _ = f.Update(km)
 	f = m.(ui.Form)
 	if f.Mode() != ui.FormModeVarPick {
-		t.Fatalf("mode after Ctrl+V = %v, want FormModeVarPick", f.Mode())
+		t.Fatalf("mode after Ctrl+G = %v, want FormModeVarPick", f.Mode())
 	}
 
 	// Down once → cursor at LOC (RG, LOC, BLD).
@@ -341,10 +341,10 @@ func TestVarOverlayTallerThanRowsAboveDoesNotPanic(t *testing.T) {
 	// Focus the first row (top of the grid) and open the var picker.
 	m, _ = f.Update(tea.KeyMsg{Type: tea.KeyEnter})
 	f = m.(ui.Form)
-	m, _ = f.Update(tea.KeyMsg{Type: tea.KeyCtrlV})
+	m, _ = f.Update(tea.KeyMsg{Type: tea.KeyCtrlG})
 	f = m.(ui.Form)
 	if f.Mode() != ui.FormModeVarPick {
-		t.Fatalf("mode after Ctrl+V = %v, want FormModeVarPick", f.Mode())
+		t.Fatalf("mode after Ctrl+G = %v, want FormModeVarPick", f.Mode())
 	}
 
 	// Must not panic.
@@ -380,7 +380,7 @@ func TestVarPickerFiltersPowerlevelAndSpecials(t *testing.T) {
 	f = m.(ui.Form)
 	m, _ = f.Update(tea.KeyMsg{Type: tea.KeyEnter})
 	f = m.(ui.Form)
-	m, _ = f.Update(tea.KeyMsg{Type: tea.KeyCtrlV})
+	m, _ = f.Update(tea.KeyMsg{Type: tea.KeyCtrlG})
 	f = m.(ui.Form)
 	if f.Mode() != ui.FormModeVarPick {
 		t.Fatalf("mode = %v, want FormModeVarPick", f.Mode())
@@ -418,7 +418,7 @@ func TestVarOverlayScrollsInsteadOfCoveringGrid(t *testing.T) {
 	f = m.(ui.Form)
 	m, _ = f.Update(tea.KeyMsg{Type: tea.KeyEnter})
 	f = m.(ui.Form)
-	m, _ = f.Update(tea.KeyMsg{Type: tea.KeyCtrlV})
+	m, _ = f.Update(tea.KeyMsg{Type: tea.KeyCtrlG})
 	f = m.(ui.Form)
 
 	view := f.View()
@@ -451,10 +451,10 @@ func TestVarPickerCancelLeavesTextInputUntouched(t *testing.T) {
 		f = m.(ui.Form)
 	}
 
-	m, _ = f.Update(tea.KeyMsg{Type: tea.KeyCtrlV})
+	m, _ = f.Update(tea.KeyMsg{Type: tea.KeyCtrlG})
 	f = m.(ui.Form)
 	if f.Mode() != ui.FormModeVarPick {
-		t.Fatalf("mode after Ctrl+V = %v, want FormModeVarPick", f.Mode())
+		t.Fatalf("mode after Ctrl+G = %v, want FormModeVarPick", f.Mode())
 	}
 
 	// Esc cancels — picker emits VarPickerCancelledMsg via a tea.Cmd.
@@ -497,10 +497,10 @@ func TestVarPickerFiltersUnderscorePrefixed(t *testing.T) {
 
 	m, _ = f.Update(tea.KeyMsg{Type: tea.KeyEnter})
 	f = m.(ui.Form)
-	m, _ = f.Update(tea.KeyMsg{Type: tea.KeyCtrlV})
+	m, _ = f.Update(tea.KeyMsg{Type: tea.KeyCtrlG})
 	f = m.(ui.Form)
 	if f.Mode() != ui.FormModeVarPick {
-		t.Fatalf("mode after Ctrl+V = %v, want FormModeVarPick", f.Mode())
+		t.Fatalf("mode after Ctrl+G = %v, want FormModeVarPick", f.Mode())
 	}
 
 	// Picker has [RG, WSTE] sorted. Cursor starts at 0 = RG. Press
@@ -560,10 +560,10 @@ func TestVarPickerFiltersShellInternals(t *testing.T) {
 
 	m, _ = f.Update(tea.KeyMsg{Type: tea.KeyEnter})
 	f = m.(ui.Form)
-	m, _ = f.Update(tea.KeyMsg{Type: tea.KeyCtrlV})
+	m, _ = f.Update(tea.KeyMsg{Type: tea.KeyCtrlG})
 	f = m.(ui.Form)
 	if f.Mode() != ui.FormModeVarPick {
-		t.Fatalf("mode after Ctrl+V = %v, want FormModeVarPick", f.Mode())
+		t.Fatalf("mode after Ctrl+G = %v, want FormModeVarPick", f.Mode())
 	}
 
 	picked := f.PickerVarNames()
@@ -621,10 +621,10 @@ func TestVarPickerFitsAcrossColumnsWhenManyVars(t *testing.T) {
 
 	m, _ = f.Update(tea.KeyMsg{Type: tea.KeyEnter})
 	f = m.(ui.Form)
-	m, _ = f.Update(tea.KeyMsg{Type: tea.KeyCtrlV})
+	m, _ = f.Update(tea.KeyMsg{Type: tea.KeyCtrlG})
 	f = m.(ui.Form)
 	if f.Mode() != ui.FormModeVarPick {
-		t.Fatalf("mode after Ctrl+V = %v, want FormModeVarPick", f.Mode())
+		t.Fatalf("mode after Ctrl+G = %v, want FormModeVarPick", f.Mode())
 	}
 
 	// Verify the layout splits into multiple columns and the total
@@ -2903,7 +2903,7 @@ func TestVKeyIgnoredOnBoolField(t *testing.T) {
 	}
 }
 
-// TestVarPickerFilterInsertsSelectedVar covers Ctrl+V → type filter →
+// TestVarPickerFilterInsertsSelectedVar covers Ctrl+G → type filter →
 // Enter end-to-end: the filtered pick is spliced as ${NAME} at the
 // saved cursor position in the text input.
 func TestVarPickerFilterInsertsSelectedVar(t *testing.T) {
@@ -2929,10 +2929,10 @@ func TestVarPickerFilterInsertsSelectedVar(t *testing.T) {
 	}
 
 	// Open picker.
-	m, _ = f.Update(tea.KeyMsg{Type: tea.KeyCtrlV})
+	m, _ = f.Update(tea.KeyMsg{Type: tea.KeyCtrlG})
 	f = m.(ui.Form)
 	if f.Mode() != ui.FormModeVarPick {
-		t.Fatalf("mode after Ctrl+V = %v, want FormModeVarPick", f.Mode())
+		t.Fatalf("mode after Ctrl+G = %v, want FormModeVarPick", f.Mode())
 	}
 
 	// Type filter `mye` → narrows to MYENV only (cursor at 0,0).
