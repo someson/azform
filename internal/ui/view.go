@@ -1036,9 +1036,6 @@ func (m *Form) spliceOverlay(lines []string, focusedRow, focusedCol int, cellWid
 		}
 	}
 
-	belowSpace := len(lines) - (visibleIdx + 1)
-	placeBelow := belowSpace >= 2
-
 	popupLines := buildPopupLines(choices, cursor)
 	if len(popupLines) == 0 {
 		return lines
@@ -1049,29 +1046,39 @@ func (m *Form) spliceOverlay(lines []string, focusedRow, focusedCol int, cellWid
 		popupLines[i] = pad + pl
 	}
 
-	insertAt := visibleIdx + 1
-	if !placeBelow {
+	belowSpace := len(lines) - (visibleIdx + 1)
+	aboveSpace := visibleIdx
+
+	// Prefer placing below (natural reading order). Flip to above only
+	// when it fully fits there and below doesn't. When neither side has
+	// full room, insert below and let the popup overflow the viewport
+	// (visually rendered under the grid region) rather than truncate —
+	// truncating loses the bottom border and, for tall popups, choices.
+	fitsBelow := belowSpace >= len(popupLines)
+	fitsAbove := aboveSpace >= len(popupLines)
+	placeBelow := fitsBelow || !fitsAbove
+
+	var insertAt, tailStart int
+	switch {
+	case placeBelow && fitsBelow:
+		insertAt = visibleIdx + 1
+		tailStart = insertAt + len(popupLines)
+	case placeBelow:
+		// Not enough room below — insert-push instead of replacing, so
+		// no popup lines are dropped. The overflow renders past the
+		// viewport, which is preferable to losing the bottom border.
+		insertAt = visibleIdx + 1
+		tailStart = insertAt
+	default:
 		insertAt = visibleIdx - len(popupLines)
-	}
-	// Same guard as spliceVarOverlay: never anchor above line 0, and
-	// never let the popup extend past the visible body.
-	if insertAt < 0 {
-		insertAt = 0
-	}
-	if room := len(lines) - insertAt; len(popupLines) > room {
-		popupLines = popupLines[:room]
+		tailStart = visibleIdx
 	}
 	head := lines[:insertAt]
-	tail := []string{}
-	if insertAt < len(lines) {
-		tail = lines[insertAt:]
-	}
+	tail := lines[tailStart:]
 	out := make([]string, 0, len(head)+len(popupLines)+len(tail))
 	out = append(out, head...)
 	out = append(out, popupLines...)
-	if len(tail) > 0 {
-		out = append(out, tail...)
-	}
+	out = append(out, tail...)
 	return out
 }
 
