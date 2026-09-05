@@ -2,6 +2,17 @@
 
 **A form for building Azure CLI commands, right in your terminal.**
 
+[![License](https://img.shields.io/github/license/someson/azform)](LICENSE)
+[![CI](https://github.com/someson/azform/actions/workflows/ci.yml/badge.svg)](https://github.com/someson/azform/actions/workflows/ci.yml)
+[![Go Report Card](https://goreportcard.com/badge/github.com/someson/azform)](https://goreportcard.com/report/github.com/someson/azform)
+[![Latest release](https://img.shields.io/github/v/release/someson/azform)](https://github.com/someson/azform/releases/latest)
+[![Downloads](https://img.shields.io/github/downloads/someson/azform/total)](https://github.com/someson/azform/releases)
+[![Go version](https://img.shields.io/github/go-mod/go-version/someson/azform)](go.mod)
+[![Issues](https://img.shields.io/github/issues/someson/azform)](https://github.com/someson/azform/issues)
+[![Last commit](https://img.shields.io/github/last-commit/someson/azform)](https://github.com/someson/azform/commits/main)
+[![PRs welcome](https://img.shields.io/badge/PRs-welcome-brightgreen)](CONTRIBUTING.md)
+[![Stars](https://img.shields.io/github/stars/someson/azform?style=social)](https://github.com/someson/azform/stargazers)
+
 > Status: early development.
 
 ---
