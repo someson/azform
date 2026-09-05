@@ -6,6 +6,44 @@
 
 ---
 
+```
+az network public-ip create
+Create a public IP address.
+───────────────────────────────────────────────────────────────────────────────
+● --name                 pip-nat               ○ --acquire-policy-token —
+● --resource-group       myResourceGroup       ○ --change-reference     —
+● --allocation-method    Static                ○ --debug
+○ --ddos-protection-mode —                     ○ --help
+○ --ddos-protection-plan —                     ○ --only-show-errors
+○ --dns-name             —                     ● --output               tsv
+○ --dns-name-scope       —                     ○ --query                —
+○ --edge-zone            —                     ○ --subscription         —
+● --idle-timeout         4                     ○ --verbose
+○ --ip-address           —
+○ --ip-tags              —
+○ --location             —
+○ --public-ip-prefix     —
+○ --reverse-fqdn         —
+● --sku                  StandardV2
+○ --tags                 —
+○ --tier                 —
+● --version              IPv4
+○ --zone                 —
+
+───────────────────────────────────────────────────────────────────────────────
+az network public-ip create \
+  --name pip-nat \
+  --resource-group myResourceGroup \
+  --allocation-method Static \
+  --idle-timeout 4 \
+  --sku StandardV2 \
+  --version IPv4 \
+  --output tsv
+
+ Done    Cancel                                               Press F1 for help
+───────────────────────────────────────────────────────────────────────────────
+```
+
 ## What it is
 
 `azform` is a small terminal companion for the Azure CLI.
@@ -13,6 +51,8 @@
 You press a key. A form opens under your prompt, listing every parameter the command accepts. Required ones are marked. Parameters with a fixed set of allowed values show that set, so you pick instead of typing. When you're done, the assembled command lands in your prompt — ready for you to read, adjust, and run.
 
 It is a way to *write* `az` commands. Nothing more than that, and that's the point.
+
+**Under the hood.** `azform` is a single Go binary. When you open a form, it shells out to `az <command> --help` and parses the text — the same help you'd read yourself. It attaches as a shell widget (Ctrl-X Ctrl-A in zsh), takes over the terminal via `/dev/tty` while the form is open, and writes the finished command straight into your shell's line buffer on exit. No daemon, no telemetry, no phone-home. Small state — drafts, remembered variable bindings — lives under `~/.local/state/azform/` as plain files you can delete at any time.
 
 ## What it is not
 
