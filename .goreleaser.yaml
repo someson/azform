@@ -45,7 +45,7 @@ snapshot:
   version_template: "{{ incpatch .Version }}-next"
 
 changelog:
-  use: github
+  use: git
   sort: asc
   filters:
     exclude:
