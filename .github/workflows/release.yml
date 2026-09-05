@@ -32,7 +32,7 @@ jobs:
           go-licenses save ./... --save_path=./licenses
           go-licenses report ./... > THIRD_PARTY_LICENSES.md
 
-      - uses: goreleaser/goreleaser-action@v6
+      - uses: goreleaser/goreleaser-action@v7
         with:
           version: latest
           args: release --clean
