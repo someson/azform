@@ -234,6 +234,9 @@ func (m Form) View() string {
 	}
 
 	if m.mode == FormModeFilter {
+		if len(m.visible) == 0 && m.filterQuery != "" {
+			writeLine(&sb, hintStyle.Render(fmt.Sprintf("  no matches for %q — Esc to clear filter", m.filterQuery)))
+		}
 		writeLine(&sb, sep)
 		writeLine(&sb, m.filterInput.View())
 	}
@@ -304,7 +307,15 @@ func (m Form) View() string {
 		cancelLabel = cancelFocusStyle.Render(" Cancel ")
 	}
 	sb.WriteString("\n")
-	writeLine(&sb, doneLabel+"  "+cancelLabel)
+	buttons := doneLabel + "  " + cancelLabel
+	helpHint := hintStyle.Render("Press F1 for help")
+	buttonsW := ansi.StringWidth(buttons)
+	hintW := ansi.StringWidth(helpHint)
+	if pad := w - buttonsW - hintW; pad > 0 {
+		writeLine(&sb, buttons+strings.Repeat(" ", pad)+helpHint)
+	} else {
+		writeLine(&sb, buttons)
+	}
 
 	// Bottom boundary: mirrors the separator above the field list so the
 	// form's vertical extent is visible at a glance.
@@ -507,7 +518,7 @@ func (m *Form) renderFieldSelected(idx int, selected bool, nameWidth int) string
 	case f.FetchState == FetchLoaded && len(f.FetchedChoices) > 0:
 		row += "  " + hintStyle.Render(fmt.Sprintf("(%d options)", len(f.FetchedChoices)))
 	}
-	if selected {
+	if selected && m.fieldsFocused() {
 		// Span the full form width. Width is applied via a style copy rather
 		// than by appending spaces: lipgloss trims trailing whitespace from
 		// styled strings, so padded spaces would silently disappear for rows
@@ -518,6 +529,15 @@ func (m *Form) renderFieldSelected(idx int, selected bool, nameWidth int) string
 		return selectedStyle.Render(row)
 	}
 	return row
+}
+
+// fieldsFocused reports whether keyboard focus is on the field grid
+// rather than the Done/Cancel buttons. Used to suppress the cursor-row
+// highlight while Tab focus is on a button — the cursor position stays
+// in state so cycling back restores it, but the row stops looking
+// "selected" so the user can see which window has focus.
+func (m *Form) fieldsFocused() bool {
+	return m.mode != FormModeDone && m.mode != FormModeCancel
 }
 
 // currentWarning returns the index of the warning currently shown in the
@@ -1219,7 +1239,7 @@ func (m *Form) renderGridCell(idx int, selected bool, nameWidth int) string {
 		prefix = fgSGR + bullet + name + "\x1b[39m" + " "
 	}
 	row := prefix + valDisplay
-	if selected {
+	if selected && m.fieldsFocused() {
 		// Span the column's cell width (mirrors renderGrid's cellWidths).
 		// Width is applied via a style copy rather than by appending spaces:
 		// lipgloss trims trailing whitespace from styled strings, so padded

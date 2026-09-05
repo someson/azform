@@ -76,6 +76,12 @@ func (m Form) handleKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 			m.rebuildVisible()
 			return m, nil
 		case "enter":
+			if len(m.visible) == 0 {
+				// Refuse to leave filter mode while zero fields match —
+				// otherwise the user lands in an empty list with no
+				// obvious way back to the query.
+				return m, nil
+			}
 			m.mode = FormModeList
 			return m, nil
 		default:
