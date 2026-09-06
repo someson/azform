@@ -17,7 +17,12 @@ func (m Form) handleMetadataLoaded(msg MetadataLoadedMsg) (tea.Model, tea.Cmd) {
 	m.loadState = LoadStateLoaded
 	m.summary = msg.Summary
 	if msg.Stale {
-		m.staleWarn = "↻ metadata may be outdated"
+		// Banner names the specific check that flagged the cache so the
+		// user can decide whether to ignore it (their az upgraded
+		// yesterday and they trust the new help) or wipe the cache.
+		// msg.StaleReason is empty for tests that synthesise a stale
+		// message without going through the cache layer.
+		m.staleWarn = "↻ metadata may be outdated — " + msg.StaleReason
 	}
 
 	fields := make([]Field, 0, len(msg.Params))

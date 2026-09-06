@@ -260,6 +260,104 @@ func TestCacheCorruptEntryIsReplaced(t *testing.T) {
 	}
 }
 
+func TestRecordStaleReasons(t *testing.T) {
+	baseTime := time.Date(2026, 9, 1, 12, 0, 0, 0, time.UTC)
+	env := Environment{
+		InstallPath:     "/opt/az",
+		InstallModTime:  baseTime.Add(-time.Hour),
+		ExtensionsPath:  "/opt/az/extensions",
+		ExtensionsModTime: baseTime.Add(-time.Hour),
+	}
+	cache := &Cache{AzformVersion: "0.1.0"}
+
+	tests := []struct {
+		name       string
+		azformVer  string
+		generated  time.Time
+		env        Environment
+		envErr     error
+		wantStale  bool
+		wantReason string
+	}{
+		{
+			name:       "fresh",
+			azformVer:  "0.1.0",
+			generated:  baseTime,
+			env:        env,
+			wantStale:  false,
+			wantReason: "",
+		},
+		{
+			name:       "azform version differs",
+			azformVer:  "0.2.0",
+			generated:  baseTime,
+			env:        env,
+			wantStale:  true,
+			wantReason: "azform was upgraded since caching",
+		},
+		{
+			name:       "env probe failed",
+			azformVer:  "0.1.0",
+			generated:  baseTime,
+			env:        env,
+			envErr:     errors.New("az not on PATH"),
+			wantStale:  true,
+			wantReason: "az install could not be detected",
+		},
+		{
+			name:       "zero generated timestamp",
+			azformVer:  "0.1.0",
+			generated:  time.Time{},
+			env:        env,
+			wantStale:  true,
+			wantReason: "cached record has no timestamp",
+		},
+		{
+			name:       "az install mtime unknown",
+			azformVer:  "0.1.0",
+			generated:  baseTime,
+			env:        Environment{ExtensionsPath: env.ExtensionsPath, ExtensionsModTime: env.ExtensionsModTime},
+			wantStale:  true,
+			wantReason: "az install mtime unknown",
+		},
+		{
+			name:       "az was upgraded",
+			azformVer:  "0.1.0",
+			generated:  baseTime,
+			env:        Environment{
+				InstallPath:       env.InstallPath,
+				InstallModTime:    baseTime.Add(time.Hour),
+				ExtensionsPath:    env.ExtensionsPath,
+				ExtensionsModTime: env.ExtensionsModTime,
+			},
+			wantStale:  true,
+			wantReason: "az was upgraded since caching",
+		},
+		{
+			name:      "extension was upgraded",
+			azformVer: "0.1.0",
+			generated: baseTime,
+			env: Environment{
+				InstallPath:       env.InstallPath,
+				InstallModTime:    env.InstallModTime,
+				ExtensionsPath:    env.ExtensionsPath,
+				ExtensionsModTime: baseTime.Add(time.Hour),
+			},
+			wantStale:  true,
+			wantReason: "an az extension was upgraded since caching",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			stale, reason := cache.recordStale(tt.generated, tt.azformVer, tt.env, tt.envErr)
+			if stale != tt.wantStale || reason != tt.wantReason {
+				t.Fatalf("recordStale: stale=%v reason=%q, want stale=%v reason=%q",
+					stale, reason, tt.wantStale, tt.wantReason)
+			}
+		})
+	}
+}
+
 func TestSlug(t *testing.T) {
 	if got := Slug(" storage   account create "); got != "storage_account_create" {
 		t.Fatalf("Slug: got %q", got)

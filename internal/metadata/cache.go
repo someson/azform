@@ -29,13 +29,21 @@ type Environment struct {
 
 // Result is a cache lookup. A stale result is deliberately returned without
 // waiting; the caller may run Refresh in a background goroutine.
+//
+// StaleReason is populated only when Stale is true. It is a short,
+// human-readable fragment naming the specific check that flagged the
+// record — multiple causes (rare in practice) are joined with "; ".
+// The UI surfaces this next to the "metadata may be outdated" banner
+// so the user knows whether to blame azform, an az upgrade, or an
+// extension upgrade.
 type Result struct {
-	Kind      DocumentKind
-	Stale     bool
-	FromCache bool
-	Command   *CommandRecord
-	Group     *GroupRecord
-	Refresh   func(context.Context) error
+	Kind        DocumentKind
+	Stale       bool
+	StaleReason string
+	FromCache   bool
+	Command     *CommandRecord
+	Group       *GroupRecord
+	Refresh     func(context.Context) error
 }
 
 // Cache is the lazy per-command metadata cache from spec 3.3.
@@ -142,8 +150,8 @@ func (c *Cache) Resolve(ctx context.Context, commandPath string) (*Result, error
 func (c *Cache) resolveInner(ctx context.Context, commandPath string) (*Result, error) {
 	env, envErr := c.detectEnvironment()
 	if record, err := c.loadCommand(commandPath); err == nil {
-		stale := c.commandStale(record, env, envErr)
-		result := &Result{Kind: DocumentKindCommand, Stale: stale, FromCache: true, Command: record}
+		stale, reason := c.commandStale(record, env, envErr)
+		result := &Result{Kind: DocumentKindCommand, Stale: stale, StaleReason: reason, FromCache: true, Command: record}
 		if stale {
 			result.Refresh = func(refreshCtx context.Context) error {
 				_, err := c.refresh(refreshCtx, commandPath)
@@ -153,8 +161,8 @@ func (c *Cache) resolveInner(ctx context.Context, commandPath string) (*Result, 
 		return result, nil
 	}
 	if record, err := c.loadGroup(commandPath); err == nil {
-		stale := c.groupStale(record, env, envErr)
-		result := &Result{Kind: DocumentKindGroup, Stale: stale, FromCache: true, Group: record}
+		stale, reason := c.groupStale(record, env, envErr)
+		result := &Result{Kind: DocumentKindGroup, Stale: stale, StaleReason: reason, FromCache: true, Group: record}
 		if stale {
 			result.Refresh = func(refreshCtx context.Context) error {
 				_, err := c.refresh(refreshCtx, commandPath)
@@ -171,10 +179,11 @@ func (c *Cache) resolveInner(ctx context.Context, commandPath string) (*Result, 
 			var rec CommandRecord
 			if err := json.Unmarshal(data, &rec); err == nil && rec.SchemaVersion == SchemaVersion {
 				result := &Result{
-					Kind:      DocumentKindCommand,
-					Stale:     true,
-					FromCache: true,
-					Command:   &rec,
+					Kind:        DocumentKindCommand,
+					Stale:       true,
+					StaleReason: "azform was upgraded since caching",
+					FromCache:   true,
+					Command:     &rec,
 				}
 				result.Refresh = func(refreshCtx context.Context) error {
 					_, err := c.refresh(refreshCtx, commandPath)
@@ -260,25 +269,47 @@ func (c *Cache) refresh(ctx context.Context, commandPath string) (*Result, error
 	return result, nil
 }
 
-func (c *Cache) commandStale(record *CommandRecord, env Environment, envErr error) bool {
+func (c *Cache) commandStale(record *CommandRecord, env Environment, envErr error) (bool, string) {
 	return c.recordStale(record.GeneratedAt, record.AzformVersion, env, envErr)
 }
 
-func (c *Cache) groupStale(record *GroupRecord, env Environment, envErr error) bool {
+func (c *Cache) groupStale(record *GroupRecord, env Environment, envErr error) (bool, string) {
 	return c.recordStale(record.GeneratedAt, record.AzformVersion, env, envErr)
 }
 
 // recordStale is deliberately per-record. A global "environment was checked"
 // file would make unrelated commands look fresh after only one command was
 // revalidated, violating the lazy per-command strategy.
-func (c *Cache) recordStale(generatedAt time.Time, azformVersion string, env Environment, envErr error) bool {
-	if azformVersion != c.AzformVersion || envErr != nil || generatedAt.IsZero() {
-		return true
+//
+// The second return value names the most actionable cause — the first
+// check that fires, in the order azform-version → env-probe →
+// timestamp → install-mtime → install-mtime-vs-record →
+// extension-mtime. Returning the first reason (rather than joining
+// every applicable one) keeps the banner readable when several things
+// changed at once, which is the common case after a Homebrew update.
+//
+// The fragments are short and lowercase so they read naturally after
+// "metadata may be outdated — " in the UI banner.
+func (c *Cache) recordStale(generatedAt time.Time, azformVersion string, env Environment, envErr error) (bool, string) {
+	if azformVersion != c.AzformVersion {
+		return true, "azform was upgraded since caching"
 	}
-	if env.InstallModTime.IsZero() || generatedAt.Before(env.InstallModTime) {
-		return true
+	if envErr != nil {
+		return true, "az install could not be detected"
 	}
-	return !env.ExtensionsModTime.IsZero() && generatedAt.Before(env.ExtensionsModTime)
+	if generatedAt.IsZero() {
+		return true, "cached record has no timestamp"
+	}
+	if env.InstallModTime.IsZero() {
+		return true, "az install mtime unknown"
+	}
+	if generatedAt.Before(env.InstallModTime) {
+		return true, "az was upgraded since caching"
+	}
+	if !env.ExtensionsModTime.IsZero() && generatedAt.Before(env.ExtensionsModTime) {
+		return true, "an az extension was upgraded since caching"
+	}
+	return false, ""
 }
 
 // recordHealth appends a parse-health entry after a fresh parse (spec §14.2).

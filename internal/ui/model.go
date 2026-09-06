@@ -46,11 +46,17 @@ const (
 
 // MetadataLoadedMsg is sent by the async loader when metadata is ready.
 // Exported so tests can inject it directly.
+//
+// StaleReason is set when Stale is true and names the specific cache
+// invalidation reason (azform upgrade, az upgrade, extension upgrade,
+// missing timestamp, env probe failure). Surfaced verbatim next to the
+// "metadata may be outdated" banner so the user knows which check fired.
 type MetadataLoadedMsg struct {
-	Params  []metadata.Parameter
-	Summary string
-	Stale   bool
-	Health  metadata.ParseHealth
+	Params      []metadata.Parameter
+	Summary     string
+	Stale       bool
+	StaleReason string
+	Health      metadata.ParseHealth
 }
 
 type metadataErrorMsg struct{ err error }
@@ -101,6 +107,17 @@ type Form struct {
 	visible    []int // filtered subset of field indices
 	reqIndices []int // required non-global field indices (always pinned)
 	cursor     int
+
+	// valueDisplayMode cycles 0→1→2→0 across presses of `v`. It controls
+	// how var-mode required fields render their value column:
+	//   0 = $REF
+	//   1 = $REF → resolved literal (current default)
+	//   2 = resolved literal
+	// Fields with a var reference that doesn't resolve in the shell
+	// (StatusOf returns VarStatusGray) ignore this setting and render
+	// red as before — the cycle is meaningless when there's no value to
+	// show. Literal-mode fields also ignore it.
+	valueDisplayMode int
 
 	vp      viewport.Model
 	vpReady bool
@@ -230,6 +247,10 @@ func NewForm(command, outPath, stateDir, version string, cache *metadata.Cache) 
 func NewFormWithSources(command, outPath, stateDir, version string, cache *metadata.Cache, src Sources) Form {
 	f := NewForm(command, outPath, stateDir, version, cache)
 	f.src = src
+	// Default to the $REF → resolved display; matches the behaviour
+	// before the v-cycle was introduced. First press of `v` advances
+	// to the literal-only view.
+	f.valueDisplayMode = 1
 	return f
 }
 
@@ -292,10 +313,11 @@ func (m Form) fetchMetadata() tea.Cmd {
 			return metadataErrorMsg{groupNotCommandErr(m.command, result.Group)}
 		}
 		return MetadataLoadedMsg{
-			Params:  result.Command.Parameters,
-			Summary: result.Command.Summary,
-			Stale:   result.Stale,
-			Health:  result.Command.ParseHealth,
+			Params:      result.Command.Parameters,
+			Summary:     result.Command.Summary,
+			Stale:       result.Stale,
+			StaleReason: result.StaleReason,
+			Health:      result.Command.ParseHealth,
 		}
 	}
 }
