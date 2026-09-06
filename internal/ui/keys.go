@@ -8,7 +8,7 @@ type KeyMap struct {
 	Down       key.Binding
 	Toggle     key.Binding // Space: enable/disable param
 	Edit       key.Binding // Enter in list: open value editor
-	Filter     key.Binding // /: open fuzzy filter
+	Filter     key.Binding // /: open filter
 	Tab        key.Binding
 	ShiftTab   key.Binding
 	Confirm    key.Binding // Enter on Done button

@@ -371,7 +371,7 @@ func (m Form) renderHelp() string {
 				{"space", "toggle optional field on/off (required fields show a hint)"},
 				{"ctrl+g", "insert variable reference ($NAME) at cursor (edit mode)"},
 				{"esc", "close popup / cancel edit"},
-				{"/", "fuzzy filter visible fields"},
+				{"/", "filter visible parameters"},
 				{"g", "toggle Global Arguments section"},
 			},
 		},
@@ -461,9 +461,16 @@ func (m *Form) renderFieldSelected(idx int, selected bool, nameWidth int) string
 		bullet = "● "
 	}
 	name := f.Param.Name
-	if len(name) < nameWidth {
-		name += strings.Repeat(" ", nameWidth-len(name))
+	namePlain := name
+	// Decide whether the dot leader will fit; only then do we skip name
+	// padding (the dots become the visual filler, so trailing spaces would
+	// just be wasted). When no dots fit we keep the padded name so values
+	// still align in a column without a leader.
+	namePadded := name
+	if len(namePadded) < nameWidth {
+		namePadded += strings.Repeat(" ", nameWidth-len(namePadded))
 	}
+	leader := ""
 	var valDisplay string
 	switch {
 	case f.Param.IsSwitch():
@@ -475,7 +482,11 @@ func (m *Form) renderFieldSelected(idx int, selected bool, nameWidth int) string
 	case selected && m.mode == FormModeEdit:
 		valDisplay = m.textInput.View()
 	case f.Value == "":
-		valDisplay = hintStyle.Render("—")
+		placeholder := "—"
+		if f.Param.HasSelectChoices() {
+			placeholder = "▼"
+		}
+		valDisplay = hintStyle.Render(placeholder)
 	case f.Mode == FieldModeVar:
 		status := StatusOf(f.Value, m.sessionVars)
 		valDisplay = status.Style().Render(f.DisplayValue())
@@ -486,14 +497,38 @@ func (m *Form) renderFieldSelected(idx int, selected bool, nameWidth int) string
 	if t := f.SourceTag(); t != "" {
 		srcTag = "  " + srcTagStyle.Render(t)
 	}
+	// Dot leader: U+2024 ONE DOT LEADER characters filling the gap
+	// between the name and the value. Format: `name···· value`
+	// (dots immediately after the name, single space before value).
+	// When dots fit, the name is rendered unpadded — the dots become the
+	// visual filler, so trailing spaces would just be wasted. When fewer
+	// than 2 dots fit (narrow row), we fall back to the padded name and a
+	// single space so values still align in a column.
+	if !f.Param.IsSwitch() && (!selected || m.mode != FormModeEdit) && m.width > 0 {
+		prefixW := runewidth.StringWidth(bullet + namePlain)
+		valW := runewidth.StringWidth(stripANSI(valDisplay))
+		srcW := runewidth.StringWidth(stripANSI(srcTag))
+		gap := m.width - prefixW - valW - srcW - 1 // -1 for the space before value
+		if gap >= 2 {
+			leader = hintStyle.Render(strings.Repeat("․", gap)) + " "
+			name = namePlain
+		} else {
+			leader = " "
+			name = namePadded
+		}
+	} else {
+		leader = " "
+		name = namePadded
+	}
 	// Required-row colouring replaces the old [req] tag: bullet+name is red
 	// when the required field has no value, green when it does. The styling
 	// is built with raw ANSI codes (not lipgloss.Style.Render) so we can use
 	// a foreground-only reset (\x1b[39m) instead of a full reset (\x1b[0m).
 	// A full reset drops the cursor-background set by selectedStyle; FG-only
 	// reset preserves it, so the highlight spans the entire row instead of
-	// only the bullet+name area.
-	prefix := bullet + name + " "
+	// only the bullet+name area. The reset is placed BEFORE the leader so
+	// the dots pick up hintStyle (gray italic) cleanly.
+	prefix := bullet + name + leader
 	if f.Param.Required {
 		// Match the SGR codes lipgloss emits for reqOkStyle (color 10) and
 		// reqMissingStyle (color 9) so tests that probe the literal escape
@@ -506,7 +541,7 @@ func (m *Form) renderFieldSelected(idx int, selected bool, nameWidth int) string
 		} else {
 			fgSGR = "\x1b[91m"
 		}
-		prefix = fgSGR + bullet + name + "\x1b[39m" + " "
+		prefix = fgSGR + bullet + name + "\x1b[39m" + leader
 	}
 	row := prefix + valDisplay + srcTag
 	// Lazy fetch state indicators (spec §6.1).
@@ -1200,8 +1235,10 @@ func (m *Form) renderGridCell(idx int, selected bool, nameWidth int) string {
 		bullet = "● "
 	}
 	name := f.Param.Name
-	if len(name) < nameWidth {
-		name += strings.Repeat(" ", nameWidth-len(name))
+	namePlain := name
+	namePadded := name
+	if len(namePadded) < nameWidth {
+		namePadded += strings.Repeat(" ", nameWidth-len(namePadded))
 	}
 	// valueBudget is gridValueBudget, but shrinks when the focused cell
 	// holds a text input — the textinput owns its own width and any
@@ -1221,14 +1258,46 @@ func (m *Form) renderGridCell(idx int, selected bool, nameWidth int) string {
 		// the value budget so the cell stays on one line.
 		valDisplay = ansi.Truncate(m.textInput.View(), valueBudget, "")
 	case f.Value == "":
-		valDisplay = hintStyle.Render("—")
+		placeholder := "—"
+		if f.Param.HasSelectChoices() {
+			placeholder = "▼"
+		}
+		valDisplay = hintStyle.Render(placeholder)
 	case f.Mode == FieldModeVar:
 		status := StatusOf(f.Value, m.sessionVars)
 		valDisplay = status.Style().Render(runewidth.Truncate(f.DisplayValue(), valueBudget-1, "…"))
 	default:
 		valDisplay = runewidth.Truncate(f.DisplayValue(), valueBudget-1, "…")
 	}
-	prefix := bullet + name + " "
+	prefix := bullet + namePadded
+	// Dot leader in grid mode: same shape as single-column (dots
+	// immediately after the name, single space before value) but the
+	// target width is the cell, not the terminal. When dots fit, drop
+	// the name padding — the dots become the visual filler, so trailing
+	// spaces would just be wasted. Falls back to padded name + space
+	// when fewer than 2 dots fit.
+	leader := ""
+	if !f.Param.IsSwitch() && (!selected || m.mode != FormModeEdit) {
+		cellWidth := 2 + nameWidth + 1 + gridValueBudget
+		valW := runewidth.StringWidth(stripANSI(valDisplay))
+		prefix = bullet + namePlain
+		gap := cellWidth - 2 - len(namePlain) - valW - 1
+		if gap >= 2 {
+			leader = hintStyle.Render(strings.Repeat("․", gap)) + " "
+		} else {
+			prefix = bullet + namePadded
+			leader = " "
+			// Keep `name` consistent with `prefix` so the required branch
+			// below reuses the padded name (mirrors single-column behaviour).
+			name = namePadded
+		}
+	} else {
+		leader = " "
+		// Edit mode: prefix uses the padded name; reassign so the required
+		// branch below reuses it instead of the unpadded namePlain.
+		name = namePadded
+	}
+	prefix += leader
 	if f.Param.Required {
 		var fgSGR string
 		if f.Enabled && f.Value != "" {
@@ -1236,7 +1305,9 @@ func (m *Form) renderGridCell(idx int, selected bool, nameWidth int) string {
 		} else {
 			fgSGR = "\x1b[91m"
 		}
-		prefix = fgSGR + bullet + name + "\x1b[39m" + " "
+		// Color bullet+name only — leader picks up hintStyle (gray italic)
+		// independently after the foreground reset.
+		prefix = fgSGR + bullet + name + "\x1b[39m" + leader
 	}
 	row := prefix + valDisplay
 	if selected && m.fieldsFocused() {

@@ -86,6 +86,14 @@ func (p Parameter) IsSwitch() bool {
 	return !p.TakesValue && p.ValueKind == ValueKindBool
 }
 
+// HasSelectChoices reports whether Enter on the field opens the enum popup
+// (a closed choice set the user picks from) rather than the text input.
+// Enums and non-switch bools both qualify; switches, strings, ints, lists,
+// key/value, and path kinds open the text input instead.
+func (p Parameter) HasSelectChoices() bool {
+	return !p.IsSwitch() && (p.ValueKind == ValueKindEnum || p.ValueKind == ValueKindBool)
+}
+
 // NavigationItem is one entry on an Azure CLI group help page.
 type NavigationItem struct {
 	Name         string `json:"name"`

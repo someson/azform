@@ -1,6 +1,7 @@
 package ui
 
 import (
+	"sort"
 	"strings"
 	"time"
 
@@ -21,7 +22,8 @@ func (m Form) handleMetadataLoaded(msg MetadataLoadedMsg) (tea.Model, tea.Cmd) {
 
 	fields := make([]Field, 0, len(msg.Params))
 	var reqIdx []int
-	for _, p := range msg.Params {
+	sortedParams := sortParamsByGroup(msg.Params)
+	for _, p := range sortedParams {
 		f := Field{
 			Param:   p,
 			Enabled: p.Required,
@@ -414,4 +416,41 @@ func resolveBufferVars(pp shell.ParsedParam, vars []vars.Variable) string {
 func matchesParamVar(v vars.Variable, p metadata.Parameter) bool {
 	matches := vars.MatchVariables([]vars.Variable{v}, []metadata.Parameter{p})
 	return len(matches) == 1 && matches[0].ParamName == p.Name
+}
+
+// sortParamsByGroup returns a copy of params ordered Required → Optional →
+// Global, alphabetical by canonical flag name within each group. The form
+// already renders the three groups in separate sections (Required pinned at
+// top, Globals collapsed by default behind the `g` toggle); this just makes
+// long parameter lists scannable inside each section.
+//
+// Sorting lives here rather than in the metadata layer so the cached JSON
+// stays in `az --help`-documented order — useful for debugging parser
+// regressions against the source text and for golden-test fixtures.
+func sortParamsByGroup(params []metadata.Parameter) []metadata.Parameter {
+	out := make([]metadata.Parameter, len(params))
+	copy(out, params)
+	sort.SliceStable(out, func(i, j int) bool {
+		ri, rj := paramGroupRank(out[i]), paramGroupRank(out[j])
+		if ri != rj {
+			return ri < rj
+		}
+		return out[i].Name < out[j].Name
+	})
+	return out
+}
+
+// paramGroupRank orders parameter groups for display: 0 = required (always
+// pinned at top), 1 = optional, 2 = global (collapsed by default). Required
+// takes precedence over Global when both flags are set — in practice az help
+// output never marks a parameter as both, but the rank needs a deterministic
+// answer.
+func paramGroupRank(p metadata.Parameter) int {
+	if p.Required {
+		return 0
+	}
+	if p.Global {
+		return 2
+	}
+	return 1
 }

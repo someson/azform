@@ -202,8 +202,19 @@ func TestGridModeStaysActiveDuringTextEdit(t *testing.T) {
 // column), without forcing a single-column reflow.
 func TestGridModeStaysActiveDuringEnumOverlay(t *testing.T) {
 	f := loadedGridForm(t)
-	// --sku is at visible idx 3.
-	for i := 0; i < 3; i++ {
+	// Navigate to --sku by name — its position changes when params are
+	// sorted alphabetically within their group.
+	target := -1
+	for i, idx := range f.Visible() {
+		if f.Fields()[idx].Param.Name == "--sku" {
+			target = i
+			break
+		}
+	}
+	if target < 0 {
+		t.Fatal("--sku not visible")
+	}
+	for i := 0; i < target; i++ {
 		m, _ := f.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("j")})
 		f = m.(ui.Form)
 	}
@@ -276,6 +287,14 @@ func TestVarPickerInsertAndReturnToEdit(t *testing.T) {
 	f := ui.NewFormWithSources("storage account create", "/tmp/out.txt", dir, "test", nil, src)
 	m, _ := f.Update(ui.MetadataLoadedMsg{Params: testParams, Summary: "."})
 	f = m.(ui.Form)
+
+	// Move cursor to --name (idx 1 after alphabetical sort) so the
+	// env pre-fill on --location (which matches $LOC by short-alias
+	// heuristic) doesn't shadow the typed text.
+	for i := 0; i < f.FieldIndex("--name"); i++ {
+		m, _ = f.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("j")})
+		f = m.(ui.Form)
+	}
 
 	// Enter edit mode on --name.
 	m, _ = f.Update(tea.KeyMsg{Type: tea.KeyEnter})
@@ -1106,9 +1125,13 @@ func TestFormToggleVarLiteral(t *testing.T) {
 	m, _ := f.Update(ui.MetadataLoadedMsg{Params: testParams, Summary: "."})
 	f = m.(ui.Form)
 
-	// Move from --name to --resource-group (one 'j' press).
-	m, _ = f.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("j")})
-	f = m.(ui.Form)
+	// Move from --location (alphabetical-first) to --resource-group.
+	// Navigate by name rather than counting j's — the cursor count
+	// changes when params are sorted within groups.
+	for i := 0; i < f.FieldIndex("--resource-group"); i++ {
+		m, _ = f.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("j")})
+		f = m.(ui.Form)
+	}
 	m, _ = f.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("v")})
 	f = m.(ui.Form)
 	for _, ff := range f.Fields() {
@@ -1280,9 +1303,12 @@ func TestFormDeclareVarEscape(t *testing.T) {
 	m, _ := f.Update(ui.MetadataLoadedMsg{Params: testParams, Summary: "."})
 	f = m.(ui.Form)
 
-	// Move to --resource-group (one 'j') and press 'd'.
-	m, _ = f.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("j")})
-	m, _ = m.(ui.Form).Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("d")})
+	// Move to --resource-group by name and press 'd' to start declaring.
+	for i := 0; i < f.FieldIndex("--resource-group"); i++ {
+		m, _ = f.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("j")})
+		f = m.(ui.Form)
+	}
+	m, _ = f.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("d")})
 	f = m.(ui.Form)
 	if f.Mode() != ui.FormModeEdit {
 		t.Fatalf("after d: mode = %v, want FormModeEdit", f.Mode())
@@ -1636,13 +1662,18 @@ func nonEmpty(s string) []string {
 
 func TestSpaceOnRequiredShowsHint(t *testing.T) {
 	f := loadedForm(t)
-	// Cursor starts at index 0 → --name (required).
+	// Move to --name (now at index 1 after alphabetical sort).
+	for i := 0; i < f.FieldIndex("--name"); i++ {
+		m, _ := f.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("j")})
+		f = m.(ui.Form)
+	}
+	nameIdx := f.FieldIndex("--name")
 	m, _ := f.Update(tea.KeyMsg{Type: tea.KeySpace})
 	f = m.(ui.Form)
 	if got := f.Hint(); got != "--name is required" {
 		t.Errorf("Hint() = %q, want %q", got, "--name is required")
 	}
-	if !f.Fields()[0].Enabled {
+	if !f.Fields()[nameIdx].Enabled {
 		t.Errorf("required field was disabled by Space")
 	}
 	if !f.HintActive() {
@@ -1652,9 +1683,12 @@ func TestSpaceOnRequiredShowsHint(t *testing.T) {
 
 func TestSpaceOnRequiredUsesActualName(t *testing.T) {
 	f := loadedForm(t)
-	// Move to --resource-group (index 1).
-	m, _ := f.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("j")})
-	f = m.(ui.Form)
+	// Move to --resource-group (now at index 2 after alphabetical sort).
+	var m tea.Model
+	for i := 0; i < f.FieldIndex("--resource-group"); i++ {
+		m, _ = f.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("j")})
+		f = m.(ui.Form)
+	}
 	m, _ = f.Update(tea.KeyMsg{Type: tea.KeySpace})
 	f = m.(ui.Form)
 	if got := f.Hint(); got != "--resource-group is required" {
@@ -1774,6 +1808,11 @@ func TestSwitchHasNoValueColumn(t *testing.T) {
 
 func TestHintRenderedInFooter(t *testing.T) {
 	f := loadedForm(t)
+	// Move to --name (idx 1 after alphabetical sort).
+	for i := 0; i < f.FieldIndex("--name"); i++ {
+		m, _ := f.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("j")})
+		f = m.(ui.Form)
+	}
 	m, _ := f.Update(tea.KeyMsg{Type: tea.KeySpace})
 	f = m.(ui.Form)
 	view := f.View()
@@ -1793,7 +1832,11 @@ func TestPreviewLineUnderForm(t *testing.T) {
 	f := ui.NewFormWithBuffer("storage account create", "/tmp/out.txt", t.TempDir(), "test", nil, raw)
 	m, _ := f.Update(ui.MetadataLoadedMsg{Params: testParams, Summary: "."})
 	f = m.(ui.Form)
-	// Trigger a hint so we can use it as a positional marker.
+	// Move to --name (idx 1 after alphabetical sort) and trigger a hint.
+	for i := 0; i < f.FieldIndex("--name"); i++ {
+		m, _ = f.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("j")})
+		f = m.(ui.Form)
+	}
 	m, _ = f.Update(tea.KeyMsg{Type: tea.KeySpace})
 	f = m.(ui.Form)
 
@@ -1999,27 +2042,31 @@ func loadedFetchForm(t *testing.T) ui.Form {
 
 func TestFocusTriggersFetch(t *testing.T) {
 	f := loadedFetchForm(t)
-	// --name has no ValuesFrom: no fetch on initial focus.
-	if got := f.Fields()[0].FetchState; got != ui.FetchIdle {
-		t.Fatalf("field 0 FetchState = %v, want idle", got)
+	// After alphabetical sort, --location (ValuesFrom) is the cursor-0
+	// field, so the spec's "kick off a lazy fetch for the initially
+	// focused field" already fired at load time. Verify --name (no
+	// ValuesFrom) stays idle and --location is in flight.
+	locIdx := f.FieldIndex("--location")
+	nameIdx := f.FieldIndex("--name")
+	if got := f.Fields()[nameIdx].FetchState; got != ui.FetchIdle {
+		t.Fatalf("--name FetchState = %v, want idle", got)
 	}
-	// Move cursor down onto --location (ValuesFrom set).
-	m, cmd := f.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("j")})
-	f = m.(ui.Form)
-	if got := f.Fields()[1].FetchState; got != ui.FetchLoading {
-		t.Fatalf("field 1 FetchState = %v, want loading", got)
+	if got := f.Fields()[locIdx].FetchState; got != ui.FetchLoading {
+		t.Fatalf("--location FetchState = %v, want loading", got)
 	}
-	if cmd == nil {
-		t.Fatal("expected non-nil cmd (fetch + ticks) when focusing ValuesFrom field")
+	// Moving cursor to --name (no ValuesFrom) doesn't fire cmd.
+	_, cmd := f.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("j")})
+	if cmd != nil {
+		t.Error("cursor move to non-ValuesFrom field must not return a cmd")
 	}
 }
 
 func TestFetchedMessagePopulatesChoices(t *testing.T) {
 	f := loadedFetchForm(t)
-	m, _ := f.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("j")})
-	m, _ = m.(ui.Form).Update(ui.FieldFetchedMsg{FieldIdx: 1, Choices: []string{"eastus", "westus"}})
+	locIdx := f.FieldIndex("--location")
+	m, _ := f.Update(ui.FieldFetchedMsg{FieldIdx: locIdx, Choices: []string{"eastus", "westus"}})
 	f = m.(ui.Form)
-	fld := f.Fields()[1]
+	fld := f.Fields()[locIdx]
 	if fld.FetchState != ui.FetchLoaded {
 		t.Fatalf("FetchState = %v, want loaded", fld.FetchState)
 	}
@@ -2033,10 +2080,10 @@ func TestFetchedMessagePopulatesChoices(t *testing.T) {
 
 func TestFetchedMessageWithErrorSetsStateError(t *testing.T) {
 	f := loadedFetchForm(t)
-	m, _ := f.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("j")})
-	m, _ = m.(ui.Form).Update(ui.FieldFetchedMsg{FieldIdx: 1, Err: errors.New("boom")})
+	locIdx := f.FieldIndex("--location")
+	m, _ := f.Update(ui.FieldFetchedMsg{FieldIdx: locIdx, Err: errors.New("boom")})
 	f = m.(ui.Form)
-	fld := f.Fields()[1]
+	fld := f.Fields()[locIdx]
 	if fld.FetchState != ui.FetchError {
 		t.Fatalf("FetchState = %v, want error", fld.FetchState)
 	}
@@ -2047,14 +2094,14 @@ func TestFetchedMessageWithErrorSetsStateError(t *testing.T) {
 
 func TestFieldAlreadyFetchedDoesNotRefetch(t *testing.T) {
 	f := loadedFetchForm(t)
-	m, _ := f.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("j")})
-	m, _ = m.(ui.Form).Update(ui.FieldFetchedMsg{FieldIdx: 1, Choices: []string{"eastus"}})
+	locIdx := f.FieldIndex("--location")
+	m, _ := f.Update(ui.FieldFetchedMsg{FieldIdx: locIdx, Choices: []string{"eastus"}})
 	f = m.(ui.Form)
 	// Move away and back.
 	m, _ = f.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("k")})
 	m, cmd := m.(ui.Form).Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("j")})
 	f = m.(ui.Form)
-	if got := f.Fields()[1].FetchState; got != ui.FetchLoaded {
+	if got := f.Fields()[locIdx].FetchState; got != ui.FetchLoaded {
 		t.Fatalf("FetchState = %v, want loaded (no refetch)", got)
 	}
 	if cmd != nil {
@@ -2064,16 +2111,16 @@ func TestFieldAlreadyFetchedDoesNotRefetch(t *testing.T) {
 
 func TestEscCancelsFetch(t *testing.T) {
 	f := loadedFetchForm(t)
-	m, _ := f.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("j")})
+	locIdx := f.FieldIndex("--location")
 	// Simulate the 10 s offer.
-	m, _ = m.(ui.Form).Update(ui.FieldFetchOfferCancelMsg{FieldIdx: 1})
+	m, _ := f.Update(ui.FieldFetchOfferCancelMsg{FieldIdx: locIdx})
 	f = m.(ui.Form)
 	if f.Hint() != "fetch taking too long — press Esc to cancel" {
 		t.Fatalf("hint = %q, want cancel offer", f.Hint())
 	}
 	m, _ = f.Update(tea.KeyMsg{Type: tea.KeyEsc})
 	f = m.(ui.Form)
-	if got := f.Fields()[1].FetchState; got != ui.FetchIdle {
+	if got := f.Fields()[locIdx].FetchState; got != ui.FetchIdle {
 		t.Fatalf("FetchState = %v, want idle after Esc cancel", got)
 	}
 	if f.Quitting() {
@@ -2083,23 +2130,22 @@ func TestEscCancelsFetch(t *testing.T) {
 		t.Errorf("hint = %q, want cancelled hint", f.Hint())
 	}
 	// Stale completion after cancel is ignored.
-	m, _ = f.Update(ui.FieldFetchedMsg{FieldIdx: 1, Choices: []string{"eastus"}})
+	m, _ = f.Update(ui.FieldFetchedMsg{FieldIdx: locIdx, Choices: []string{"eastus"}})
 	f = m.(ui.Form)
-	if got := f.Fields()[1].FetchState; got != ui.FetchIdle {
+	if got := f.Fields()[locIdx].FetchState; got != ui.FetchIdle {
 		t.Errorf("stale FieldFetchedMsg changed FetchState to %v, want idle", got)
 	}
 }
 
 func TestSpinnerAppearsAfterThreshold(t *testing.T) {
 	f := loadedFetchForm(t)
-	m, _ := f.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("j")})
-	f = m.(ui.Form)
-	if f.Fields()[1].FetchSpinnerShow {
+	locIdx := f.FieldIndex("--location")
+	if f.Fields()[locIdx].FetchSpinnerShow {
 		t.Fatal("spinner must be hidden before the 150ms tick")
 	}
-	m, _ = f.Update(ui.FieldSpinnerShowMsg{FieldIdx: 1})
+	m, _ := f.Update(ui.FieldSpinnerShowMsg{FieldIdx: locIdx})
 	f = m.(ui.Form)
-	if !f.Fields()[1].FetchSpinnerShow {
+	if !f.Fields()[locIdx].FetchSpinnerShow {
 		t.Fatal("FetchSpinnerShow = false after FieldSpinnerShowMsg, want true")
 	}
 	if v := f.View(); !strings.Contains(v, "--location") {
@@ -2109,30 +2155,30 @@ func TestSpinnerAppearsAfterThreshold(t *testing.T) {
 
 func TestSpinnerHiddenWhenFetchCompletesBeforeThreshold(t *testing.T) {
 	f := loadedFetchForm(t)
-	m, _ := f.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("j")})
-	m, _ = m.(ui.Form).Update(ui.FieldFetchedMsg{FieldIdx: 1, Choices: []string{"eastus"}})
+	locIdx := f.FieldIndex("--location")
+	m, _ := f.Update(ui.FieldFetchedMsg{FieldIdx: locIdx, Choices: []string{"eastus"}})
 	f = m.(ui.Form)
-	if f.Fields()[1].FetchSpinnerShow {
+	if f.Fields()[locIdx].FetchSpinnerShow {
 		t.Error("spinner must never show when fetch completes before the threshold")
 	}
 	// Late tick is a no-op.
-	m, _ = f.Update(ui.FieldSpinnerShowMsg{FieldIdx: 1})
+	m, _ = f.Update(ui.FieldSpinnerShowMsg{FieldIdx: locIdx})
 	f = m.(ui.Form)
-	if f.Fields()[1].FetchSpinnerShow {
+	if f.Fields()[locIdx].FetchSpinnerShow {
 		t.Error("late FieldSpinnerShowMsg must be a no-op on a loaded field")
 	}
 }
 
 func TestSlowFetchHintAt3s(t *testing.T) {
 	f := loadedFetchForm(t)
-	m, _ := f.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("j")})
-	m, _ = m.(ui.Form).Update(ui.FieldFetchSlowMsg{FieldIdx: 1})
+	locIdx := f.FieldIndex("--location")
+	m, _ := f.Update(ui.FieldFetchSlowMsg{FieldIdx: locIdx})
 	f = m.(ui.Form)
 	if f.Hint() != "az is slow to start — this result will be cached" {
 		t.Errorf("hint = %q, want slow-fetch hint", f.Hint())
 	}
 	// Hint clears when the fetch completes.
-	m, _ = f.Update(ui.FieldFetchedMsg{FieldIdx: 1, Choices: []string{"eastus"}})
+	m, _ = f.Update(ui.FieldFetchedMsg{FieldIdx: locIdx, Choices: []string{"eastus"}})
 	f = m.(ui.Form)
 	if f.Hint() != "" {
 		t.Errorf("hint = %q after completion, want cleared", f.Hint())
@@ -2163,8 +2209,8 @@ func TestEnumPopupUsesFetchedChoices(t *testing.T) {
 
 func TestLoadedFieldRowShowsOptionCount(t *testing.T) {
 	f := loadedFetchForm(t)
-	m, _ := f.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("j")})
-	m, _ = m.(ui.Form).Update(ui.FieldFetchedMsg{FieldIdx: 1, Choices: []string{"eastus", "westus", "northeurope"}})
+	locIdx := f.FieldIndex("--location")
+	m, _ := f.Update(ui.FieldFetchedMsg{FieldIdx: locIdx, Choices: []string{"eastus", "westus", "northeurope"}})
 	f = m.(ui.Form)
 	if v := f.View(); !strings.Contains(v, "(3 options)") {
 		t.Errorf("loaded row should show '(3 options)'; view:\n%s", v)
@@ -2618,10 +2664,11 @@ func TestSelectedRowSpansFullWidth(t *testing.T) {
 	m, _ := f.Update(tea.WindowSizeMsg{Width: 60, Height: 30})
 	f = m.(ui.Form)
 	view := f.View()
-	// The first (focused) field row: find the line containing "--name".
+	// The first (focused) field row: find the line containing "--location"
+	// (the alphabetically-first required field, after sort).
 	found := false
 	for _, ln := range strings.Split(view, "\n") {
-		if strings.Contains(stripSGR(ln), "--name") {
+		if strings.Contains(stripSGR(ln), "--location") {
 			if w := runewidth.StringWidth(stripSGR(ln)); w != 60 {
 				t.Errorf("selected row visual width = %d, want 60 (full width); line: %q", w, stripSGR(ln))
 			}
@@ -2630,7 +2677,7 @@ func TestSelectedRowSpansFullWidth(t *testing.T) {
 		}
 	}
 	if !found {
-		t.Errorf("no --name row found; view:\n%s", view)
+		t.Errorf("no --location row found; view:\n%s", view)
 	}
 }
 
@@ -2659,19 +2706,25 @@ func TestSelectedRowSpansFullWidthWithVarAndEmptyValues(t *testing.T) {
 		return 0, false
 	}
 
-	// Empty-value row selected (styled — placeholder).
-	if w, ok := rowWidth(frm.View(), "--name"); !ok || w != 60 {
+	// Empty-value row selected (styled — placeholder). Cursor sits on
+	// --location after alphabetical sort.
+	if w, ok := rowWidth(frm.View(), "--location"); !ok || w != 60 {
 		t.Errorf("selected empty row width = %d (ok=%v), want 60", w, ok)
 	}
-	// $VAR row selected.
-	m, _ = frm.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("j")})
-	frm = m.(ui.Form)
+	// $VAR row selected — navigate to --resource-group by name.
+	for i := 0; i < frm.FieldIndex("--resource-group"); i++ {
+		m, _ = frm.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("j")})
+		frm = m.(ui.Form)
+	}
 	if w, ok := rowWidth(frm.View(), "$RG →"); !ok || w != 60 {
 		t.Errorf("selected $VAR row width = %d (ok=%v), want 60", w, ok)
 	}
-	// Typed literal row selected.
-	m, _ = frm.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("j")})
-	frm = m.(ui.Form)
+	// Typed literal row selected — navigate to --location (which still
+	// has no value) and type "westeurope".
+	for i := 0; i < frm.FieldIndex("--location"); i++ {
+		m, _ = frm.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("j")})
+		frm = m.(ui.Form)
+	}
 	m, _ = frm.Update(tea.KeyMsg{Type: tea.KeyEnter})
 	frm = m.(ui.Form)
 	for _, r := range "westeurope" {
@@ -2707,17 +2760,28 @@ func TestSelectedGridCellSpansColumnWidth(t *testing.T) {
 		t.Fatalf("expected grid layout, got cols=%d", cols)
 	}
 	view := f.View()
-	// Focused cell (--name, first column). Expected cell width mirrors
-	// renderGrid: 2 + nameWidth + 1 + gridValueBudget. nameWidth for column 1
-	// = max(len("--name"), len("--optXX"), minNameCol=12) = 12 → 39.
+	// Focused cell (--name, first column). With the dot leader filling
+	// the gap, the cell content is exactly cellWidth = 2 + nameWidth + 1
+	// + gridValueBudget chars (nameWidth=12, gridValueBudget=24 → 39).
+	// Assert the dots are inside the highlighted region — i.e. the
+	// cell background spans from the bullet to the value, with no
+	// unstyled gap between name and dots.
 	found := false
 	for _, ln := range strings.Split(view, "\n") {
 		if s := stripSGR(ln); strings.Contains(s, "--name") {
-			// The highlighted background must extend past the value: assert
-			// the raw line contains the selected row with at least 10 trailing
-			// spaces inside the styled region (padding up to the cell width).
-			if !strings.Contains(ln, "          \x1b[0m") && !strings.Contains(ln, "          \x1b[") {
-				t.Errorf("selected grid cell not padded to column width; raw line: %q", ln)
+			// Strip ANSI to measure visual width; the cell should be 39.
+			if w := runewidth.StringWidth(s); w < 39 {
+				t.Errorf("selected grid cell visual width = %d, want >= 39; line: %q", w, s)
+			}
+			// The styled region (selectedStyle background) must wrap the
+			// dots — check it starts before the first dot and ends after
+			// the value placeholder.
+			firstDotIdx := strings.Index(ln, "․")
+			if firstDotIdx < 0 {
+				t.Errorf("no dots in --name row; line: %q", ln)
+			}
+			if !strings.Contains(ln[:firstDotIdx], "\x1b[48;5;240m") {
+				t.Errorf("background style should reach the dots; line: %q", ln)
 			}
 			found = true
 			break

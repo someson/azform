@@ -28,7 +28,7 @@ const (
 	FormModeList    FormMode = iota // navigating the field list
 	FormModeEdit                    // text input inside a field
 	FormModeEnum                    // enum popup open
-	FormModeFilter                  // / fuzzy filter input active
+	FormModeFilter                  // / filter input active
 	FormModeDone                    // Tab → Done button focused
 	FormModeCancel                  // Tab → Cancel button focused
 	FormModeHelp                    // ? cheatsheet overlay open
@@ -58,7 +58,7 @@ type metadataErrorMsg struct{ err error }
 // Styles
 var (
 	headerStyle      = lipgloss.NewStyle().Bold(true)
-	selectedStyle    = lipgloss.NewStyle().Background(lipgloss.Color("237"))
+	selectedStyle    = lipgloss.NewStyle().Background(lipgloss.Color("240"))
 	srcTagStyle      = lipgloss.NewStyle().Foreground(lipgloss.Color("8"))
 	hintStyle        = lipgloss.NewStyle().Foreground(lipgloss.Color("8")).Italic(true)
 	previewStyle     = lipgloss.NewStyle().Foreground(lipgloss.Color("14"))
@@ -991,6 +991,19 @@ func (m Form) Mode() FormMode { return m.mode }
 
 // Fields returns a defensive copy of all fields.
 func (m Form) Fields() []Field { return append([]Field(nil), m.fields...) }
+
+// FieldIndex returns the index of the field whose Param.Name matches, or
+// -1 if absent. Useful for tests and any external code that wants to
+// address fields by name rather than position — positions shift when the
+// display sort changes, names don't.
+func (m Form) FieldIndex(name string) int {
+	for i, f := range m.fields {
+		if f.Param.Name == name {
+			return i
+		}
+	}
+	return -1
+}
 
 // Visible returns the filtered field-index subset.
 func (m Form) Visible() []int { return append([]int(nil), m.visible...) }

@@ -4,7 +4,6 @@
 
 [![License](https://img.shields.io/github/license/someson/azform)](LICENSE)
 [![CI](https://github.com/someson/azform/actions/workflows/ci.yml/badge.svg)](https://github.com/someson/azform/actions/workflows/ci.yml)
-[![Go Report Card](https://goreportcard.com/badge/github.com/someson/azform)](https://goreportcard.com/report/github.com/someson/azform)
 [![Latest release](https://img.shields.io/github/v/release/someson/azform)](https://github.com/someson/azform/releases/latest)
 [![Downloads](https://img.shields.io/github/downloads/someson/azform/total)](https://github.com/someson/azform/releases)
 [![Go version](https://img.shields.io/github/go-mod/go-version/someson/azform)](go.mod)
@@ -94,10 +93,68 @@ So the loop becomes: type, run, read error, fix, run again. Sometimes four or fi
 ## What it can do
 
 - Show every parameter of a command in one place, with required ones marked
+- Filter the parameter list as you type — names and help text are searched live, so a 100-parameter command like `az vm create` collapses to one row when you know what you're after
+```
+○ --dns-name               —
+○ --dns-name-scope         —
+
+/ dns█
+```
 - Turn fixed value sets into pickable lists, so misspellings stop happening
+```
+● --name                 pip-nat                   ○ --acquire-policy-token —
+● --resource-group       myResourceGroup           ○ --change-reference     —
+● --allocation-method    Static                    ○ --debug
+○ --ddos-protection-mode —                         ○ --help
+○ --ddos-protection-plan —                         ○ --only-show-errors
+○ --dns-name             —                         ● --output               json
+○ --dns-name-scope       —                         ┌──────────────────────┐ —
+○ --edge-zone            —                         │▶ json                │ —
+● --idle-timeout         4                         │  jsonc               │
+○ --ip-address           —                         │  none                │
+○ --ip-tags              —                         │  table               │
+○ --location             —                         │  tsv                 │
+○ --public-ip-prefix     —                         │  yaml                │
+○ --reverse-fqdn         —                         │  yamlc               │
+● --sku                  StandardV2                └──────────────────────┘
+○ --tags                 —
+○ --tier                 —
+● --version              IPv4
+○ --zone                 —
+```
 - Pick up a command you already started typing and let you finish it in the form
 - Fill fields with shell variables you already have defined, and remember which variable you used for which parameter
 - Warn you before you run a command that references a variable your shell doesn't actually have
+- Open a filtered variable picker from any field (`Ctrl-G`) to insert `$VAR` from the current shell session without scrolling through your whole env
+```
+● --name                 pip-nat                   ○ --acquire-policy-token —
+● --resource-group       █                         ○ --change-reference     —
+┌─────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+│ filter: my█                                                                                                     │
+│▶ myResourceGroup                                                                                                │
+│  my_git_format                                                                                                  │
+│                                                                                                                 │
+│                                                                                                                 │
+│                                                                                                                 │
+└─────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+● --allocation-method    Static                    ○ --debug
+○ --ddos-protection-mode —                         ○ --help
+○ --ddos-protection-plan —                         ○ --only-show-errors
+○ --dns-name             —                         ● --output               json
+○ --dns-name-scope       —                         ○ --query                —
+○ --edge-zone            —                         ○ --subscription         —
+● --idle-timeout         4                         ○ --verbose
+○ --ip-address           —
+○ --ip-tags              —
+○ --location             —
+○ --public-ip-prefix     —
+○ --reverse-fqdn         —
+● --sku                  StandardV2
+○ --tags                 —
+○ --tier                 —
+● --version              IPv4
+○ --zone                 —
+```
 - Show live values from your Azure subscription where it makes sense — resource groups, locations, existing resources
 - Save named presets, so "a storage account like the one in project X" is one keystroke
 - Give the finished command back as a single line, as a multi-line script block, or on your clipboard
@@ -110,6 +167,66 @@ So the loop becomes: type, run, read error, fix, run again. Sometimes four or fi
 - **Cover the deep structure of generic update commands.** For things like `--set properties.encryption.keySource=...` you get a plain text field. The shape of a resource's properties isn't something the CLI exposes.
 - **Undo anything.** It never changes anything in your subscription, so there's nothing to roll back — and once you press Enter, you're talking to Azure directly, same as always.
 
+## Keyboard
+
+The form is keyboard-only. Press **?** or **F1** inside it for an
+overlay listing every binding in the current context.
+
+```
+↑  ↓   k  j       move between parameters
+←  →   h  l       move between columns (grid layout)
+Enter             edit field / open enum popup / confirm
+Space             toggle optional parameter on/off (required fields show a hint)
+Esc               close popup; from list, cancel and save draft
+/                 filter by parameter name and help text
+Tab  Shift-Tab    cycle list → Done → Cancel → list
+g                 expand the Global Arguments section
+a                 show all collapsed parameters
+v                 toggle var / literal mode on env-sourced fields
+Ctrl-G            select $VAR from the buffer list and insert at the cursor
+w                 cycle through non-blocking warnings in the footer
+```
+
+`Enter` on **Done** is blocked while a blocking validation finding is
+active — the footer names the parameter and the reason. `Esc` inside
+a popup closes only the popup, not the whole form; cancelling the
+selection does not lose what is already filled in.
+
+## Privacy
+
+`azform` runs entirely on your machine and holds nothing on a server.
+The widget in your shell hands it a list of your current variables;
+variables whose names match `*TOKEN*`, `*SECRET*`, `*KEY*`, `*PASSWORD*`,
+`*PASSWD*`, or `*CREDENTIAL*` (case-insensitive) are filtered out
+before anything is read from disk, so secrets never reach the form's
+variable picker and never land in shell history through the form's
+actions.
+
+Drafts and bindings store *names* of variables, not resolved values —
+`--resource-group $RG` is remembered as `RG`, never as the group name
+itself. The only literal values persisted are enum parameters with a
+closed value set (such as `--sku Standard_LRS`), where the alternative
+would be to re-pick from the list each time.
+
+`azform` does not handle Azure authentication in any form. Tokens,
+device-code flows, and credential caches live entirely inside the
+`az` binary the form calls. If `az` is signed out, the form degrades
+gracefully — see *Diagnostics* below.
+
+## Terminals
+
+Reference platform is iTerm2 on macOS. The form needs the terminal to
+emit standard escape sequences for arrow keys, Home, End, and Page
+Up/Down; terminals that remap any of those — most commonly macOS
+Terminal.app, which binds Home/End to scrollback by default — will
+need them rebound to "beginning/end of line" for navigation to work.
+
+Kitty, WezTerm, Alacritty, and plain xterm on Linux are expected to
+work; VS Code's integrated terminal is not recommended because it
+forwards keys inconsistently. If a key seems dead, the form's **?**
+overlay lists every binding it understood, which usually identifies
+the missing sequence at a glance.
+
 ---
 
 ## Install
@@ -121,6 +238,61 @@ curl -fsSL https://raw.githubusercontent.com/someson/azform/main/install.sh | sh
 One command. No `sudo`, nothing outside your home directory. The installer asks before touching your shell profile, and `install.sh --uninstall` removes everything it added.
 
 Requires the Azure CLI to be installed and on your `PATH`. macOS and Linux for now.
+
+## Update and uninstall
+
+Update by rerunning the install command — the same one-liner, no
+special path:
+
+```sh
+curl -fsSL https://raw.githubusercontent.com/someson/azform/main/install.sh | sh
+```
+
+Uninstall:
+
+```sh
+curl -fsSL https://raw.githubusercontent.com/someson/azform/main/install.sh | sh -s -- --uninstall
+```
+
+The binary and the widget are removed; your drafts, bindings, and
+metadata cache are preserved. Add `--purge` if you want state gone
+too. Re-running `install.sh` does not duplicate the widget block in
+your shell profile — it checks for the markers first.
+
+## Diagnostics
+
+`azform --doctor` prints a summary of the runtime environment: which
+`az` is found, where the cache and state directories are, whether
+`az account get-access-token` works, and the relevant env-var
+overrides. Run it first when something is wrong.
+
+```sh
+azform --doctor                  # environment summary
+azform --version                 # azform version, commit, build date
+azform --dump-cache "vm create"  # JSON view of cached metadata for one command
+azform --parse-help save.txt     # parse a saved `az … --help` file, print the JSON
+azform --debug                   # write structured events to <state-dir>/debug.log
+```
+
+State and cache live under standard XDG-style paths — plain JSON
+files you can `cat` and delete:
+
+| | macOS | Linux |
+|---|---|---|
+| cache | `~/Library/Caches/azform/` | `~/.cache/azform/` |
+| state | `~/Library/Application Support/azform/` | `~/.local/state/azform/` |
+
+The cache directory holds per-command metadata (`commands/*.json`).
+The state directory holds `drafts.json` (form state from cancelled
+forms, 20 entries, 7-day TTL), `bindings.json` (remembered
+parameter-to-var links), and `parse-health.log` (rolling log of
+parser self-diagnostics, last 200 entries). With `--debug`,
+`debug.log` appears next to them.
+
+If a parser change does not seem to take effect on a command you were
+already editing, the cached metadata is the usual suspect — the form
+will keep showing what was parsed last time. Delete the specific file
+under `commands/` (or the whole cache directory) and reopen the form.
 
 ## Support me
 
