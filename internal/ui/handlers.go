@@ -92,6 +92,71 @@ func (m Form) handleKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 			return m, cmd
 		}
 
+	case FormModeSetVar:
+		switch msg.String() {
+		case "esc":
+			// Esc discards the batch (mirrors "Esc cancels and saves draft"
+			// semantics in the rest of the form — pressing Esc means
+			// "I changed my mind"). The widget's --env-out is left empty,
+			// so the shell sees no export line for this session.
+			m.pendingExports = nil
+			m.setVarHintMsg = ""
+			m.setVarHintActive = false
+			m.setVarInput.SetValue("")
+			m.mode = FormModeList
+			return m, nil
+		case "enter":
+			raw := m.setVarInput.Value()
+			name, value, ok, hint := m.parseSetVarInput(raw)
+			if raw == "" {
+				// Empty Enter: close the popup, commit whatever has
+				// accumulated so far. pendingExports survives — main.go
+				// flushes it on Done (confirmDone) only.
+				m.setVarInput.SetValue("")
+				m.setVarHintMsg = ""
+				m.setVarHintActive = false
+				m.mode = FormModeList
+				return m, nil
+			}
+			if !ok {
+				m.setVarHintMsg = hint
+				m.setVarHintActive = true
+				// Keep the input so the user can edit; popup stays open.
+				return m, nil
+			}
+			m.pendingExports = append(m.pendingExports, shellExportLine(name, value))
+			// Surface the just-set var to the Ctrl+G picker so the
+			// user can immediately insert `$name` into a field without
+			// closing and reopening the form. Without this, the picker
+			// would still be the snapshot from widget-open time and the
+			// new var wouldn't be reachable.
+			m.registerVar(name, value)
+			m.setVarHintMsg = ""
+			m.setVarHintActive = false
+			m.setVarInput.SetValue("")
+			// Stay in FormModeSetVar so the user can queue more exports.
+			// Empty Enter (handled above) is the explicit close.
+			var cmd tea.Cmd
+			m.setVarInput, cmd = m.setVarInput.Update(msg)
+			focusCmd := m.setVarInput.Focus()
+			if cmd == nil {
+				cmd = focusCmd
+			} else {
+				cmd = tea.Batch(cmd, focusCmd)
+			}
+			return m, cmd
+		default:
+			var cmd tea.Cmd
+			m.setVarInput, cmd = m.setVarInput.Update(msg)
+			// Typing invalidates a stale inline hint; the user is
+			// already correcting what tripped the validator.
+			if m.setVarHintActive {
+				m.setVarHintMsg = ""
+				m.setVarHintActive = false
+			}
+			return m, cmd
+		}
+
 	case FormModeHelp:
 		// Any keypress dismisses the cheatsheet. We don't filter for
 		// "q"/"esc"/"?" specifically — even arrow keys feel natural here
@@ -216,6 +281,17 @@ func (m Form) handleKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 			}
 			return m, nil
 		case "g":
+			// g opens the popup to write a shell variable export to
+			// --env-out. The old "toggle Global Arguments" behaviour
+			// moved to G (shift+g) — see the next case.
+			m.setVarInput.SetValue("")
+			m.setVarHintMsg = ""
+			m.setVarHintActive = false
+			m.mode = FormModeSetVar
+			return m, m.setVarInput.Focus()
+		case "G":
+			// Old 'g' binding (toggle Global Arguments section), shifted
+			// to uppercase to make room for the set-var popup.
 			m.showGlobals = !m.showGlobals
 			return m, nil
 		case "h", "left":

@@ -14,7 +14,7 @@ type KeyMap struct {
 	Confirm    key.Binding // Enter on Done button
 	Quit       key.Binding // Esc/q in list: exit without result
 	ShowAll    key.Binding // a: expand collapsed params
-	ShowGlobal key.Binding // g: show global args
+	ShowGlobal key.Binding // G (shift+g): show global args
 }
 
 // DefaultKeys matches the keyboard layout in spec 6.6.
@@ -29,5 +29,5 @@ var DefaultKeys = KeyMap{
 	Confirm:    key.NewBinding(key.WithKeys("enter")),
 	Quit:       key.NewBinding(key.WithKeys("esc", "q")),
 	ShowAll:    key.NewBinding(key.WithKeys("a")),
-	ShowGlobal: key.NewBinding(key.WithKeys("g")),
+	ShowGlobal: key.NewBinding(key.WithKeys("G")),
 }

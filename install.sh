@@ -138,16 +138,17 @@ write_widget() {
     cat > "$SHARE_DIR/widget.zsh" <<'WIDGET'
 # azform shell widget
 azform-widget() {
-  local out vars
+  local out vars env
   out=$(mktemp -t azform-out)
   vars=$(mktemp -t azform-vars)
+  env=$(mktemp -t azform-env)
   # Denylist: zsh built-in specials + prompt/theme noise. RANDOM intentionally kept.
   local -A azform_deny=(
     SECONDS 1 EPOCHSECONDS 1 EPOCHREALTIME 1
     UID 1 EUID 1 GID 1 EGID 1
     MATCH 1 MBEGIN 1 MEND 1 OPTARG 1 OPTIND 1
     HISTCHARS 1 histchars 1 HISTFILE 1 HISTSIZE 1 SAVEHIST 1
-    LISTMAX 1 LOGCHECK 1 MAILCHECK 1
+    LISTMAX 1 LOGCHECK 1 MAILCHECK 2
     MACHTYPE 1 CPUTYPE 1 OSTYPE 1 VENDOR 1
     HOST 1 HOSTNAME 1 SHORT_HOST 1 USERNAME 1
     LINES 1 COLUMNS 1 TTY 1 TMPPREFIX 1
@@ -169,13 +170,24 @@ azform-widget() {
     print -rn -- "$k=${(P)k}" >> "$vars"
     print -rn -- $'\0' >> "$vars"
   done
-  azform --line "$BUFFER" --cursor "$CURSOR" --out "$out" --vars "$vars" --cwd "$PWD" </dev/tty >/dev/tty 2>&1
+  azform --line "$BUFFER" --cursor "$CURSOR" --out "$out" --vars "$vars" --env-out "$env" --cwd "$PWD" </dev/tty >/dev/tty 2>&1
   if [[ -s "$out" ]]; then
     BUFFER=$(cat "$out")
     CURSOR=$#BUFFER
   fi
-  rm -f "$out" "$vars"
+  # Apply any shell-variable exports the user queued via the g-popup.
+  # Each line is `export NAME='value'` produced by azform itself, so eval
+  # is safe; we deliberately don't `source` so we never accidentally
+  # execute arbitrary shell from disk.
+  if [[ -s "$env" ]]; then
+    while IFS= read -r line; do eval "$line"; done < "$env"
+  fi
+  rm -f "$out" "$vars" "$env"
   zle redisplay
+}
+zle -N azform-widget
+bindkey '^Xa' azform-widget
+WIDGET
 }
 zle -N azform-widget
 bindkey '^Xa' azform-widget

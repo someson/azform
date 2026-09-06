@@ -33,6 +33,7 @@ const (
 	FormModeCancel                  // Tab → Cancel button focused
 	FormModeHelp                    // ? cheatsheet overlay open
 	FormModeVarPick                 // Ctrl+G → variable picker popup open
+	FormModeSetVar                  // g → popup to write `export NAME=VALUE` to --env-out
 )
 
 // LoadState tracks async metadata fetch.
@@ -134,6 +135,16 @@ type Form struct {
 	filterInput textinput.Model
 	filterQuery string
 
+	// setVarInput is the single-line textinput inside the FormModeSetVar
+	// popup. The user types `name=value` (or a bare `name` to export the
+	// current session value) and Enter appends a single-quoted export line
+	// to pendingExports. Esc discards the batch and closes the popup; an
+	// empty Enter also closes (committing whatever has accumulated).
+	setVarInput      textinput.Model
+	pendingExports   []string // flushed to --env-out on Done / Esc (commit on Done only)
+	setVarHintMsg    string   // transient inline hint shown while the popup is open
+	setVarHintActive bool     // a HintClearMsg tick is pending for setVarHintMsg
+
 	mode FormMode
 
 	width  int
@@ -225,6 +236,11 @@ func NewForm(command, outPath, stateDir, version string, cache *metadata.Cache) 
 	fi.Placeholder = "filter params…"
 	fi.Prompt = "/ "
 
+	sv := textinput.New()
+	sv.Placeholder = "name=value"
+	sv.Prompt = "set shell variable: "
+	sv.CharLimit = 256
+
 	return Form{
 		command:        command,
 		outPath:        outPath,
@@ -238,6 +254,7 @@ func NewForm(command, outPath, stateDir, version string, cache *metadata.Cache) 
 		cancelFetchIdx: -1,
 		textInput:      ti,
 		filterInput:    fi,
+		setVarInput:    sv,
 		draftStore:     state.NewDraftStore(stateDir),
 	}
 }
@@ -482,6 +499,10 @@ func (m Form) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		var cmd tea.Cmd
 		m.filterInput, cmd = m.filterInput.Update(msg)
 		return m, cmd
+	case FormModeSetVar:
+		var cmd tea.Cmd
+		m.setVarInput, cmd = m.setVarInput.Update(msg)
+		return m, cmd
 	}
 	return m, nil
 }
@@ -547,6 +568,34 @@ func (m *Form) sessionVarNames() map[string]bool {
 		set[v.Name] = true
 	}
 	return set
+}
+
+// registerVar adds (name, value) to both m.src.Vars and m.sessionVars so
+// the Ctrl+G picker sees vars that were just committed via the g-popup.
+// Without this, vars defined inside the widget would only land in the
+// shell (via --env-out) and the picker would still be the snapshot from
+// widget-open time — the user would have to close and reopen the form
+// to see them. Existing entries are left alone (idempotent); the call
+// is cheap, so committing each popup line calls it once.
+func (m *Form) registerVar(name, value string) {
+	for _, v := range m.src.Vars {
+		if v.Name == name {
+			// Already known. Don't overwrite: the shell already has a
+			// (possibly newer) value, and the picker relies on
+			// m.sessionVars / m.src.Vars to surface just-set vars as
+			// green-resolving references.
+			if m.sessionVars == nil {
+				m.sessionVars = map[string]bool{}
+			}
+			m.sessionVars[name] = true
+			return
+		}
+	}
+	m.src.Vars = append(m.src.Vars, vars.Variable{Name: name, Value: value})
+	if m.sessionVars == nil {
+		m.sessionVars = map[string]bool{}
+	}
+	m.sessionVars[name] = true
 }
 
 // recomputeFindings rebuilds m.findings using m.src.Engine. params may be nil
@@ -1086,4 +1135,98 @@ func (m Form) SessionVars() map[string]bool { return m.sessionVars }
 // Declarations returns a defensive copy of vars the user explicitly declared.
 func (m Form) Declarations() []DeclaredVar {
 	return append([]DeclaredVar(nil), m.declaredVars...)
+}
+
+// PendingEnvExports returns the defensive copy of the export lines the user
+// queued via the FormModeSetVar popup. Each line is `export NAME='value'`,
+// ready to be written verbatim into a file sourced by the shell widget.
+func (m Form) PendingEnvExports() []string {
+	return append([]string(nil), m.pendingExports...)
+}
+
+// SetVarInputValue exposes the current set-var popup text so tests can drive
+// the input programmatically without faking per-rune key events.
+func (m Form) SetVarInputValue() string {
+	return m.setVarInput.Value()
+}
+
+// SetVarHint returns the transient inline hint shown while the set-var popup
+// is open (e.g. "invalid var name", "var $NAME is not set in this shell").
+func (m Form) SetVarHint() string { return m.setVarHintMsg }
+
+// quoteForShell returns value wrapped in POSIX single quotes, with embedded
+// single quotes escaped via the standard '\” (close-quote, escaped-quote,
+// reopen-quote) pattern. This is safe to embed in an `export NAME=...` line
+// that the widget later passes through `eval` — the resulting token is a
+// single shell word regardless of the value's contents.
+func quoteForShell(value string) string {
+	const (
+		quote     = "'"
+		escapeRun = `'\''`
+	)
+	return quote + strings.ReplaceAll(value, quote, escapeRun+quote) + quote
+}
+
+// shellExportLine formats a single export line. name is assumed valid by
+// the caller; value is single-quoted via quoteForShell. Returns "export
+// NAME='value'".
+func shellExportLine(name, value string) string {
+	return "export " + name + "=" + quoteForShell(value)
+}
+
+// isValidVarName reports whether s is a valid POSIX shell variable name
+// ([A-Za-z_][A-Za-z0-9_]*). Mirrors the regex used in isVarName but kept
+// separate so the helper reads at the call site and so any divergence
+// between field-var parsing and env-export parsing is intentional and
+// named, not accidental.
+func isValidVarName(s string) bool {
+	return isVarName(s)
+}
+
+// parseSetVarInput interprets the user's popup input as either a NAME=VALUE
+// pair or a bare NAME to look up in the current shell session. Returns the
+// resolved (name, value) and a hint to show when ok is false.
+//
+// Whitespace around the input is trimmed; empty input is reported as
+// ok=true with empty strings so the caller can decide to close the popup
+// (empty Enter) rather than treat it as an error.
+func (m *Form) parseSetVarInput(raw string) (name, value string, ok bool, hint string) {
+	s := strings.TrimSpace(raw)
+	if s == "" {
+		return "", "", true, ""
+	}
+	eq := strings.IndexByte(s, '=')
+	if eq < 0 {
+		// Bare name: export the current session value.
+		if !isValidVarName(s) {
+			return "", "", false, "invalid var name (must match [A-Za-z_][A-Za-z0-9_]*)"
+		}
+		if m.src.Vars == nil {
+			return s, "", false, "var $" + s + " is not set in this shell"
+		}
+		for _, v := range m.src.Vars {
+			if v.Name == s {
+				return s, v.Value, true, ""
+			}
+		}
+		return s, "", false, "var $" + s + " is not set in this shell"
+	}
+	name = strings.TrimSpace(s[:eq])
+	value = s[eq+1:]
+	if !isValidVarName(name) {
+		return "", "", false, "invalid var name (must match [A-Za-z_][A-Za-z0-9_]*)"
+	}
+	return name, value, true, ""
+}
+
+// FlushPendingEnvExports returns the accumulated export lines as a single
+// newline-joined string with a trailing newline. Each entry is the exact
+// form written into the --env-out file: `export NAME='value'` (POSIX-
+// portable single-quoting, safe for `eval`). Empty when no exports are
+// queued, so the CLI can `[[ -s "$env" ]]` check before sourcing.
+func (m Form) FlushPendingEnvExports() string {
+	if len(m.pendingExports) == 0 {
+		return ""
+	}
+	return strings.Join(m.pendingExports, "\n") + "\n"
 }

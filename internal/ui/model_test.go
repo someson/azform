@@ -2191,7 +2191,7 @@ func TestFormShowGlobalsToggle(t *testing.T) {
 	m, _ := f.Update(ui.MetadataLoadedMsg{Params: params, Summary: "."})
 	f = m.(ui.Form)
 
-	// Default: globals hidden; view shows the "press g" hint but not --output.
+	// Default: globals hidden; view shows the "press G" hint but not --output.
 	view := f.View()
 	if f.ShowGlobals() {
 		t.Error("ShowGlobals should default to false")
@@ -2199,32 +2199,68 @@ func TestFormShowGlobalsToggle(t *testing.T) {
 	if strings.Contains(view, "--output") {
 		t.Error("view should NOT contain --output when showGlobals=false")
 	}
-	if !strings.Contains(view, "press g to show 2 global") {
-		t.Errorf("view should include the 'press g' hint with count; view:\n%s", view)
+	if !strings.Contains(view, "press G to show 2 global") {
+		t.Errorf("view should include the 'press G' hint with count; view:\n%s", view)
 	}
 
-	// Press 'g' → globals visible.
-	m, _ = f.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("g")})
+	// Press 'G' (uppercase; lowercase 'g' now opens the set-var popup)
+	// → globals visible.
+	m, _ = f.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("G")})
 	f = m.(ui.Form)
 	if !f.ShowGlobals() {
-		t.Fatal("ShowGlobals should be true after pressing g")
+		t.Fatal("ShowGlobals should be true after pressing G")
 	}
 	view = f.View()
 	if !strings.Contains(view, "--output") {
-		t.Errorf("view should contain --output after g; view:\n%s", view)
+		t.Errorf("view should contain --output after G; view:\n%s", view)
 	}
 	if !strings.Contains(view, "--query") {
-		t.Error("view should contain --query after g")
+		t.Error("view should contain --query after G")
 	}
 
-	// Press 'g' again → hidden again.
-	m, _ = f.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("g")})
+	// Press 'G' again → hidden again.
+	m, _ = f.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("G")})
 	f = m.(ui.Form)
 	if f.ShowGlobals() {
 		t.Error("ShowGlobals should toggle back to false")
 	}
 	if strings.Contains(f.View(), "--output") {
-		t.Error("view should not contain --output after second g")
+		t.Error("view should not contain --output after second G")
+	}
+}
+
+// TestShowGlobalsMovedToShiftG is the companion to TestFormShowGlobalsToggle:
+// pressing lowercase 'g' from list mode must NOT toggle showGlobals anymore
+// (it now opens the set-var popup). The old binding has been shifted to
+// uppercase 'G'. Without this guard a future refactor could accidentally
+// re-wire 'g' and silently break the new popup.
+func TestShowGlobalsMovedToShiftG(t *testing.T) {
+	f := ui.NewForm("group list", "/tmp/out.txt", t.TempDir(), "test", nil)
+	m, _ := f.Update(ui.MetadataLoadedMsg{Params: testParams, Summary: "."})
+	f = m.(ui.Form)
+
+	// Lowercase 'g' opens the popup, not the toggle.
+	m, _ = f.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("g")})
+	f = m.(ui.Form)
+	if f.Mode() != ui.FormModeSetVar {
+		t.Fatalf("lowercase g should open FormModeSetVar, got %v", f.Mode())
+	}
+	if f.ShowGlobals() {
+		t.Error("lowercase g must not toggle ShowGlobals")
+	}
+
+	// Esc closes the popup; ShowGlobals is still false (uppercase only).
+	m, _ = f.Update(tea.KeyMsg{Type: tea.KeyEsc})
+	f = m.(ui.Form)
+	if f.ShowGlobals() {
+		t.Error("Esc from popup must not change ShowGlobals")
+	}
+
+	// Uppercase 'G' now toggles.
+	m, _ = f.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("G")})
+	f = m.(ui.Form)
+	if !f.ShowGlobals() {
+		t.Error("uppercase G should toggle ShowGlobals")
 	}
 }
 
@@ -2260,7 +2296,7 @@ func makeGridForm(t *testing.T, reqCount, reqOptCount, globalCount, termWidth in
 	m, _ := f.Update(tea.WindowSizeMsg{Width: termWidth, Height: 40})
 	m, _ = m.(ui.Form).Update(ui.MetadataLoadedMsg{Params: params, Summary: "."})
 	if showGlobals {
-		m, _ = m.(ui.Form).Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("g")})
+		m, _ = m.(ui.Form).Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("G")})
 	}
 	return m.(ui.Form)
 }
@@ -3111,7 +3147,7 @@ func TestVertNavSweepIgnoresScrambledMetadataOrder(t *testing.T) {
 	f := ui.NewForm("test cmd", "/tmp/out", t.TempDir(), "test", nil)
 	m, _ := f.Update(tea.WindowSizeMsg{Width: 240, Height: 40})
 	m, _ = m.(ui.Form).Update(ui.MetadataLoadedMsg{Params: params, Summary: "."})
-	m, _ = m.(ui.Form).Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("g")}) // show globals
+	m, _ = m.(ui.Form).Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("G")}) // show globals
 	f = m.(ui.Form)
 	roCols, globalsCol, cols := f.GridLayout()
 	if cols < 2 {

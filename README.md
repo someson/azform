@@ -180,7 +180,8 @@ Space             toggle optional parameter on/off (required fields show a hint)
 Esc               close popup; from list, cancel and save draft
 /                 filter by parameter name and help text
 Tab  Shift-Tab    cycle list → Done → Cancel → list
-g                 expand the Global Arguments section
+g                 open a popup to set a shell variable (`name=value`, or just `name` to export the current session value) — writes the export into the calling shell on Done
+G                 expand the Global Arguments section (the old `g` binding, shifted)
 a                 show all collapsed parameters
 v                 cycle value visibility for required params (see below)
 Ctrl-G            select $VAR from the buffer list and insert at the cursor

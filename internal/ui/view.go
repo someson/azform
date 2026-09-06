@@ -215,7 +215,7 @@ func (m Form) View() string {
 				row++
 			}
 			if hiddenGlobals > 0 {
-				writeLine(&optSB, hintStyle.Render(fmt.Sprintf("  (press g to show %d global argument(s))", hiddenGlobals)))
+				writeLine(&optSB, hintStyle.Render(fmt.Sprintf("  (press G to show %d global argument(s))", hiddenGlobals)))
 			}
 			if m.vpReady {
 				m.vp.SetContent(optSB.String())
@@ -256,6 +256,12 @@ func (m Form) View() string {
 		}
 		writeLine(&sb, sep)
 		writeLine(&sb, m.filterInput.View())
+	}
+
+	if m.mode == FormModeSetVar {
+		for _, ln := range m.renderSetVarBox() {
+			writeLine(&sb, ln)
+		}
 	}
 
 	writeLine(&sb, sep)
@@ -341,6 +347,58 @@ func (m Form) View() string {
 	return sb.String()
 }
 
+// renderSetVarBox builds the bordered popup for FormModeSetVar as a slice
+// of lines: a top border, the input row (textinput view with prompt +
+// optional hint suffix), and a bottom border. Width matches the terminal
+// so the box visually replaces the normal separator/preview boundary.
+//
+// When the user types a value that doesn't parse, the hint is shown
+// inline in the input row (red, after the input), so the field stays
+// editable in place — no separate footer churn.
+func (m *Form) renderSetVarBox() []string {
+	w := m.width
+	if w < 8 {
+		w = 8
+	}
+	innerW := w - 2
+	if innerW < 4 {
+		innerW = 4
+	}
+
+	top := "┌" + strings.Repeat("─", innerW) + "┐"
+	bot := "└" + strings.Repeat("─", innerW) + "┘"
+
+	// Content row: textinput view on the left, hint (if any) on the
+	// right. We measure the textinput's rendered width so the hint can
+	// be right-aligned inside the same bordered line, mirroring the
+	// hint-on-the-right layout the filter input uses elsewhere.
+	inputLine := m.setVarInput.View()
+	inputPlain := stripANSI(inputLine)
+	inputW := runewidth.StringWidth(inputPlain)
+	hint := m.setVarHintMsg
+	var right string
+	if hint != "" {
+		right = hintStyle.Render(" " + hint)
+	}
+	// Compose the interior: pad input with spaces up to innerW - rightW.
+	// We use lipgloss.Width (ANSI-aware) so styled hint widths line up.
+	rightW := 0
+	if right != "" {
+		rightW = ansi.StringWidth(right)
+	}
+	pad := innerW - inputW - rightW
+	if pad < 1 {
+		pad = 1
+	}
+	interior := inputLine + strings.Repeat(" ", pad) + right
+	if ansi.StringWidth(interior) > innerW {
+		interior = ansi.Truncate(interior, innerW, "")
+	}
+	middle := "│" + interior + "│"
+
+	return []string{top, middle, bot}
+}
+
 // renderHelp produces the cheatsheet overlay for FormModeHelp. Lists every
 // key the widget understands (in FormModeList / Done / Cancel); edit/filter
 // modes follow standard text-input conventions and aren't enumerated here.
@@ -389,7 +447,8 @@ func (m Form) renderHelp() string {
 				{"ctrl+g", "insert variable reference ($NAME) at cursor (edit mode)"},
 				{"esc", "close popup / cancel edit"},
 				{"/", "filter visible parameters"},
-				{"g", "toggle Global Arguments section"},
+				{"g", "set a shell variable (writes export to calling shell)"},
+				{"G", "toggle Global Arguments section"},
 			},
 		},
 		{
@@ -826,12 +885,12 @@ func (m *Form) renderGrid(roCols [][]int, globalsCol []int) (body string, cursor
 	}
 
 	// Hint: when globals were auto-hidden because they don't fit vertically,
-	// let the user know 'g' will reveal them.
+	// let the user know 'G' will reveal them.
 	if hiddenGlobals > 0 {
 		if len(globalsCol) > 0 {
-			sb.WriteString(hintStyle.Render(fmt.Sprintf("  (press g to show %d more global argument(s))", hiddenGlobals)))
+			sb.WriteString(hintStyle.Render(fmt.Sprintf("  (press G to show %d more global argument(s))", hiddenGlobals)))
 		} else {
-			sb.WriteString(hintStyle.Render(fmt.Sprintf("  (press g to show %d global argument(s))", hiddenGlobals)))
+			sb.WriteString(hintStyle.Render(fmt.Sprintf("  (press G to show %d global argument(s))", hiddenGlobals)))
 		}
 		sb.WriteByte('\n')
 	}

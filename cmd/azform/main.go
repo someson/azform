@@ -43,6 +43,7 @@ func run(args []string) int {
 		showVersion   bool
 		line          string
 		outPath       string
+		envOutPath    string
 		cursor        int
 		varsPath      string
 		cwd           string
@@ -57,6 +58,7 @@ func run(args []string) int {
 	fs.BoolVar(&showVersion, "version", false, "print version and exit")
 	fs.StringVar(&line, "line", "", "current shell buffer contents")
 	fs.StringVar(&outPath, "out", "", "file path to write the assembled command")
+	fs.StringVar(&envOutPath, "env-out", "", "file path to write pending shell-variable exports (g-popup); empty = disabled")
 	fs.IntVar(&cursor, "cursor", 0, "cursor position in --line")
 	fs.StringVar(&varsPath, "vars", "", "NUL-separated NAME=VALUE file from the shell widget")
 	fs.StringVar(&cwd, "cwd", "", "shell working directory (for @ path completion)")
@@ -155,10 +157,10 @@ func run(args []string) int {
 	}
 	azureDefaults := vars.LoadAzureDefaults()
 
-	return runTUI(raw, shellVars, azureDefaults, outPath, stateDir, cacheDir, dbg)
+	return runTUI(raw, shellVars, azureDefaults, outPath, envOutPath, stateDir, cacheDir, dbg)
 }
 
-func runTUI(raw shell.RawBuffer, shellVars, azureDefaults []vars.Variable, outPath, stateDir, cacheDir string, dbg *debug.Logger) int {
+func runTUI(raw shell.RawBuffer, shellVars, azureDefaults []vars.Variable, outPath, envOutPath, stateDir, cacheDir string, dbg *debug.Logger) int {
 	cache := metadata.NewCache(cacheDir, version, nil)
 	cache.Debug = dbg
 	sessionNames := make([]string, 0, len(shellVars))
@@ -218,6 +220,21 @@ func runTUI(raw shell.RawBuffer, shellVars, azureDefaults []vars.Variable, outPa
 	result := f.Result()
 	if result == "" {
 		return 1
+	}
+
+	// Flush any pending shell-variable exports the user queued via the
+	// g-popup. Done only writes the file when the form actually committed
+	// (i.e. Result() is non-empty); Esc/cancel paths take Result()=="" so
+	// --env-out is left untouched on cancel. Matches the user's mental
+	// model: "press Done → my exports land in the shell; press Cancel →
+	// nothing happens".
+	if envOutPath != "" {
+		if exports := f.FlushPendingEnvExports(); exports != "" {
+			if err := os.WriteFile(envOutPath, []byte(exports), 0o600); err != nil {
+				fmt.Fprintf(os.Stderr, "azform: write env-out: %v\n", err)
+				return 2
+			}
+		}
 	}
 
 	declPrefix := ""
