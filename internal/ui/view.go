@@ -9,6 +9,7 @@ import (
 	"github.com/mattn/go-runewidth"
 
 	"github.com/someson/azform/internal/render"
+	"github.com/someson/azform/internal/shell"
 	"github.com/someson/azform/internal/validate"
 )
 
@@ -169,7 +170,23 @@ func (m Form) View() string {
 
 		switch m.mode {
 		case FormModeEnum:
-			writeLine(&sb, m.enumPop.View())
+			// Same bordered, right-aligned popup as grid mode. Lines
+			// are padded with leading spaces so the popup box hugs the
+			// terminal's right edge; content inside stays left-aligned.
+			popupLines := buildPopupLines(m.enumPop.choices, m.enumPop.cursor)
+			popupWidth := 0
+			for _, ln := range popupLines {
+				if w := runewidth.StringWidth(stripANSI(ln)); w > popupWidth {
+					popupWidth = w
+				}
+			}
+			leftPad := 0
+			if m.width > popupWidth {
+				leftPad = m.width - popupWidth
+			}
+			for _, ln := range popupLines {
+				writeLine(&sb, strings.Repeat(" ", leftPad)+ln)
+			}
 		case FormModeVarPick:
 			// Unified bordered box rendered full-width. Same geometry as
 			// the grid-mode overlay so both modes look consistent.
@@ -378,7 +395,7 @@ func (m Form) renderHelp() string {
 		{
 			title: "Variables",
 			rows: [][2]string{
-				{"v", "toggle var/literal mode (env-sourced fields only)"},
+				{"v", "cycle value visibility for required params"},
 				{"d", "declare current var for the session"},
 			},
 		},
@@ -454,6 +471,51 @@ func (m *Form) nameColumnWidth() int {
 	return width
 }
 
+// cycleDisplayRaw returns the unstyled value-column text for a field
+// that has a resolving var reference, picking one of three views based
+// on the global m.valueDisplayMode:
+//
+//	0 → $REF           (e.g. "$RG")
+//	1 → $REF → value   (e.g. "$RG → myResourceGroup", default)
+//	2 → value         (e.g. "myResourceGroup")
+//
+// Resolved value is read either from f.VarValue (env/buffer/remembered
+// pre-fill) or from m.src.Vars for the literal-text case (draft
+// restore / user typed "$RG" and committed). The caller is
+// responsible for checking that the field is required AND its value
+// is a resolving var ref; this helper just returns the raw text — the
+// caller applies status.Style().Render(...) and (in grid mode)
+// truncates to the cell width.
+func (m *Form) cycleDisplayRaw(f *Field) string {
+	resolved := f.VarValue
+	if resolved == "" {
+		if isVar, name := shell.DetectVarRef(f.Value); isVar {
+			for _, vv := range m.src.Vars {
+				if vv.Name == name {
+					resolved = vv.Value
+					break
+				}
+			}
+		}
+	}
+	switch m.valueDisplayMode {
+	case 0:
+		return f.Value
+	case 1:
+		if resolved != "" {
+			return f.Value + " → " + resolved
+		}
+		return f.Value
+	case 2:
+		if resolved != "" {
+			return resolved
+		}
+		return f.Value
+	default:
+		return f.DisplayValue()
+	}
+}
+
 func (m *Form) renderFieldSelected(idx int, selected bool, nameWidth int) string {
 	f := &m.fields[idx]
 	bullet := "○ "
@@ -489,8 +551,23 @@ func (m *Form) renderFieldSelected(idx int, selected bool, nameWidth int) string
 		valDisplay = hintStyle.Render(placeholder)
 	case f.Mode == FieldModeVar:
 		status := StatusOf(f.Value, m.sessionVars)
-		valDisplay = status.Style().Render(f.DisplayValue())
+		if f.Param.Required && status == VarStatusGreen {
+			valDisplay = status.Style().Render(m.cycleDisplayRaw(f))
+		} else {
+			valDisplay = status.Style().Render(f.DisplayValue())
+		}
 	default:
+		// Literal-mode field whose value happens to be a resolving
+		// var ref (e.g. draft-restored Value="$RG" with Mode=Literal
+		// and VarValue="" — drafts don't preserve var info). Detect
+		// this here so the v-cycle still applies; the rendering is
+		// view-only, no field state mutation.
+		if status := StatusOf(f.Value, m.sessionVars); status == VarStatusGreen && f.Param.Required {
+			if isVar, _ := shell.DetectVarRef(f.Value); isVar {
+				valDisplay = status.Style().Render(m.cycleDisplayRaw(f))
+				break
+			}
+		}
 		valDisplay = f.DisplayValue()
 	}
 	srcTag := ""
@@ -1127,12 +1204,6 @@ func (m *Form) spliceOverlay(lines []string, focusedRow, focusedCol int, cellWid
 		return lines
 	}
 
-	// Anchor x = sum of column widths up to focusedCol (plus the inter-column gap).
-	xAnchor := 0
-	for c := 0; c < focusedCol; c++ {
-		xAnchor += cellWidths[c] + gridCellGap
-	}
-
 	// Anchor y = the focused row in the viewport.
 	visibleIdx := focusedRow - m.vp.YOffset
 	if visibleIdx < 0 || visibleIdx >= len(lines) {
@@ -1152,11 +1223,21 @@ func (m *Form) spliceOverlay(lines []string, focusedRow, focusedCol int, cellWid
 			popupWidth = w
 		}
 	}
-	if xAnchor+popupWidth > m.width {
-		if m.width >= popupWidth {
+	// Right-align the popup to the focused cell's right edge (the
+	// end of the value column) so the box hugs the right side of the
+	// param column instead of the terminal. Content inside stays
+	// left-aligned — buildPopupLines pads with trailing spaces.
+	xAnchor := 0
+	for c := 0; c < focusedCol; c++ {
+		xAnchor += cellWidths[c] + gridCellGap
+	}
+	if m.width >= popupWidth {
+		cellRight := xAnchor + cellWidths[focusedCol]
+		if cellRight-popupWidth > xAnchor {
+			xAnchor = cellRight - popupWidth
+		} else if m.width-popupWidth > xAnchor {
+			// Popup wider than the cell: fall back to terminal-right.
 			xAnchor = m.width - popupWidth
-		} else {
-			xAnchor = 0
 		}
 	}
 
@@ -1265,8 +1346,24 @@ func (m *Form) renderGridCell(idx int, selected bool, nameWidth int) string {
 		valDisplay = hintStyle.Render(placeholder)
 	case f.Mode == FieldModeVar:
 		status := StatusOf(f.Value, m.sessionVars)
-		valDisplay = status.Style().Render(runewidth.Truncate(f.DisplayValue(), valueBudget-1, "…"))
+		var v string
+		if f.Param.Required && status == VarStatusGreen {
+			v = m.cycleDisplayRaw(f)
+		} else {
+			v = f.DisplayValue()
+		}
+		valDisplay = status.Style().Render(runewidth.Truncate(v, valueBudget-1, "…"))
 	default:
+		// Literal-mode field whose value happens to be a resolving
+		// var ref (draft-restored Value="$RG" with Mode=Literal
+		// and VarValue=""). Detect this here so the v-cycle still
+		// applies; rendering is view-only, no field state mutation.
+		if status := StatusOf(f.Value, m.sessionVars); status == VarStatusGreen && f.Param.Required {
+			if isVar, _ := shell.DetectVarRef(f.Value); isVar {
+				valDisplay = status.Style().Render(runewidth.Truncate(m.cycleDisplayRaw(f), valueBudget-1, "…"))
+				break
+			}
+		}
 		valDisplay = runewidth.Truncate(f.DisplayValue(), valueBudget-1, "…")
 	}
 	prefix := bullet + namePadded

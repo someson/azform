@@ -26,13 +26,24 @@ func main() {
 	m, _ := f.Update(tea.WindowSizeMsg{Width: 200, Height: 40})
 	m, _ = m.(ui.Form).Update(ui.MetadataLoadedMsg{Params: params, Summary: "Create a public IP address."})
 	if len(os.Args) > 2 && os.Args[2] == "enum" {
-		// Open the enum popup over --allocation-method (first optional,
-		// idx 3 after Required block). m.View() renders the popup anchored
-		// to that row.
-		for i := 0; i < 3; i++ {
-			m, _ = m.(ui.Form).Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("j")})
+		// Open the enum popup over the first optional field (--allocation-method
+		// in grid mode, --sku in single mode). Required fields come first
+		// in the alphabetical-within-group sort, so we skip past them.
+		form := m.(ui.Form)
+		fields := form.Fields()
+		target := -1
+		for i, f := range fields {
+			if !f.Param.Required && f.Param.HasSelectChoices() {
+				target = i
+				break
+			}
 		}
-		m, _ = m.(ui.Form).Update(tea.KeyMsg{Type: tea.KeyEnter})
+		if target > 0 {
+			for i := 0; i < target; i++ {
+				m, _ = m.(ui.Form).Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("j")})
+			}
+			m, _ = m.(ui.Form).Update(tea.KeyMsg{Type: tea.KeyEnter})
+		}
 	}
 	fmt.Println(stripANSI(m.View()))
 }

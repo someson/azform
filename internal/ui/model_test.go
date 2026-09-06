@@ -1117,43 +1117,6 @@ func TestFormDraftBeatsEnvPerSpecPriority(t *testing.T) {
 	}
 }
 
-func TestFormToggleVarLiteral(t *testing.T) {
-	src := ui.Sources{
-		Vars: []vars.Variable{{Name: "RG", Value: "my-group"}},
-	}
-	f := ui.NewFormWithSources("storage account create", "/tmp/out.txt", t.TempDir(), "test", nil, src)
-	m, _ := f.Update(ui.MetadataLoadedMsg{Params: testParams, Summary: "."})
-	f = m.(ui.Form)
-
-	// Move from --location (alphabetical-first) to --resource-group.
-	// Navigate by name rather than counting j's — the cursor count
-	// changes when params are sorted within groups.
-	for i := 0; i < f.FieldIndex("--resource-group"); i++ {
-		m, _ = f.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("j")})
-		f = m.(ui.Form)
-	}
-	m, _ = f.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("v")})
-	f = m.(ui.Form)
-	for _, ff := range f.Fields() {
-		if ff.Param.Name == "--resource-group" {
-			if ff.Mode != ui.FieldModeLiteral || ff.Value != "my-group" {
-				t.Errorf("after v: --resource-group = %+v, want literal my-group", ff)
-			}
-			break
-		}
-	}
-	m, _ = f.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("v")})
-	f = m.(ui.Form)
-	for _, ff := range f.Fields() {
-		if ff.Param.Name == "--resource-group" {
-			if ff.Mode != ui.FieldModeVar || ff.Value != "$RG" {
-				t.Errorf("after second v: --resource-group = %+v, want $RG (var)", ff)
-			}
-			return
-		}
-	}
-}
-
 func TestFormBlocksDoneOnRequiredMissing(t *testing.T) {
 	src := ui.Sources{
 		Engine:      validate.NewEngine(validate.BuiltinProvider{}),

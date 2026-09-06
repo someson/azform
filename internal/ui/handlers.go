@@ -248,24 +248,13 @@ func (m Form) handleKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 			m.mode = FormModeFilter
 			return m, focusCmd
 		case "v":
-			idx := m.fieldAt(m.cursor)
-			// Closed choice sets (enum/bool) never take var mode — az expects a
-			// literal from the set, so there is nothing to toggle into.
-			if idx >= 0 && m.fields[idx].Source == FieldSourceEnv && len(m.fields[idx].Param.Choices) == 0 {
-				if m.fields[idx].Mode == FieldModeVar {
-					m.fields[idx].Mode = FieldModeLiteral
-					m.fields[idx].Value = m.fields[idx].VarValue
-				} else {
-					m.fields[idx].Mode = FieldModeVar
-					for _, vv := range m.src.Vars {
-						if vv.Value == m.fields[idx].VarValue && matchesParamVar(vv, m.fields[idx].Param) {
-							m.fields[idx].Value = "$" + vv.Name
-							break
-						}
-					}
-				}
-				m.recomputeFindings(nil)
-			}
+			// Global value-display cycle for required params: 0→1→2→0.
+			// Renders the value column as $REF, $REF→value, or value
+			// respectively. Fields whose var doesn't resolve in the
+			// shell stay red and ignore the cycle; literal-mode fields
+			// also ignore it. See Form.valueDisplayMode doc.
+			m.valueDisplayMode = (m.valueDisplayMode + 1) % 3
+			m.recomputeFindings(nil)
 			return m, nil
 		case "d":
 			idx := m.fieldAt(m.cursor)

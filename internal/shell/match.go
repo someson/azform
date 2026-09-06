@@ -240,10 +240,10 @@ func isListKind(k metadata.ValueKind) bool {
 	return k == metadata.ValueKindList || k == metadata.ValueKindKeyValue
 }
 
-// detectVarRef reports whether value is a shell variable reference and
+// DetectVarRef reports whether value is a shell variable reference and
 // returns the variable name. Recognised forms: $NAME, ${NAME}.
 // $(...) is command substitution and is not treated as a var ref.
-func detectVarRef(value string) (bool, string) {
+func DetectVarRef(value string) (bool, string) {
 	if strings.HasPrefix(value, "${") && strings.HasSuffix(value, "}") {
 		name := value[2 : len(value)-1]
 		if isVarName(name) {
@@ -258,6 +258,10 @@ func detectVarRef(value string) (bool, string) {
 	}
 	return false, ""
 }
+
+// detectVarRef is the internal alias kept so callers inside the shell
+// package don't need to import the public symbol.
+func detectVarRef(value string) (bool, string) { return DetectVarRef(value) }
 
 // looksLikeNumber reports whether s parses as an optionally-signed decimal
 // integer or float — used to distinguish `--priority -1` (numeric value) from

@@ -182,7 +182,7 @@ Esc               close popup; from list, cancel and save draft
 Tab  Shift-Tab    cycle list → Done → Cancel → list
 g                 expand the Global Arguments section
 a                 show all collapsed parameters
-v                 toggle var / literal mode on env-sourced fields
+v                 cycle value visibility for required params (see below)
 Ctrl-G            select $VAR from the buffer list and insert at the cursor
 w                 cycle through non-blocking warnings in the footer
 ```
@@ -191,6 +191,45 @@ w                 cycle through non-blocking warnings in the footer
 active — the footer names the parameter and the reason. `Esc` inside
 a popup closes only the popup, not the whole form; cancelling the
 selection does not lose what is already filled in.
+
+### `v` — value visibility cycle
+
+`v` is a global display toggle: every required parameter whose value
+is a shell variable reference participates in the same cycle, and the
+cycle is purely a view change — pressing `v` never mutates a field's
+`Value`, `VarValue`, or `Mode`. The cycle advances through three
+states in the value column:
+
+```
+state 0   $RG                       (just the var reference)
+state 1   $RG → myResourceGroup     (default; reference and resolved value)
+state 2   myResourceGroup           (just the resolved value)
+```
+
+After state 2, the next press wraps back to state 1, then 0, then 1,
+and so on. Required fields whose reference does **not** resolve in
+the current shell (e.g. you forgot to export `$RG`) stay red and
+ignore the cycle — there is no resolved value to reveal. Optional
+parameters and required parameters with a non-var literal value
+(`"myResourceGroup"`, with no `$`) render their value normally and
+also ignore the cycle.
+
+The cycle works identically whether the variable reference came from
+the env pre-fill, a remembered binding, the shell buffer
+(`az … --resource-group $RG`), or a restored draft where the value
+was saved as the literal text `$RG`. In all cases the resolved value
+is looked up from the current shell session at render time; drafts
+do not have to store a separate "this was a var" flag for the cycle
+to apply.
+
+Use `v` to preview what `az` will actually receive:
+
+- state 0 answers "which variable did I bind this to?"
+- state 1 is the default, useful while filling out the form
+- state 2 answers "what literal value is about to be substituted?"
+
+Pressing `v` while in text-edit mode types `v` into the input; press
+`Esc` first to leave the field, then `v` to cycle.
 
 ## Privacy
 
