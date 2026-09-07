@@ -573,24 +573,20 @@ func (m *Form) sessionVarNames() map[string]bool {
 // to see them. Existing entries are left alone (idempotent); the call
 // is cheap, so committing each popup line calls it once.
 func (m *Form) registerVar(name, value string) {
+	if m.sessionVars == nil {
+		m.sessionVars = map[string]bool{}
+	}
+	m.sessionVars[name] = true
 	for _, v := range m.src.Vars {
 		if v.Name == name {
 			// Already known. Don't overwrite: the shell already has a
 			// (possibly newer) value, and the picker relies on
 			// m.sessionVars / m.src.Vars to surface just-set vars as
 			// green-resolving references.
-			if m.sessionVars == nil {
-				m.sessionVars = map[string]bool{}
-			}
-			m.sessionVars[name] = true
 			return
 		}
 	}
 	m.src.Vars = append(m.src.Vars, vars.Variable{Name: name, Value: value})
-	if m.sessionVars == nil {
-		m.sessionVars = map[string]bool{}
-	}
-	m.sessionVars[name] = true
 }
 
 // recomputeFindings rebuilds m.findings using m.src.Engine. params may be nil
@@ -1146,23 +1142,35 @@ func (m Form) SetVarInputValue() string {
 // is open (e.g. "invalid var name", "var $NAME is not set in this shell").
 func (m Form) SetVarHint() string { return m.setVarHintMsg }
 
-// quoteForShell returns value wrapped in POSIX single quotes, with embedded
-// single quotes escaped via the standard '\” (close-quote, escaped-quote,
-// reopen-quote) pattern. This is safe to embed in an `export NAME=...` line
-// that the widget later passes through `eval` — the resulting token is a
-// single shell word regardless of the value's contents.
+// clearSetVarHint drops the transient inline hint shown inside the set-var
+// popup and cancels the bookkeeping for its pending HintClearMsg tick.
+func (m *Form) clearSetVarHint() {
+	m.setVarHintMsg = ""
+	m.setVarHintActive = false
+}
+
+// closeSetVarPopup returns the form to list mode, clearing the popup's
+// in-progress input and hint. It deliberately leaves m.pendingExports
+// alone: lines committed with Enter must survive both the Esc/cancel and
+// the empty-Enter close, because main.go flushes the queue to --env-out on
+// either path. Do not add a pendingExports reset here — that was the bug
+// that made queued vars vanish when the user cancelled out of the form.
+func (m *Form) closeSetVarPopup() {
+	m.clearSetVarHint()
+	m.setVarInput.SetValue("")
+	m.mode = FormModeList
+}
+
+// quoteForShell returns value wrapped in POSIX single quotes, with each
+// embedded single quote rewritten as the portable close-escape-reopen run
+// so the outer pair closes cleanly. The result is a single shell word
+// whatever the value contains, which is what makes it safe to embed in the
+// NAME=... lines the widget later passes through eval.
 func quoteForShell(value string) string {
 	const (
 		quote     = "'"
 		escapeRun = `'\''`
 	)
-	// POSIX-portable single-quoting: each embedded ' becomes '\''
-	// (close, escape, reopen) so the outer pair of '…' closes cleanly.
-	// The previous +quote suffix was a quoting bug that left an extra '
-	// dangling when the value contained an odd number of single quotes
-	// — e.g. it's came out as 'it'\'''s' which eval rejects with
-	// "unmatched '". Drop it; the outer quote added below re-opens
-	// after the escape.
 	return quote + strings.ReplaceAll(value, quote, escapeRun) + quote
 }
 
@@ -1204,9 +1212,6 @@ func (m *Form) parseSetVarInput(raw string) (name, value string, ok bool, hint s
 		// Bare name: export the current session value.
 		if !isValidVarName(s) {
 			return "", "", false, "invalid var name (must match [A-Za-z_][A-Za-z0-9_]*)"
-		}
-		if m.src.Vars == nil {
-			return s, "", false, "var $" + s + " is not set in this shell"
 		}
 		for _, v := range m.src.Vars {
 			if v.Name == s {

@@ -263,9 +263,9 @@ func TestCacheCorruptEntryIsReplaced(t *testing.T) {
 func TestRecordStaleReasons(t *testing.T) {
 	baseTime := time.Date(2026, 9, 1, 12, 0, 0, 0, time.UTC)
 	env := Environment{
-		InstallPath:     "/opt/az",
-		InstallModTime:  baseTime.Add(-time.Hour),
-		ExtensionsPath:  "/opt/az/extensions",
+		InstallPath:       "/opt/az",
+		InstallModTime:    baseTime.Add(-time.Hour),
+		ExtensionsPath:    "/opt/az/extensions",
 		ExtensionsModTime: baseTime.Add(-time.Hour),
 	}
 	cache := &Cache{AzformVersion: "0.1.0"}
@@ -321,10 +321,10 @@ func TestRecordStaleReasons(t *testing.T) {
 			wantReason: "az install mtime unknown",
 		},
 		{
-			name:       "az was upgraded",
-			azformVer:  "0.1.0",
-			generated:  baseTime,
-			env:        Environment{
+			name:      "az was upgraded",
+			azformVer: "0.1.0",
+			generated: baseTime,
+			env: Environment{
 				InstallPath:       env.InstallPath,
 				InstallModTime:    baseTime.Add(time.Hour),
 				ExtensionsPath:    env.ExtensionsPath,

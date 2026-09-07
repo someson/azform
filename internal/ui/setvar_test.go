@@ -396,3 +396,28 @@ func TestSetVarThenPickerSeesIt(t *testing.T) {
 		t.Fatalf("picker did not pick up just-set var; picker contents: %v", names)
 	}
 }
+
+// TestSetVarWhitespaceOnlyEnterCloses pins the whitespace-only input
+// path. parseSetVarInput trims before parsing, so "   " parses as the
+// same "nothing was typed" case as "" and must close the popup rather
+// than queue a line. Regression guard: the handler used to compare the
+// raw (untrimmed) value against "", so spaces fell through to the
+// commit branch and queued a nameless `=”` entry — which the widget's
+// eval loop then rejected with a zsh "not an identifier" error.
+func TestSetVarWhitespaceOnlyEnterCloses(t *testing.T) {
+	t.Parallel()
+	f := loadedForm(t)
+	m, _ := f.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("g")})
+	f = m.(ui.Form)
+
+	f = typeRunes(t, f, "   ")
+	m, _ = f.Update(tea.KeyMsg{Type: tea.KeyEnter})
+	f = m.(ui.Form)
+
+	if got := f.PendingEnvExports(); len(got) != 0 {
+		t.Errorf("whitespace-only Enter queued %v, want no exports", got)
+	}
+	if f.Mode() != ui.FormModeList {
+		t.Errorf("whitespace-only Enter should close popup; mode = %v", f.Mode())
+	}
+}

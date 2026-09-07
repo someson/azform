@@ -415,14 +415,6 @@ func resolveBufferVars(pp shell.ParsedParam, vars []vars.Variable) string {
 	return ""
 }
 
-// matchesParamVar reports whether v matches p per the §4.2 heuristic. Used
-// by the v-key toggle handler to re-discover the variable name when the user
-// switches back from literal to var mode.
-func matchesParamVar(v vars.Variable, p metadata.Parameter) bool {
-	matches := vars.MatchVariables([]vars.Variable{v}, []metadata.Parameter{p})
-	return len(matches) == 1 && matches[0].ParamName == p.Name
-}
-
 // sortParamsByGroup returns a copy of params ordered Required → Optional →
 // Global, alphabetical by canonical flag name within each group. The form
 // already renders the three groups in separate sections (Required pinned at

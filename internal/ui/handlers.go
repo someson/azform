@@ -92,22 +92,16 @@ func (m Form) handleKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 			// pendingExports after azform exits, so the user gets the vars
 			// they queued regardless of whether they commit the command
 			// (Done) or cancel out (Esc/q).
-			m.setVarHintMsg = ""
-			m.setVarHintActive = false
-			m.setVarInput.SetValue("")
-			m.mode = FormModeList
+			m.closeSetVarPopup()
 			return m, nil
 		case "enter":
-			raw := m.setVarInput.Value()
-			name, value, ok, hint := m.parseSetVarInput(raw)
-			if raw == "" {
-				// Empty Enter: close the popup, commit whatever has
-				// accumulated so far. pendingExports survives — main.go
-				// flushes it on Done (confirmDone) only.
-				m.setVarInput.SetValue("")
-				m.setVarHintMsg = ""
-				m.setVarHintActive = false
-				m.mode = FormModeList
+			name, value, ok, hint := m.parseSetVarInput(m.setVarInput.Value())
+			if ok && name == "" {
+				// Nothing typed (empty or whitespace-only): close the
+				// popup, keeping whatever has accumulated so far.
+				// pendingExports survives — main.go flushes it on both
+				// the Done and the cancel path.
+				m.closeSetVarPopup()
 				return m, nil
 			}
 			if !ok {
@@ -123,28 +117,18 @@ func (m Form) handleKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 			// would still be the snapshot from widget-open time and the
 			// new var wouldn't be reachable.
 			m.registerVar(name, value)
-			m.setVarHintMsg = ""
-			m.setVarHintActive = false
+			m.clearSetVarHint()
 			m.setVarInput.SetValue("")
-			// Stay in FormModeSetVar so the user can queue more exports.
-			// Empty Enter (handled above) is the explicit close.
-			var cmd tea.Cmd
-			m.setVarInput, cmd = m.setVarInput.Update(msg)
-			focusCmd := m.setVarInput.Focus()
-			if cmd == nil {
-				cmd = focusCmd
-			} else {
-				cmd = tea.Batch(cmd, focusCmd)
-			}
-			return m, cmd
+			// Stay in FormModeSetVar so the user can queue more lines;
+			// an empty Enter (handled above) is the explicit close.
+			return m, m.setVarInput.Focus()
 		default:
 			var cmd tea.Cmd
 			m.setVarInput, cmd = m.setVarInput.Update(msg)
 			// Typing invalidates a stale inline hint; the user is
 			// already correcting what tripped the validator.
 			if m.setVarHintActive {
-				m.setVarHintMsg = ""
-				m.setVarHintActive = false
+				m.clearSetVarHint()
 			}
 			return m, cmd
 		}
@@ -280,8 +264,7 @@ func (m Form) handleKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 			// you unset it. The old "toggle Global Arguments" behaviour
 			// moved to G (shift+g) — see the next case.
 			m.setVarInput.SetValue("")
-			m.setVarHintMsg = ""
-			m.setVarHintActive = false
+			m.clearSetVarHint()
 			m.mode = FormModeSetVar
 			return m, m.setVarInput.Focus()
 		case "G":

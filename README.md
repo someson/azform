@@ -129,14 +129,14 @@ So the loop becomes: type, run, read error, fix, run again. Sometimes four or fi
 ```
 ● --name                 pip-nat                   ○ --acquire-policy-token —
 ● --resource-group       █                         ○ --change-reference     —
-┌─────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
-│ filter: my█                                                                                                     │
-│▶ myResourceGroup                                                                                                │
-│  my_git_format                                                                                                  │
-│                                                                                                                 │
-│                                                                                                                 │
-│                                                                                                                 │
-└─────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+┌────────────────────────────────────────────────────────────────────────────────────────┐
+│ filter: my█                                                                            │
+│▶ myResourceGroup                                                                       │
+│  my_git_format                                                                         │
+│                                                                                        │
+│                                                                                        │
+│                                                                                        │
+└────────────────────────────────────────────────────────────────────────────────────────┘
 ● --allocation-method    Static                    ○ --debug
 ○ --ddos-protection-mode —                         ○ --help
 ○ --ddos-protection-plan —                         ○ --only-show-errors

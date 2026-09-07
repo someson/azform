@@ -96,7 +96,7 @@ func TestE2EWidgetEnvOutRoundTrip(t *testing.T) {
 	writeRunes("\r", 60*time.Millisecond, 400*time.Millisecond) // Enter on --name
 	writeRunes("rg1", 40*time.Millisecond, 300*time.Millisecond)
 	writeRunes("\r", 60*time.Millisecond, 400*time.Millisecond) // commit
-	writeRunes("j", 60*time.Millisecond, 300*time.Millisecond)   // move down to --location
+	writeRunes("j", 60*time.Millisecond, 300*time.Millisecond)  // move down to --location
 	writeRunes("\r", 60*time.Millisecond, 400*time.Millisecond) // Enter on --location
 	writeRunes("westeurope", 40*time.Millisecond, 300*time.Millisecond)
 	writeRunes("\r", 60*time.Millisecond, 400*time.Millisecond) // commit

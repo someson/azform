@@ -28,6 +28,7 @@ coverage.*
 *.swp
 .agents/
 .claude/
+CLAUDE.md
 
 # Internal notes and plans. README.md at repo root is the canonical
 # user-facing doc; un-ignore selectively if real docs land here.
