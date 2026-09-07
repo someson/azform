@@ -14,6 +14,27 @@
 
 > Status: early development.
 
+## Shell support
+
+azform works through a shell keybinding widget, so support is
+per-shell, not per-OS.
+
+| Shell | Status |
+|---|---|
+| zsh | Supported |
+| bash 4.0+ | Supported |
+| bash 3.x | Not supported — needs bash 4+ for `READLINE_LINE` |
+| sh / dash / ash | Not supported — no keybinding mechanism |
+| fish | Considering |
+| PowerShell | Considering |
+| nushell | Considering |
+
+macOS ships bash 3.2, so bash users on macOS need a newer bash from a
+package manager. Linux distributions ship bash 4.4+ (RHEL 8+) or 5.x
+(Debian, Ubuntu, Fedora, Arch), which work as-is. On an unsupported
+shell the installer still installs the binary, tells you why the
+widget was skipped, and leaves your shell profile untouched.
+
 ---
 
 ```
