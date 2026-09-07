@@ -26,11 +26,11 @@ import (
 func TestE2EBashWidgetEnvOut(t *testing.T) {
 	bash := bashAtLeast4(t)
 	if bash == "" {
-		t.Skip("no bash >= 4 available")
+		skipOrFail(t, "no bash >= 4 available")
 	}
 	bin := repoBinary(t)
 	if bin == "" {
-		t.Skip("bin/azform not built; run `make build` first")
+		skipOrFail(t, "bin/azform not built; run `make build` first")
 	}
 
 	tmp := t.TempDir()
