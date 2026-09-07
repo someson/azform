@@ -29,11 +29,12 @@ per-shell, not per-OS.
 | PowerShell | Considering |
 | nushell | Considering |
 
-macOS ships bash 3.2, so bash users on macOS need a newer bash from a
-package manager. Linux distributions ship bash 4.4+ (RHEL 8+) or 5.x
-(Debian, Ubuntu, Fedora, Arch), which work as-is. On an unsupported
-shell the installer still installs the binary, tells you why the
-widget was skipped, and leaves your shell profile untouched.
+macOS ships bash 3.2, so if you choose to use `bash` instead of `zsh`,
+you need a newer bash from a package manager. Linux distributions ship
+bash 4.4+ (RHEL 8+) or 5.x (Debian, Ubuntu, Fedora, Arch), which work
+as-is. On an unsupported shell the installer still installs the binary,
+tells you why the widget was skipped, and leaves your shell profile
+untouched.
 
 ---
 
