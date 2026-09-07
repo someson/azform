@@ -159,12 +159,6 @@ type Form struct {
 	draftStore    *state.DraftStore
 	draftRestored bool
 
-	// showGlobals controls whether Azure CLI "Global Arguments" (--output,
-	// --query, --subscription, --verbose, --debug, etc.) are rendered in the
-	// optional list. Toggle with the 'g' key. Enabled globals always appear
-	// in the built command regardless of this flag.
-	showGlobals bool
-
 	staleWarn string
 	quitting  bool
 	result    string
@@ -802,9 +796,6 @@ func (m *Form) widestName() int {
 	w := gridMinNameCol
 	for _, idx := range m.visible {
 		f := &m.fields[idx]
-		if f.Param.Global && !m.showGlobals && !f.Enabled {
-			continue
-		}
 		if n := len(f.Param.Name); n > w {
 			w = n
 		}
@@ -831,9 +822,8 @@ func (m *Form) gridCellWidth() int {
 // Returns:
 //   - roCols: Req+Opt field indices split across 1 or 2 columns
 //     (required-first order preserved).
-//   - globalsCol: global field indices for the last column; empty when
-//     showGlobals is off and no globals are enabled AND there are no globals
-//     to hint about.
+//   - globalsCol: global field indices for the last column; empty only when
+//     the command has no global parameters.
 //   - cols: total column count (1, 2, or 3). Callers use cols == 1 to fall
 //     back to the single-column render path.
 //
@@ -845,34 +835,12 @@ func (m *Form) gridLayout() (roCols [][]int, globalsCol []int, cols int) {
 		return nil, nil, 1
 	}
 
-	// Count total globals to decide if they all fit vertically. When they do,
-	// show them all unconditionally (a dedicated column with room to spare has
-	// no reason to hide anything). When they don't fit, respect the 'g' toggle
-	// so users can collapse them to save space.
-	totalGlobals := 0
-	for _, idx := range m.visible {
-		if m.fields[idx].Param.Global {
-			totalGlobals++
-		}
-	}
-	availableRows := 20 // reasonable default before the first WindowSizeMsg
-	if m.vpReady && m.vp.Height > 0 {
-		availableRows = m.vp.Height
-	}
-	fitAll := totalGlobals <= availableRows
-	showAllGlobals := m.showGlobals || fitAll
-
 	// Partition visible fields into (req+opt) and (globals).
 	var ro []int
-	var hasHiddenGlobal bool
 	for _, idx := range m.visible {
 		f := &m.fields[idx]
 		if f.Param.Global {
-			if showAllGlobals || f.Enabled {
-				globalsCol = append(globalsCol, idx)
-			} else {
-				hasHiddenGlobal = true
-			}
+			globalsCol = append(globalsCol, idx)
 			continue
 		}
 		ro = append(ro, idx)
@@ -887,7 +855,7 @@ func (m *Form) gridLayout() (roCols [][]int, globalsCol []int, cols int) {
 
 	// A globals column is "present" (occupies a slot) whenever the command
 	// has any global arguments — visible or hidden-but-hintable.
-	globalPresent := len(globalsCol) > 0 || hasHiddenGlobal
+	globalPresent := len(globalsCol) > 0
 
 	// Req+Opt: 1 col unless count > threshold AND we have room for 2 ro cols
 	// plus (if needed) the globals col.
@@ -1072,9 +1040,6 @@ func (m Form) Visible() []int { return append([]int(nil), m.visible...) }
 
 // DraftRestored reports whether NewForm loaded a persisted draft.
 func (m Form) DraftRestored() bool { return m.draftRestored }
-
-// ShowGlobals reports whether the "g" toggle is showing global params.
-func (m Form) ShowGlobals() bool { return m.showGlobals }
 
 // Quitting reports whether the form has signalled tea.Quit.
 func (m Form) Quitting() bool { return m.quitting }

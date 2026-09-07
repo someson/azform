@@ -195,7 +195,6 @@ func (m Form) View() string {
 			}
 		default:
 			var optSB strings.Builder
-			hiddenGlobals := 0
 			cursorRow := -1
 			row := 0
 			focusIdx := m.fieldAt(m.cursor)
@@ -204,18 +203,11 @@ func (m Form) View() string {
 				if f.Param.Required {
 					continue
 				}
-				if f.Param.Global && !m.showGlobals && !f.Enabled {
-					hiddenGlobals++
-					continue
-				}
 				if idx == focusIdx {
 					cursorRow = row
 				}
 				writeLine(&optSB, m.renderFieldSelected(idx, idx == focusIdx, nameWidth))
 				row++
-			}
-			if hiddenGlobals > 0 {
-				writeLine(&optSB, hintStyle.Render(fmt.Sprintf("  (press G to show %d global argument(s))", hiddenGlobals)))
 			}
 			if m.vpReady {
 				m.vp.SetContent(optSB.String())
@@ -448,7 +440,6 @@ func (m Form) renderHelp() string {
 				{"esc", "close popup / cancel edit"},
 				{"/", "filter visible parameters"},
 				{"g", "set a shell variable (writes export to calling shell)"},
-				{"G", "toggle Global Arguments section"},
 			},
 		},
 		{
@@ -519,9 +510,6 @@ func (m *Form) nameColumnWidth() int {
 	for _, idx := range m.visible {
 		f := &m.fields[idx]
 		if f.Param.Required {
-			continue
-		}
-		if f.Param.Global && !m.showGlobals && !f.Enabled {
 			continue
 		}
 		widen(idx)
@@ -825,31 +813,6 @@ func (m *Form) renderGrid(roCols [][]int, globalsCol []int) (body string, cursor
 	cursorRow = -1
 	focusedCol = -1
 
-	// Count hidden globals so we can emit a "press g" hint. Mirrors the
-	// fit-vs-toggle logic in gridLayout: if all globals fit vertically, none
-	// are hidden — no hint needed.
-	hiddenGlobals := 0
-	if !m.showGlobals {
-		totalGlobals := 0
-		for _, idx := range m.visible {
-			if m.fields[idx].Param.Global {
-				totalGlobals++
-			}
-		}
-		availableRows := 20
-		if m.vpReady && m.vp.Height > 0 {
-			availableRows = m.vp.Height
-		}
-		if totalGlobals > availableRows {
-			for _, idx := range m.visible {
-				f := &m.fields[idx]
-				if f.Param.Global && !f.Enabled {
-					hiddenGlobals++
-				}
-			}
-		}
-	}
-
 	var sb strings.Builder
 	for row := 0; row < maxH; row++ {
 		var line strings.Builder
@@ -880,17 +843,6 @@ func (m *Form) renderGrid(roCols [][]int, globalsCol []int) (body string, cursor
 			}
 		}
 		sb.WriteString(line.String())
-		sb.WriteByte('\n')
-	}
-
-	// Hint: when globals were auto-hidden because they don't fit vertically,
-	// let the user know 'G' will reveal them.
-	if hiddenGlobals > 0 {
-		if len(globalsCol) > 0 {
-			sb.WriteString(hintStyle.Render(fmt.Sprintf("  (press G to show %d more global argument(s))", hiddenGlobals)))
-		} else {
-			sb.WriteString(hintStyle.Render(fmt.Sprintf("  (press G to show %d global argument(s))", hiddenGlobals)))
-		}
 		sb.WriteByte('\n')
 	}
 

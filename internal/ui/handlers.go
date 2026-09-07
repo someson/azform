@@ -261,17 +261,11 @@ func (m Form) handleKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 			// pendingExports; main.go flushes the lines to --env-out on
 			// Done, and the widget evals them in your interactive zsh
 			// after azform exits so the var lives in the shell until
-			// you unset it. The old "toggle Global Arguments" behaviour
-			// moved to G (shift+g) — see the next case.
+			// you unset it.
 			m.setVarInput.SetValue("")
 			m.clearSetVarHint()
 			m.mode = FormModeSetVar
 			return m, m.setVarInput.Focus()
-		case "G":
-			// Old 'g' binding (toggle Global Arguments section), shifted
-			// to uppercase to make room for the set-var popup.
-			m.showGlobals = !m.showGlobals
-			return m, nil
 		case "h", "left":
 			if m.moveCursorHoriz(-1) {
 				if idx := m.fieldAt(m.cursor); idx >= 0 {

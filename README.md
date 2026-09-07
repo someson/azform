@@ -259,7 +259,6 @@ Esc               close popup; from list, cancel and save draft
 /                 filter by parameter name and help text
 Tab  Shift-Tab    cycle list → Done → Cancel → list
 g                 open a popup to set a shell variable (`name=value`, or just `name` to re-declare the current session value) — the widget evals the line in your shell after the form closes, so the var persists until you unset it; the var also appears in the Ctrl+G picker for the same session
-G                 expand the Global Arguments section
 a                 show all collapsed parameters
 v                 cycle value visibility for required params (see below)
 Ctrl-G            select $VAR from the buffer list and insert at the cursor
