@@ -41,39 +41,41 @@ untouched.
 ```
 az network public-ip create
 Create a public IP address.
-───────────────────────────────────────────────────────────────────────────────
-● --name                 pip-nat               ○ --acquire-policy-token —
-● --resource-group       myResourceGroup       ○ --change-reference     —
-● --allocation-method    Static                ○ --debug
-○ --ddos-protection-mode —                     ○ --help
-○ --ddos-protection-plan —                     ○ --only-show-errors
-○ --dns-name             —                     ● --output               tsv
-○ --dns-name-scope       —                     ○ --query                —
-○ --edge-zone            —                     ○ --subscription         —
-● --idle-timeout         4                     ○ --verbose
-○ --ip-address           —
-○ --ip-tags              —
-○ --location             —
-○ --public-ip-prefix     —
-○ --reverse-fqdn         —
-● --sku                  StandardV2
-○ --tags                 —
-○ --tier                 —
-● --version              IPv4
-○ --zone                 —
+──────────────────────────────────────────────────────────────────────────────────────────────────────────
+● --name․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․ $PIP → pip  ○ --acquire-policy-token․․․․․․․․․․․․․․․․․․․․․․․ —
+● --resource-group․․․․․․․․․ $RG → myResourceGroup  ○ --change-reference․․․․․․․․․․․․․․․․․․․․․․․․․․․ —
+● --allocation-method․․․․․․․․․․․․․․․․․․․․․ Static  ○ --debug
+○ --ddos-protection-mode․․․․․․․․․․․․․․․․․․․․․․․ ▼  ○ --help
+○ --ddos-protection-plan․․․․․․․․․․․․․․․․․․․․․․․ —  ○ --only-show-errors
+○ --dns-name․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․ —  ● --output․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․ tsv
+○ --dns-name-scope․․․․․․․․․․․․․․․․․․․․․․․․․․․․․ ▼  ○ --query․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․ —
+○ --edge-zone․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․ —  ○ --subscription․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․ —
+● --idle-timeout․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․ 15  ○ --verbose
+○ --ip-address․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․ —
+○ --ip-tags․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․ —
+● --location․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․ $LOC
+○ --public-ip-prefix․․․․․․․․․․․․․․․․․․․․․․․․․․․ —
+○ --reverse-fqdn․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․ —
+● --sku․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․ StandardV2
+○ --tags․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․ —
+● --tier․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․ Regional
+● --version․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․ IPv4
+● --zone․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․ —
 
-───────────────────────────────────────────────────────────────────────────────
+──────────────────────────────────────────────────────────────────────────────────────────────────────────
 az network public-ip create \
-  --name pip-nat \
-  --resource-group myResourceGroup \
+  --name $PIP \
+  --resource-group '$RG' \
   --allocation-method Static \
-  --idle-timeout 4 \
+  --idle-timeout 15 \
+  --location '$LOC' \
   --sku StandardV2 \
+  --tier Regional \
   --version IPv4 \
   --output tsv
 
- Done    Cancel                                               Press F1 for help
-───────────────────────────────────────────────────────────────────────────────
+ Done    Cancel                                                                          Press F1 for help
+──────────────────────────────────────────────────────────────────────────────────────────────────────────
 ```
 
 ## What it is
@@ -117,65 +119,119 @@ So the loop becomes: type, run, read error, fix, run again. Sometimes four or fi
 - Show every parameter of a command in one place, with required ones marked
 - Filter the parameter list as you type — names and help text are searched live, so a 100-parameter command like `az vm create` collapses to one row when you know what you're after
 ```
-○ --dns-name               —
-○ --dns-name-scope         —
+az network public-ip create
+Create a public IP address.
+──────────────────────────────────────────────────────────────────────────────────────────────────────────
+○ --dns-name․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․ —
+○ --dns-name-scope․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․ ▼
 
+──────────────────────────────────────────────────────────────────────────────────────────────────────────
 / dns█
+──────────────────────────────────────────────────────────────────────────────────────────────────────────
+az network public-ip create \
+  --name $PIP \
+  --resource-group '$RG' \
+  --allocation-method Static \
+  --idle-timeout 15 \
+  --location '$LOC' \
+  --sku StandardV2 \
+  --tier Regional \
+  --version IPv4 \
+  --output tsv
+
+ Done    Cancel                                                                          Press F1 for help
+──────────────────────────────────────────────────────────────────────────────────────────────────────────
 ```
 - Turn fixed value sets into pickable lists, so misspellings stop happening
 ```
-● --name                 pip-nat                   ○ --acquire-policy-token —
-● --resource-group       myResourceGroup           ○ --change-reference     —
-● --allocation-method    Static                    ○ --debug
-○ --ddos-protection-mode —                         ○ --help
-○ --ddos-protection-plan —                         ○ --only-show-errors
-○ --dns-name             —                         ● --output               json
-○ --dns-name-scope       —                         ┌──────────────────────┐ —
-○ --edge-zone            —                         │▶ json                │ —
-● --idle-timeout         4                         │  jsonc               │
-○ --ip-address           —                         │  none                │
-○ --ip-tags              —                         │  table               │
-○ --location             —                         │  tsv                 │
-○ --public-ip-prefix     —                         │  yaml                │
-○ --reverse-fqdn         —                         │  yamlc               │
-● --sku                  StandardV2                └──────────────────────┘
-○ --tags                 —
-○ --tier                 —
-● --version              IPv4
-○ --zone                 —
+az network public-ip create
+Create a public IP address.
+──────────────────────────────────────────────────────────────────────────────────────────────────────────
+● --name․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․ $PIP → pip  ○ --acquire-policy-token․․․․․․․․․․․․․․․․․․․․․․․ —
+● --resource-group․․․․․․․․․ $RG → myResourceGroup  ○ --change-reference․․․․․․․․․․․․․․․․․․․․․․․․․․․ —
+● --allocation-method․․․․․․․․․․․․․․․․․․․․․ Static  ○ --debug
+○ --ddos-protection-mode․․․․․․․․․․․․․․․․․․․․․․․ ▼  ○ --help
+○ --ddos-protection-plan․․․․․․․․․․․․․․․․․․․․․․․ —  ○ --only-show-errors
+○ --dns-name․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․ —  ● --output․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․ tsv
+○ --dns-name-scope․․․․․․․․․․․․․․․․․․․․․․․․․․․․․ ▼  ○ --query․․․․․․․․․․․․․․․․┌──────────────────────┐
+○ --edge-zone․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․ —  ○ --subscription․․․․․․․․․│  json                │
+● --idle-timeout․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․ 15  ○ --verbose              │  jsonc               │
+○ --ip-address․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․ —                           │  none                │
+○ --ip-tags․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․ —                           │  table               │
+● --location․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․ $LOC                           │▶ tsv                 │
+○ --public-ip-prefix․․․․․․․․․․․․․․․․․․․․․․․․․․․ —                           │  yaml                │
+○ --reverse-fqdn․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․ —                           │  yamlc               │
+● --sku․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․ StandardV2                           └──────────────────────┘
+○ --tags․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․ —
+● --tier․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․ Regional
+● --version․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․ IPv4
+● --zone․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․ —
+
+──────────────────────────────────────────────────────────────────────────────────────────────────────────
+az network public-ip create \
+  --name $PIP \
+  --resource-group '$RG' \
+  --allocation-method Static \
+  --idle-timeout 15 \
+  --location '$LOC' \
+  --sku StandardV2 \
+  --tier Regional \
+  --version IPv4 \
+  --output tsv
+
+ Done    Cancel                                                                          Press F1 for help
+──────────────────────────────────────────────────────────────────────────────────────────────────────────
 ```
 - Pick up a command you already started typing and let you finish it in the form
 - Fill fields with shell variables you already have defined, and remember which variable you used for which parameter
 - Warn you before you run a command that references a variable your shell doesn't actually have
 - Open a filtered variable picker from any field (`Ctrl-G`) to insert `$VAR` from the current shell session without scrolling through your whole env
 ```
-● --name                 pip-nat                   ○ --acquire-policy-token —
-● --resource-group       █                         ○ --change-reference     —
-┌────────────────────────────────────────────────────────────────────────────────────────┐
-│ filter: my█                                                                            │
-│▶ myResourceGroup                                                                       │
-│  my_git_format                                                                         │
-│                                                                                        │
-│                                                                                        │
-│                                                                                        │
-└────────────────────────────────────────────────────────────────────────────────────────┘
-● --allocation-method    Static                    ○ --debug
-○ --ddos-protection-mode —                         ○ --help
-○ --ddos-protection-plan —                         ○ --only-show-errors
-○ --dns-name             —                         ● --output               json
-○ --dns-name-scope       —                         ○ --query                —
-○ --edge-zone            —                         ○ --subscription         —
-● --idle-timeout         4                         ○ --verbose
-○ --ip-address           —
-○ --ip-tags              —
-○ --location             —
-○ --public-ip-prefix     —
-○ --reverse-fqdn         —
-● --sku                  StandardV2
-○ --tags                 —
-○ --tier                 —
-● --version              IPv4
-○ --zone                 —
+az network public-ip create
+Create a public IP address.
+──────────────────────────────────────────────────────────────────────────────────────────────────────────
+● --name․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․ $PIP → pip  ○ --acquire-policy-token․․․․․․․․․․․․․․․․․․․․․․․ —
+● --resource-group․․․․․․․․․ $RG → myResourceGroup  ○ --change-reference․․․․․․․․․․․․․․․․․․․․․․․․․․․ —
+┌────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+│ filter: rg█                                                                                            │
+│▶ RG                                                                                                    │
+│                                                                                                        │
+│                                                                                                        │
+│                                                                                                        │
+│                                                                                                        │
+└────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+● --allocation-method․․․․․․․․․․․․․․․․․․․․․ Static  ○ --debug
+○ --ddos-protection-mode․․․․․․․․․․․․․․․․․․․․․․․ ▼  ○ --help
+○ --ddos-protection-plan․․․․․․․․․․․․․․․․․․․․․․․ —  ○ --only-show-errors
+○ --dns-name․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․ —  ● --output․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․ tsv
+○ --dns-name-scope․․․․․․․․․․․․․․․․․․․․․․․․․․․․․ ▼  ○ --query․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․ —
+○ --edge-zone․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․ —  ○ --subscription․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․ —
+● --idle-timeout․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․ 15  ○ --verbose
+○ --ip-address․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․ —
+○ --ip-tags․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․ —
+● --location․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․ $LOC
+○ --public-ip-prefix․․․․․․․․․․․․․․․․․․․․․․․․․․․ —
+○ --reverse-fqdn․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․ —
+● --sku․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․ StandardV2
+○ --tags․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․ —
+● --tier․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․ Regional
+● --version․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․ IPv4
+● --zone․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․ —
+
+──────────────────────────────────────────────────────────────────────────────────────────────────────────
+az network public-ip create \
+  --name $PIP \
+  --resource-group '$RG' \
+  --allocation-method Static \
+  --idle-timeout 15 \
+  --location '$LOC' \
+  --sku StandardV2 \
+  --tier Regional \
+  --version IPv4 \
+  --output tsv
+
+ Done    Cancel                                                                          Press F1 for help
+──────────────────────────────────────────────────────────────────────────────────────────────────────────
 ```
 - Show live values from your Azure subscription where it makes sense — resource groups, locations, existing resources
 - Save named presets, so "a storage account like the one in project X" is one keystroke
@@ -203,7 +259,7 @@ Esc               close popup; from list, cancel and save draft
 /                 filter by parameter name and help text
 Tab  Shift-Tab    cycle list → Done → Cancel → list
 g                 open a popup to set a shell variable (`name=value`, or just `name` to re-declare the current session value) — the widget evals the line in your shell after the form closes, so the var persists until you unset it; the var also appears in the Ctrl+G picker for the same session
-G                 expand the Global Arguments section (the old `g` binding, shifted)
+G                 expand the Global Arguments section
 a                 show all collapsed parameters
 v                 cycle value visibility for required params (see below)
 Ctrl-G            select $VAR from the buffer list and insert at the cursor
@@ -228,7 +284,20 @@ state 0   $RG                       (just the var reference)
 state 1   $RG → myResourceGroup     (default; reference and resolved value)
 state 2   myResourceGroup           (just the resolved value)
 ```
+```
+● --name․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․ $PIP
+● --resource-group․․․․․․․․․․․․․․․․․․․․․․․․․․․ $RG
+```
 
+```
+● --name․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․ $PIP → pip
+● --resource-group․․․․․․․․․ $RG → myResourceGroup
+```
+
+```
+● --name․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․ pip
+● --resource-group․․․․․․․․․․․․․․․ myResourceGroup
+```
 After state 2, the next press wraps back to state 1, then 0, then 1,
 and so on. Required fields whose reference does **not** resolve in
 the current shell (e.g. you forgot to export `$RG`) stay red and
