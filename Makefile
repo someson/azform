@@ -1,7 +1,8 @@
 BIN_DIR ?= $(HOME)/.local/bin
+SHARE_DIR ?= $(HOME)/.local/share/azform
 PKG     := ./...
 
-.PHONY: help build install test test-race cover lint lint-fix fmt vet tidy clean
+.PHONY: help build install widget-install test test-race cover lint lint-fix fmt vet tidy clean
 
 help: ## Show available targets
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | \
@@ -11,8 +12,15 @@ build: ## Build azform binary into ./bin
 	@mkdir -p bin
 	go build -o bin/azform ./cmd/azform
 
-install: ## go install into $(BIN_DIR)
+install: install-bin widget-install ## Install binary and refresh widget
+
+install-bin: build ## go install into $(BIN_DIR) (depends on build for the local ./bin/azform copy)
 	GOBIN=$(BIN_DIR) go install ./cmd/azform
+
+widget-install: ## Copy widget/widget.zsh into $(SHARE_DIR)
+	@mkdir -p $(SHARE_DIR)
+	install -m 0644 widget/widget.zsh $(SHARE_DIR)/widget.zsh
+	@echo "widget installed at $(SHARE_DIR)/widget.zsh — restart shell or: exec zsh"
 
 test: ## Run tests
 	go test $(PKG)

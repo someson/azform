@@ -1254,61 +1254,6 @@ func TestFormResolvedBufferVarStillShowsArrow(t *testing.T) {
 	t.Fatal("--resource-group not found")
 }
 
-func TestFormDeclareVarEscape(t *testing.T) {
-	raw, _ := shell.ParseRaw("az storage account create --name mystorage --location westeurope", 0)
-	src := ui.Sources{
-		Engine:      validate.NewEngine(validate.BuiltinProvider{}),
-		SessionVars: []string{},
-		Vars:        []vars.Variable{{Name: "RG", Value: "my-group"}},
-		Buffer:      raw,
-	}
-	f := ui.NewFormWithSources("storage account create", "/tmp/out.txt", t.TempDir(), "test", nil, src)
-	m, _ := f.Update(ui.MetadataLoadedMsg{Params: testParams, Summary: "."})
-	f = m.(ui.Form)
-
-	// Move to --resource-group by name and press 'd' to start declaring.
-	for i := 0; i < f.FieldIndex("--resource-group"); i++ {
-		m, _ = f.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("j")})
-		f = m.(ui.Form)
-	}
-	m, _ = f.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("d")})
-	f = m.(ui.Form)
-	if f.Mode() != ui.FormModeEdit {
-		t.Fatalf("after d: mode = %v, want FormModeEdit", f.Mode())
-	}
-
-	// Clear pre-filled "my-group" (8 chars) and type the real value.
-	for i := 0; i < 8; i++ {
-		m, _ = f.Update(tea.KeyMsg{Type: tea.KeyBackspace})
-		f = m.(ui.Form)
-	}
-	for _, r := range "real-group" {
-		m, _ = f.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{r}})
-		f = m.(ui.Form)
-	}
-	m, _ = f.Update(tea.KeyMsg{Type: tea.KeyEnter})
-	f = m.(ui.Form)
-
-	// Move to Done and confirm.
-	m, _ = f.Update(tea.KeyMsg{Type: tea.KeyTab})
-	m, _ = m.(ui.Form).Update(tea.KeyMsg{Type: tea.KeyEnter})
-	f = m.(ui.Form)
-
-	decls := f.Declarations()
-	if len(decls) != 1 || decls[0].Name != "RG" || decls[0].Value != "real-group" {
-		t.Errorf("declarations = %+v, want [{RG real-group}]", decls)
-	}
-	// Form-level Result is the bare command; main.go wraps it with the
-	// declaration prefix using Declarations(). We assert the prefix piece
-	// separately so the test isolates ui from main.go wrapping.
-	if !strings.HasPrefix(decls[0].Name+"="+decls[0].Value+" && az ", "RG=real-group && az ") {
-		t.Errorf("declaration does not produce expected prefix")
-	}
-	if f.Result() == "" {
-		t.Errorf("Result should be non-empty; errorMsg=%q", f.ErrorMsg())
-	}
-}
-
 func TestFormRememberedPreFills(t *testing.T) {
 	dir := t.TempDir()
 	store := state.NewBindingsStore(dir)

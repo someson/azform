@@ -218,16 +218,14 @@ func runTUI(raw shell.RawBuffer, shellVars, azureDefaults []vars.Variable, outPa
 
 	f := finalModel.(ui.Form)
 	result := f.Result()
-	if result == "" {
-		return 1
-	}
 
 	// Flush any pending shell-variable exports the user queued via the
-	// g-popup. Done only writes the file when the form actually committed
-	// (i.e. Result() is non-empty); Esc/cancel paths take Result()=="" so
-	// --env-out is left untouched on cancel. Matches the user's mental
-	// model: "press Done → my exports land in the shell; press Cancel →
-	// nothing happens".
+	// g-popup. We do this regardless of result: the user might have
+	// committed vars through the popup and then pressed Esc/q to discard
+	// the command — they still want the vars in their shell so the next
+	// `az …` they type (with $VAR expanded) sees them. Env-out is
+	// independent of the command-result file, so the order is: write
+	// env-out first, then handle the result.
 	if envOutPath != "" {
 		if exports := f.FlushPendingEnvExports(); exports != "" {
 			if err := os.WriteFile(envOutPath, []byte(exports), 0o600); err != nil {
@@ -237,12 +235,14 @@ func runTUI(raw shell.RawBuffer, shellVars, azureDefaults []vars.Variable, outPa
 		}
 	}
 
-	declPrefix := ""
-	for _, d := range f.Declarations() {
-		declPrefix += d.Name + "=" + d.Value + " && "
+	if result == "" {
+		// Cancel/Esc: the command file stays untouched (draft remains
+		// on disk for the next invocation); only the env-out flush
+		// above has run.
+		return 1
 	}
 
-	output := raw.Prefix + declPrefix + result + raw.Suffix
+	output := raw.Prefix + result + raw.Suffix
 	if err := os.WriteFile(outPath, []byte(output+"\n"), 0o600); err != nil {
 		fmt.Fprintf(os.Stderr, "azform: write result: %v\n", err)
 		return 2

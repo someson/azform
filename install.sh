@@ -24,6 +24,10 @@ SHARE_DIR="${AZFORM_SHARE_DIR:-$HOME/.local/share/azform}"
 STATE_DIR="${AZFORM_STATE_DIR:-$HOME/.local/state/azform}"
 VERSION="${AZFORM_VERSION:-}"
 
+# Directory containing this script. Used to locate widget/widget.zsh
+# so the source of truth lives in the repo, not in the heredoc.
+SCRIPT_DIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
+
 MARKER_BEGIN="# >>> azform >>>"
 MARKER_END="# <<< azform <<<"
 WIDGET_LINE="[ -f \"$SHARE_DIR/widget.zsh\" ] && source \"$SHARE_DIR/widget.zsh\""
@@ -133,65 +137,11 @@ install_binary() {
     mkdir -p "$SHARE_DIR"
 }
 
+WIDGET_SRC="${WIDGET_SRC:-$SCRIPT_DIR/widget/widget.zsh}"
+
 write_widget() {
     mkdir -p "$SHARE_DIR"
-    cat > "$SHARE_DIR/widget.zsh" <<'WIDGET'
-# azform shell widget
-azform-widget() {
-  local out vars env
-  out=$(mktemp -t azform-out)
-  vars=$(mktemp -t azform-vars)
-  env=$(mktemp -t azform-env)
-  # Denylist: zsh built-in specials + prompt/theme noise. RANDOM intentionally kept.
-  local -A azform_deny=(
-    SECONDS 1 EPOCHSECONDS 1 EPOCHREALTIME 1
-    UID 1 EUID 1 GID 1 EGID 1
-    MATCH 1 MBEGIN 1 MEND 1 OPTARG 1 OPTIND 1
-    HISTCHARS 1 histchars 1 HISTFILE 1 HISTSIZE 1 SAVEHIST 1
-    LISTMAX 1 LOGCHECK 1 MAILCHECK 2
-    MACHTYPE 1 CPUTYPE 1 OSTYPE 1 VENDOR 1
-    HOST 1 HOSTNAME 1 SHORT_HOST 1 USERNAME 1
-    LINES 1 COLUMNS 1 TTY 1 TMPPREFIX 1
-    NULLCMD 1 READNULLCMD 1 WORDCHARS 1
-    KEYTIMEOUT 1 KEYBOARD_HACK 1 FUNCNEST 1
-    TRY_BLOCK_ERROR 1 TRY_BLOCK_INTERRUPT 1
-    VCS_STATUS_RESULT 1 WATCH 1 ZLS_COLORS 1
-  )
-  local k
-  for k in ${(k)parameters}; do
-    case ${parameters[$k]} in
-      scalar*|*integer*|*float*) ;;
-      *) continue ;;
-    esac
-    [[ $k != RANDOM && ${parameters[$k]} == *(readonly|special)* ]] && continue
-    [[ $k == _* || $k == POWERLEVEL9K_* || $k == P9K_* || $k == ZSH_* ]] && continue
-    [[ $k == GITSTATUS_*_POWERLEVEL9K ]] && continue
-    (( ${+azform_deny[$k]} )) && continue
-    print -rn -- "$k=${(P)k}" >> "$vars"
-    print -rn -- $'\0' >> "$vars"
-  done
-  azform --line "$BUFFER" --cursor "$CURSOR" --out "$out" --vars "$vars" --env-out "$env" --cwd "$PWD" </dev/tty >/dev/tty 2>&1
-  if [[ -s "$out" ]]; then
-    BUFFER=$(cat "$out")
-    CURSOR=$#BUFFER
-  fi
-  # Apply any shell-variable exports the user queued via the g-popup.
-  # Each line is `export NAME='value'` produced by azform itself, so eval
-  # is safe; we deliberately don't `source` so we never accidentally
-  # execute arbitrary shell from disk.
-  if [[ -s "$env" ]]; then
-    while IFS= read -r line; do eval "$line"; done < "$env"
-  fi
-  rm -f "$out" "$vars" "$env"
-  zle redisplay
-}
-zle -N azform-widget
-bindkey '^Xa' azform-widget
-WIDGET
-}
-zle -N azform-widget
-bindkey '^Xa' azform-widget
-WIDGET
+    cp "$WIDGET_SRC" "$SHARE_DIR/widget.zsh"
 }
 
 add_to_profile() {

@@ -31,7 +31,6 @@ func (m Form) handleKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	case FormModeEdit:
 		switch msg.String() {
 		case "esc":
-			m.declaring = false
 			m.mode = FormModeList
 			return m, nil
 		case "ctrl+g":
@@ -51,14 +50,6 @@ func (m Form) handleKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 				m.fields[m.editIdx].Enabled = true
 			}
 			m.recomputeFindings(nil)
-			if m.declaring {
-				if f := &m.fields[m.editIdx]; f.Source == FieldSourceEnv && f.VarValue != "" {
-					if name := varNameFor(f.VarValue, m.src.Vars); name != "" {
-						m.declaredVars = append(m.declaredVars, DeclaredVar{Name: name, Value: f.Value})
-					}
-				}
-				m.declaring = false
-			}
 			m.mode = FormModeList
 			return m, nil
 		default:
@@ -95,11 +86,12 @@ func (m Form) handleKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	case FormModeSetVar:
 		switch msg.String() {
 		case "esc":
-			// Esc discards the batch (mirrors "Esc cancels and saves draft"
-			// semantics in the rest of the form — pressing Esc means
-			// "I changed my mind"). The widget's --env-out is left empty,
-			// so the shell sees no export line for this session.
-			m.pendingExports = nil
+			// Esc closes the popup but keeps any lines already committed
+			// (committed via Enter; the in-progress line is just discarded
+			// because it was never committed). The widget will still eval
+			// pendingExports after azform exits, so the user gets the vars
+			// they queued regardless of whether they commit the command
+			// (Done) or cancel out (Esc/q).
 			m.setVarHintMsg = ""
 			m.setVarHintActive = false
 			m.setVarInput.SetValue("")
@@ -124,7 +116,7 @@ func (m Form) handleKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 				// Keep the input so the user can edit; popup stays open.
 				return m, nil
 			}
-			m.pendingExports = append(m.pendingExports, shellExportLine(name, value))
+			m.pendingExports = append(m.pendingExports, shellVarLine(name, value))
 			// Surface the just-set var to the Ctrl+G picker so the
 			// user can immediately insert `$name` into a field without
 			// closing and reopening the form. Without this, the picker
@@ -281,8 +273,11 @@ func (m Form) handleKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 			}
 			return m, nil
 		case "g":
-			// g opens the popup to write a shell variable export to
-			// --env-out. The old "toggle Global Arguments" behaviour
+			// g opens the popup to queue a shell-variable line into
+			// pendingExports; main.go flushes the lines to --env-out on
+			// Done, and the widget evals them in your interactive zsh
+			// after azform exits so the var lives in the shell until
+			// you unset it. The old "toggle Global Arguments" behaviour
 			// moved to G (shift+g) — see the next case.
 			m.setVarInput.SetValue("")
 			m.setVarHintMsg = ""
@@ -331,19 +326,6 @@ func (m Form) handleKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 			// also ignore it. See Form.valueDisplayMode doc.
 			m.valueDisplayMode = (m.valueDisplayMode + 1) % 3
 			m.recomputeFindings(nil)
-			return m, nil
-		case "d":
-			idx := m.fieldAt(m.cursor)
-			if idx >= 0 && m.fields[idx].Mode == FieldModeVar && m.fields[idx].Source == FieldSourceEnv {
-				m.fields[idx].Mode = FieldModeLiteral
-				m.fields[idx].Value = m.fields[idx].VarValue
-				m.textInput.SetValue(m.fields[idx].Value)
-				focusCmd := m.textInput.Focus()
-				m.editIdx = idx
-				m.declaring = true
-				m.mode = FormModeEdit
-				return m, focusCmd
-			}
 			return m, nil
 		case "tab":
 			m.mode = FormModeDone
@@ -431,15 +413,6 @@ func extractVarName(value string) string {
 			return value[2 : len(value)-1]
 		}
 		return value[1:]
-	}
-	return ""
-}
-
-func varNameFor(value string, in []vars.Variable) string {
-	for _, v := range in {
-		if v.Value == value {
-			return v.Name
-		}
 	}
 	return ""
 }

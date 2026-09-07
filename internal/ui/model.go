@@ -33,7 +33,7 @@ const (
 	FormModeCancel                  // Tab → Cancel button focused
 	FormModeHelp                    // ? cheatsheet overlay open
 	FormModeVarPick                 // Ctrl+G → variable picker popup open
-	FormModeSetVar                  // g → popup to write `export NAME=VALUE` to --env-out
+	FormModeSetVar                  // g → popup to write `NAME=VALUE` to --env-out (widget evals after azform exits)
 )
 
 // LoadState tracks async metadata fetch.
@@ -136,12 +136,16 @@ type Form struct {
 	filterQuery string
 
 	// setVarInput is the single-line textinput inside the FormModeSetVar
-	// popup. The user types `name=value` (or a bare `name` to export the
-	// current session value) and Enter appends a single-quoted export line
-	// to pendingExports. Esc discards the batch and closes the popup; an
-	// empty Enter also closes (committing whatever has accumulated).
+	// popup. The user types `name=value` (or a bare `name` to look up the
+	// current session value) and Enter appends a single-quoted shell-var
+	// line to pendingExports. The widget evals each line in your
+	// interactive zsh after azform exits, so the var persists in the
+	// shell until you unset it (no `export ` prefix — shell-local, not
+	// inherited by subprocesses). Esc discards the batch and closes the
+	// popup; an empty Enter also closes (committing whatever has
+	// accumulated).
 	setVarInput      textinput.Model
-	pendingExports   []string // flushed to --env-out on Done / Esc (commit on Done only)
+	pendingExports   []string // flushed to --env-out on Done; widget evals after azform exits
 	setVarHintMsg    string   // transient inline hint shown while the popup is open
 	setVarHintActive bool     // a HintClearMsg tick is pending for setVarHintMsg
 
@@ -172,8 +176,6 @@ type Form struct {
 	errorMsg        string
 	hintMsg         string // transient footer feedback (spec §6.6: Space-on-required)
 	hintActive      bool   // a tea.Tick is pending to clear hintMsg
-	declaredVars    []DeclaredVar
-	declaring       bool
 	updateAvailable string
 
 	// Lazy field-fetch state (spec §6.1).
@@ -200,13 +202,6 @@ type FieldFetchSlowMsg struct{ FieldIdx int }
 // long — press Esc to cancel". Pressing Esc during this window cancels
 // the fetch and frees the field for manual input.
 type FieldFetchOfferCancelMsg struct{ FieldIdx int }
-
-// DeclaredVar records a var the user explicitly assigned in the form (spec §8.4
-// option 3). The result wrapper prepends these declarations.
-type DeclaredVar struct {
-	Name  string
-	Value string
-}
 
 // Sources bundles all pre-fill inputs the form should consume on metadata
 // load (spec §8.5). Each field may be nil/empty — the form degrades gracefully.
@@ -1132,14 +1127,11 @@ func (m *Form) SetFindings(findings []validate.Finding) {
 // SessionVars returns the map of variable names seen this session.
 func (m Form) SessionVars() map[string]bool { return m.sessionVars }
 
-// Declarations returns a defensive copy of vars the user explicitly declared.
-func (m Form) Declarations() []DeclaredVar {
-	return append([]DeclaredVar(nil), m.declaredVars...)
-}
-
-// PendingEnvExports returns the defensive copy of the export lines the user
-// queued via the FormModeSetVar popup. Each line is `export NAME='value'`,
-// ready to be written verbatim into a file sourced by the shell widget.
+// PendingEnvExports returns the defensive copy of the shell-variable lines
+// the user queued via the FormModeSetVar popup. Each line is
+// `NAME='value'` (no `export `), ready to be eval'd verbatim by the
+// widget after azform exits. The widget runs each line in your
+// interactive zsh so the var persists in the shell until you unset it.
 func (m Form) PendingEnvExports() []string {
 	return append([]string(nil), m.pendingExports...)
 }
@@ -1164,14 +1156,26 @@ func quoteForShell(value string) string {
 		quote     = "'"
 		escapeRun = `'\''`
 	)
-	return quote + strings.ReplaceAll(value, quote, escapeRun+quote) + quote
+	// POSIX-portable single-quoting: each embedded ' becomes '\''
+	// (close, escape, reopen) so the outer pair of '…' closes cleanly.
+	// The previous +quote suffix was a quoting bug that left an extra '
+	// dangling when the value contained an odd number of single quotes
+	// — e.g. it's came out as 'it'\'''s' which eval rejects with
+	// "unmatched '". Drop it; the outer quote added below re-opens
+	// after the escape.
+	return quote + strings.ReplaceAll(value, quote, escapeRun) + quote
 }
 
-// shellExportLine formats a single export line. name is assumed valid by
-// the caller; value is single-quoted via quoteForShell. Returns "export
-// NAME='value'".
-func shellExportLine(name, value string) string {
-	return "export " + name + "=" + quoteForShell(value)
+// shellVarLine formats a single shell-variable line for the widget's
+// post-azform eval loop. name is assumed valid by the caller; value is
+// single-quoted via quoteForShell. Returns "NAME='value'" — no `export `
+// prefix, so the resulting variable is shell-local (lives in your zsh
+// session until unset) but not pushed into the environment. Both
+// `$VAR` expansions in the next `az …` and visibility in the Ctrl+G
+// picker work; only inheritance by subprocesses of `az` differs from
+// the previous `export VAR=value` shape.
+func shellVarLine(name, value string) string {
+	return name + "=" + quoteForShell(value)
 }
 
 // isValidVarName reports whether s is a valid POSIX shell variable name
@@ -1219,11 +1223,12 @@ func (m *Form) parseSetVarInput(raw string) (name, value string, ok bool, hint s
 	return name, value, true, ""
 }
 
-// FlushPendingEnvExports returns the accumulated export lines as a single
-// newline-joined string with a trailing newline. Each entry is the exact
-// form written into the --env-out file: `export NAME='value'` (POSIX-
-// portable single-quoting, safe for `eval`). Empty when no exports are
-// queued, so the CLI can `[[ -s "$env" ]]` check before sourcing.
+// FlushPendingEnvExports returns the accumulated shell-var lines as a
+// single newline-joined string with a trailing newline. Each entry is
+// the exact form written into the --env-out file: `NAME='value'`
+// (POSIX-portable single-quoting, no `export `, safe for the widget's
+// post-azform `eval`). Empty when nothing is queued, so the widget can
+// `[[ -s "$env" ]]` check before sourcing.
 func (m Form) FlushPendingEnvExports() string {
 	if len(m.pendingExports) == 0 {
 		return ""

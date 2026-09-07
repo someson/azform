@@ -455,7 +455,6 @@ func (m Form) renderHelp() string {
 			title: "Variables",
 			rows: [][2]string{
 				{"v", "cycle value visibility for required params"},
-				{"d", "declare current var for the session"},
 			},
 		},
 		{

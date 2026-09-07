@@ -51,8 +51,9 @@ func TestSetVarPopupOpens(t *testing.T) {
 
 // TestSetVarAcceptsNameEqValue is the happy path: the user types
 // `RG=foo`, presses Enter, the popup stays open (multi-line batch
-// entry), and a single export line lands in pendingExports with the
-// value single-quoted. The CLI writes the file on Done.
+// entry), and a single shell-var line lands in pendingExports with the
+// value single-quoted. The CLI writes the file on Done; the widget
+// evals the line in your interactive zsh after azform exits.
 func TestSetVarAcceptsNameEqValue(t *testing.T) {
 	f := loadedForm(t)
 	m, _ := f.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("g")})
@@ -64,7 +65,7 @@ func TestSetVarAcceptsNameEqValue(t *testing.T) {
 		t.Errorf("popup should stay open after Enter on a valid line; mode = %v", f.Mode())
 	}
 	got := f.PendingEnvExports()
-	want := []string{"export RG='foo'"}
+	want := []string{"RG='foo'"}
 	if len(got) != 1 || got[0] != want[0] {
 		t.Errorf("pendingExports = %v, want %v", got, want)
 	}
@@ -74,10 +75,10 @@ func TestSetVarAcceptsNameEqValue(t *testing.T) {
 }
 
 // TestSetVarAcceptsBareName covers the second entry shape: the user
-// types just a name (no `=`) to re-export the current shell value.
-// When the widget has the var (via Sources.Vars), the export line uses
-// the live value; when it doesn't, the hint explains why and the input
-// stays for the user to retry.
+// types just a name (no `=`) to assign the current shell value into the
+// widget's eval queue. When the widget has the var (via Sources.Vars),
+// the line uses the live value; when it doesn't, the hint explains why
+// and the input stays for the user to retry.
 func TestSetVarAcceptsBareName(t *testing.T) {
 	src := ui.Sources{
 		Engine: validate.NewEngine(validate.BuiltinProvider{}),
@@ -94,7 +95,7 @@ func TestSetVarAcceptsBareName(t *testing.T) {
 	m, _ = f.Update(tea.KeyMsg{Type: tea.KeyEnter})
 	f = m.(ui.Form)
 	got := f.PendingEnvExports()
-	want := []string{"export RG='myResourceGroup'"}
+	want := []string{"RG='myResourceGroup'"}
 	if len(got) != 1 || got[0] != want[0] {
 		t.Errorf("pendingExports = %v, want %v", got, want)
 	}
@@ -120,7 +121,7 @@ func TestSetVarAcceptsBareName(t *testing.T) {
 // TestSetVarRejectsInvalidName locks down the three error cases the
 // plan calls out: a digit-leading name, an empty name (`=foo`), and a
 // name with a space. Each one must surface a hint and leave pendingExports
-// untouched — never silently emit an `export =foo` or similar nonsense.
+// untouched — never silently emit a `=foo` or similar nonsense.
 func TestSetVarRejectsInvalidName(t *testing.T) {
 	cases := []struct {
 		input string
@@ -168,7 +169,7 @@ func TestSetVarQuotesSingleQuote(t *testing.T) {
 	// quoteForShell wraps in `'...'`, replacing each `'` with `'\'''`
 	// (close, escape, reopen). For `it's` this gives the literal
 	// sequence below — note the doubled `'\'\'` boundary.
-	want := []string{`export TOKEN='it'\'''s'`}
+	want := []string{`TOKEN='it'\''s'`}
 	if len(got) != 1 || got[0] != want[0] {
 		t.Errorf("pendingExports = %q, want %q", got[0], want[0])
 	}
@@ -198,8 +199,8 @@ func TestSetVarEmptyEnterCloses(t *testing.T) {
 	if f.Mode() != ui.FormModeList {
 		t.Errorf("empty Enter should close popup; mode = %v", f.Mode())
 	}
-	if got := f.PendingEnvExports(); len(got) != 1 || got[0] != "export FOO='bar'" {
-		t.Errorf("pendingExports after close = %v, want [export FOO='bar'] (close must not drop the queue)", got)
+	if got := f.PendingEnvExports(); len(got) != 1 || got[0] != "FOO='bar'" {
+		t.Errorf("pendingExports after close = %v, want [FOO='bar'] (close must not drop the queue)", got)
 	}
 }
 
@@ -227,9 +228,9 @@ func TestSetVarMultiLine(t *testing.T) {
 	}
 	got := f.PendingEnvExports()
 	want := []string{
-		"export RG='rg1'",
-		"export LOC='eastus'",
-		"export SA='storage1'",
+		"RG='rg1'",
+		"LOC='eastus'",
+		"SA='storage1'",
 	}
 	if len(got) != len(want) {
 		t.Fatalf("pendingExports = %v, want %v", got, want)
@@ -246,12 +247,16 @@ func TestSetVarMultiLine(t *testing.T) {
 	}
 }
 
-// TestSetVarEscDiscardsBatch locks down the cancellation semantics:
-// Esc inside the popup must drop the in-progress batch. This matches
-// the rest of the form's "Esc cancels and saves draft" behaviour —
-// pressing Esc means "I changed my mind", and a forgotten export
-// line in the shell would be worse than losing one.
-func TestSetVarEscDiscardsBatch(t *testing.T) {
+// TestSetVarEscKeepsCommittedBatch locks down the new "Esc cancels
+// the command but keeps the queued vars" semantics. The user might
+// commit FOO=bar via Enter, then change their mind about the rest of
+// the form and press Esc to leave. They still want FOO=bar in their
+// shell for the next `az …` they type.
+//
+// Lines are committed on Enter (each Enter appends one entry); the
+// in-progress half-typed line is what's discarded on Esc, not the
+// previously committed entries.
+func TestSetVarEscKeepsCommittedBatch(t *testing.T) {
 	f := loadedForm(t)
 	m, _ := f.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("g")})
 	f = m.(ui.Form)
@@ -266,8 +271,8 @@ func TestSetVarEscDiscardsBatch(t *testing.T) {
 	if f.Mode() != ui.FormModeList {
 		t.Errorf("Esc should close popup; mode = %v", f.Mode())
 	}
-	if got := f.PendingEnvExports(); len(got) != 0 {
-		t.Errorf("Esc must drop the pending batch; pendingExports = %v, want []", got)
+	if got := f.PendingEnvExports(); len(got) != 1 {
+		t.Errorf("Esc must keep committed entries; pendingExports = %v, want [FOO='bar']", got)
 	}
 }
 
@@ -334,7 +339,7 @@ func TestSetVarFlushSurvivesDone(t *testing.T) {
 		t.Fatalf("Result should be set after Done; errorMsg=%q", f.ErrorMsg())
 	}
 	got := f.PendingEnvExports()
-	want := []string{"export FOO='bar'"}
+	want := []string{"FOO='bar'"}
 	if len(got) != 1 || got[0] != want[0] {
 		t.Errorf("pendingExports after Done = %v, want %v", got, want)
 	}
