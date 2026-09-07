@@ -45,6 +45,12 @@ jobs:
         with:
           version: latest
 
+      # install.sh is not covered by any Go test. A stray top-level
+      # token here breaks the published install path under `set -eu`
+      # while every other check stays green, so parse it explicitly.
+      - name: install.sh syntax
+        run: sh -n install.sh
+
   licenses:
     name: licenses
     runs-on: ubuntu-latest
