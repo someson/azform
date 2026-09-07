@@ -6,6 +6,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strings"
+	"sync"
 	"testing"
 	"time"
 
@@ -69,7 +70,33 @@ func TestE2EBashWidgetEnvOut(t *testing.T) {
 		t.Fatalf("pty start: %v", err)
 	}
 	defer func() { _ = f.Close() }()
-	go func() { _, _ = io.Copy(io.Discard, f) }()
+
+	// Capture the pty stream instead of discarding it. The widget runs
+	// inside bash, so anything it or its helpers write to the terminal
+	// — command-not-found, mktemp errors, azform diagnostics — only
+	// surfaces here. Discarding it made a CI-only failure impossible to
+	// diagnose from the logs.
+	var mu sync.Mutex
+	var ptyOut strings.Builder
+	go func() {
+		buf := make([]byte, 4096)
+		for {
+			n, err := f.Read(buf)
+			if n > 0 {
+				mu.Lock()
+				ptyOut.Write(buf[:n])
+				mu.Unlock()
+			}
+			if err != nil {
+				return
+			}
+		}
+	}()
+	dumpPty := func() string {
+		mu.Lock()
+		defer mu.Unlock()
+		return ptyOut.String()
+	}
 
 	seq := func(s string, perByte, settle time.Duration) {
 		for _, b := range []byte(s) {
@@ -98,9 +125,9 @@ func TestE2EBashWidgetEnvOut(t *testing.T) {
 
 	data, err := os.ReadFile(keep)
 	if err != nil {
-		t.Fatalf("read env-out: %v", err)
+		t.Fatalf("read env-out: %v\n--- pty output ---\n%s\n--- end ---", err, dumpPty())
 	}
 	if !strings.Contains(string(data), "bashVar='value1'") {
-		t.Fatalf("env-out missing queued var; got:\n%s", data)
+		t.Fatalf("env-out missing queued var; got:\n%s\n--- pty output ---\n%s\n--- end ---", data, dumpPty())
 	}
 }
