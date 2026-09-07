@@ -1,7 +1,10 @@
 package ui_test
 
 import (
+	"bytes"
+	"os"
 	"os/exec"
+	"path/filepath"
 	"strings"
 	"testing"
 )
@@ -75,5 +78,55 @@ func TestInstallShOldBashMessage(t *testing.T) {
 	}
 	if strings.Contains(strings.ToLower(got), "brew") {
 		t.Errorf("message must not hardcode a package manager; got %q", got)
+	}
+}
+
+// TestInstallShWriteWidgetFromOutsideRepo is the regression test for the
+// piped-install blocker: `curl … | sh` sets $0 to "sh", so SCRIPT_DIR
+// resolved to the user's cwd and the widget copy failed for everyone
+// without a repo checkout. write_widget must now get the scripts from
+// the binary it just installed, so it has to work with a cwd that has
+// no widget/ directory at all.
+//
+// Running this from the repo root would pass for the wrong reason —
+// hence the explicit cmd.Dir outside it.
+func TestInstallShWriteWidgetFromOutsideRepo(t *testing.T) {
+	t.Parallel()
+	root, err := filepath.Abs(repoRoot(t))
+	if err != nil {
+		t.Fatal(err)
+	}
+	binDir := t.TempDir()
+	shareDir := t.TempDir()
+	build := exec.Command("go", "build", "-o", filepath.Join(binDir, "azform"), "./cmd/azform")
+	build.Dir = root
+	if out, err := build.CombinedOutput(); err != nil {
+		t.Fatalf("build azform: %v\n%s", err, out)
+	}
+
+	elsewhere := t.TempDir()
+	cmd := exec.Command("sh", "-c", "AZFORM_INSTALL_LIB=1 . "+filepath.Join(root, "install.sh")+"; write_widget")
+	cmd.Dir = elsewhere
+	cmd.Env = append(os.Environ(),
+		"AZFORM_BIN_DIR="+binDir,
+		"AZFORM_SHARE_DIR="+shareDir,
+	)
+	if out, err := cmd.CombinedOutput(); err != nil {
+		t.Fatalf("write_widget from %s: %v\n%s", elsewhere, err, out)
+	}
+
+	for _, name := range []string{"widget.zsh", "widget.bash"} {
+		got, err := os.ReadFile(filepath.Join(shareDir, name))
+		if err != nil {
+			t.Errorf("read installed %s: %v", name, err)
+			continue
+		}
+		want, err := os.ReadFile(filepath.Join(root, "widget", name))
+		if err != nil {
+			t.Fatal(err)
+		}
+		if !bytes.Equal(got, want) {
+			t.Errorf("installed %s differs from widget/%s", name, name)
+		}
 	}
 }

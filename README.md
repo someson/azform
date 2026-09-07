@@ -369,6 +369,19 @@ One command. No `sudo`, nothing outside your home directory. The installer asks 
 
 Requires the Azure CLI to be installed and on your `PATH`. macOS and Linux for now.
 
+The installer never copies the widget from a checkout — it asks the
+binary for it, so the piped one-liner above works from any directory:
+
+```sh
+azform shell-init zsh    # prints the zsh widget to stdout
+azform shell-init bash   # prints the bash widget (needs bash 4+)
+```
+
+Useful if you manage your dotfiles yourself: source the output from
+your profile instead of letting the installer edit it. Because the
+script comes out of the binary, the widget can never be a version
+behind the `azform` that reads it.
+
 ## Update and uninstall
 
 Update by rerunning the install command — the same one-liner, no

@@ -36,6 +36,13 @@ func main() {
 }
 
 func run(args []string) int {
+	// Subcommands are dispatched before flag parsing: `shell-init` is a
+	// bare positional, which the flag path would otherwise mistake for
+	// an az command path.
+	if len(args) > 0 && args[0] == "shell-init" {
+		return runShellInit(args[1:], os.Stdout, os.Stderr)
+	}
+
 	fs := flag.NewFlagSet("azform", flag.ContinueOnError)
 	fs.SetOutput(os.Stderr)
 
@@ -71,7 +78,8 @@ func run(args []string) int {
 	fs.BoolVar(&doctorFlag, "doctor", false, "print environment summary and exit (spec §15.3)")
 
 	fs.Usage = func() {
-		fmt.Fprintf(fs.Output(), "Usage: azform --line <buffer> --out <path> [--vars <path>] [--cwd <path>]\n\n")
+		fmt.Fprintf(fs.Output(), "Usage: azform --line <buffer> --out <path> [--vars <path>] [--cwd <path>]\n")
+		fmt.Fprintf(fs.Output(), "       azform shell-init <bash|zsh>   print the shell widget to stdout\n\n")
 		fmt.Fprintf(fs.Output(), "Flags:\n")
 		fs.PrintDefaults()
 	}

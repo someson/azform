@@ -24,10 +24,6 @@ SHARE_DIR="${AZFORM_SHARE_DIR:-$HOME/.local/share/azform}"
 STATE_DIR="${AZFORM_STATE_DIR:-$HOME/.local/state/azform}"
 VERSION="${AZFORM_VERSION:-}"
 
-# Directory containing this script. Used to locate widget/widget.zsh
-# so the source of truth lives in the repo, not in the heredoc.
-SCRIPT_DIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
-
 MARKER_BEGIN="# >>> azform >>>"
 MARKER_END="# <<< azform <<<"
 
@@ -176,13 +172,25 @@ install_binary() {
     mkdir -p "$SHARE_DIR"
 }
 
+# write_widget asks the freshly installed binary for its widgets
+# instead of copying them from next to this script. When the installer
+# is piped (`curl … | sh`) there is no script directory to copy from —
+# $0 is "sh" — so a copy-based install worked only inside a repo
+# checkout. Emitting from the binary also makes widget/binary skew
+# impossible: the widget is whatever that binary was built with.
 write_widget() {
     mkdir -p "$SHARE_DIR"
     # Both widgets are installed regardless of the current shell: it
     # costs nothing and means switching shells later works without
     # re-running the installer.
-    cp "$SCRIPT_DIR/widget/widget.zsh" "$SHARE_DIR/widget.zsh"
-    cp "$SCRIPT_DIR/widget/widget.bash" "$SHARE_DIR/widget.bash"
+    for shell in zsh bash; do
+        tmp="$SHARE_DIR/widget.$shell.tmp.$$"
+        # Via a temp file: a failing binary must not leave a truncated
+        # widget.$shell behind for the profile to source.
+        "$BIN_DIR/azform" shell-init "$shell" > "$tmp" \
+            || err "azform shell-init $shell failed"
+        mv "$tmp" "$SHARE_DIR/widget.$shell"
+    done
 }
 
 add_to_profile() {
@@ -270,7 +278,7 @@ cat <<SUMMARY
 azform $version installed.
 
   binary:  $BIN_DIR/azform
-  widget:  $SHARE_DIR/widget.zsh
+  widget:  $SHARE_DIR/widget.zsh, $SHARE_DIR/widget.bash
   profile: $prof
 
 Restart the shell or run:  exec "$SHELL"
