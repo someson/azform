@@ -2125,93 +2125,33 @@ func TestLoadedFieldRowShowsOptionCount(t *testing.T) {
 	}
 }
 
-func TestFormShowGlobalsToggle(t *testing.T) {
-	params := []metadata.Parameter{
-		{Name: "--name", Required: true, TakesValue: true, ValueKind: metadata.ValueKindString, Group: "Required Parameters"},
-		{Name: "--tags", Required: false, TakesValue: true, ValueKind: metadata.ValueKindKeyValue, Group: "Optional Parameters"},
-		{Name: "--output", Aliases: []string{"-o"}, Global: true, TakesValue: true, ValueKind: metadata.ValueKindEnum, Choices: []string{"json", "table", "tsv"}, Group: "Global Arguments"},
-		{Name: "--query", Global: true, TakesValue: true, ValueKind: metadata.ValueKindString, Group: "Global Arguments"},
-	}
-	f := ui.NewForm("group list", "/tmp/out.txt", t.TempDir(), "test", nil)
-	m, _ := f.Update(ui.MetadataLoadedMsg{Params: params, Summary: "."})
-	f = m.(ui.Form)
-
-	// Default: globals hidden; view shows the "press G" hint but not --output.
-	view := f.View()
-	if f.ShowGlobals() {
-		t.Error("ShowGlobals should default to false")
-	}
-	if strings.Contains(view, "--output") {
-		t.Error("view should NOT contain --output when showGlobals=false")
-	}
-	if !strings.Contains(view, "press G to show 2 global") {
-		t.Errorf("view should include the 'press G' hint with count; view:\n%s", view)
-	}
-
-	// Press 'G' (uppercase; lowercase 'g' now opens the set-var popup)
-	// → globals visible.
-	m, _ = f.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("G")})
-	f = m.(ui.Form)
-	if !f.ShowGlobals() {
-		t.Fatal("ShowGlobals should be true after pressing G")
-	}
-	view = f.View()
-	if !strings.Contains(view, "--output") {
-		t.Errorf("view should contain --output after G; view:\n%s", view)
-	}
-	if !strings.Contains(view, "--query") {
-		t.Error("view should contain --query after G")
-	}
-
-	// Press 'G' again → hidden again.
-	m, _ = f.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("G")})
-	f = m.(ui.Form)
-	if f.ShowGlobals() {
-		t.Error("ShowGlobals should toggle back to false")
-	}
-	if strings.Contains(f.View(), "--output") {
-		t.Error("view should not contain --output after second G")
-	}
-}
-
-// TestShowGlobalsMovedToShiftG is the companion to TestFormShowGlobalsToggle:
-// pressing lowercase 'g' from list mode must NOT toggle showGlobals anymore
-// (it now opens the set-var popup). The old binding has been shifted to
-// uppercase 'G'. Without this guard a future refactor could accidentally
-// re-wire 'g' and silently break the new popup.
-func TestShowGlobalsMovedToShiftG(t *testing.T) {
+// TestLowercaseGOpensSetVarPopup guards the 'g' binding: it must open the
+// set-var popup rather than doing anything else. It previously toggled the
+// Global Arguments section, and that toggle has since been removed
+// (globals always render — see TestGlobalsAlwaysVisible), but the guard on
+// 'g' itself is still worth keeping so a future refactor cannot silently
+// re-wire the popup key.
+func TestLowercaseGOpensSetVarPopup(t *testing.T) {
 	f := ui.NewForm("group list", "/tmp/out.txt", t.TempDir(), "test", nil)
 	m, _ := f.Update(ui.MetadataLoadedMsg{Params: testParams, Summary: "."})
 	f = m.(ui.Form)
 
-	// Lowercase 'g' opens the popup, not the toggle.
 	m, _ = f.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("g")})
 	f = m.(ui.Form)
 	if f.Mode() != ui.FormModeSetVar {
 		t.Fatalf("lowercase g should open FormModeSetVar, got %v", f.Mode())
 	}
-	if f.ShowGlobals() {
-		t.Error("lowercase g must not toggle ShowGlobals")
-	}
 
-	// Esc closes the popup; ShowGlobals is still false (uppercase only).
 	m, _ = f.Update(tea.KeyMsg{Type: tea.KeyEsc})
 	f = m.(ui.Form)
-	if f.ShowGlobals() {
-		t.Error("Esc from popup must not change ShowGlobals")
-	}
-
-	// Uppercase 'G' now toggles.
-	m, _ = f.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("G")})
-	f = m.(ui.Form)
-	if !f.ShowGlobals() {
-		t.Error("uppercase G should toggle ShowGlobals")
+	if f.Mode() != ui.FormModeList {
+		t.Errorf("Esc should return to list mode, got %v", f.Mode())
 	}
 }
 
 // makeGridForm builds a Form loaded with a synthetic parameter set for grid
 // layout tests. reqOptCount includes reqCount as the first N required params.
-func makeGridForm(t *testing.T, reqCount, reqOptCount, globalCount, termWidth int, showGlobals bool) ui.Form {
+func makeGridForm(t *testing.T, reqCount, reqOptCount, globalCount, termWidth int) ui.Form {
 	t.Helper()
 	var params []metadata.Parameter
 	for i := 0; i < reqCount; i++ {
@@ -2240,9 +2180,6 @@ func makeGridForm(t *testing.T, reqCount, reqOptCount, globalCount, termWidth in
 	f := ui.NewForm("test cmd", "/tmp/out", t.TempDir(), "test", nil)
 	m, _ := f.Update(tea.WindowSizeMsg{Width: termWidth, Height: 40})
 	m, _ = m.(ui.Form).Update(ui.MetadataLoadedMsg{Params: params, Summary: "."})
-	if showGlobals {
-		m, _ = m.(ui.Form).Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("G")})
-	}
 	return m.(ui.Form)
 }
 
@@ -2253,24 +2190,22 @@ func TestGridLayout(t *testing.T) {
 		reqCount    int // subset of reqOpt that are required
 		globals     int
 		termWidth   int
-		showGlobals bool
 		wantCols    int
 		wantRoCols  int // len(roCols)
 		wantGlobals int // len(globalsCol)
 	}{
-		{"narrow terminal → single col fallback", 5, 2, 3, 60, true, 1, 0, 0},
-		{"mid width, few fields, globals shown", 5, 2, 3, 140, true, 2, 1, 3},
-		{"mid width, many fields, globals shown → 3-col needs 3 cells; 140 fits ~3", 18, 3, 3, 200, true, 3, 2, 3},
-		{"mid width, many fields, showGlobals off but globals fit → shown anyway", 18, 3, 3, 200, false, 3, 2, 3},
-		{"wide, few fields → stays 2-col (count not > threshold)", 5, 2, 3, 240, true, 2, 1, 3},
-		{"wide, many fields → 3-col (Req+Opt split)", 18, 3, 3, 240, true, 3, 2, 3},
-		{"wide, many fields, no globals in metadata → 2-col", 18, 3, 0, 240, true, 2, 2, 0},
-		{"exactly at threshold (10) → stays 1 Req+Opt col", 10, 2, 3, 240, true, 2, 1, 3},
-		{"just over threshold (11) → splits", 11, 2, 3, 240, true, 3, 2, 3},
+		{"narrow terminal → single col fallback", 5, 2, 3, 60, 1, 0, 0},
+		{"mid width, few fields, globals shown", 5, 2, 3, 140, 2, 1, 3},
+		{"mid width, many fields, globals shown → 3-col needs 3 cells; 140 fits ~3", 18, 3, 3, 200, 3, 2, 3},
+		{"wide, few fields → stays 2-col (count not > threshold)", 5, 2, 3, 240, 2, 1, 3},
+		{"wide, many fields → 3-col (Req+Opt split)", 18, 3, 3, 240, 3, 2, 3},
+		{"wide, many fields, no globals in metadata → 2-col", 18, 3, 0, 240, 2, 2, 0},
+		{"exactly at threshold (10) → stays 1 Req+Opt col", 10, 2, 3, 240, 2, 1, 3},
+		{"just over threshold (11) → splits", 11, 2, 3, 240, 3, 2, 3},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
-			f := makeGridForm(t, tc.reqCount, tc.reqOpt, tc.globals, tc.termWidth, tc.showGlobals)
+			f := makeGridForm(t, tc.reqCount, tc.reqOpt, tc.globals, tc.termWidth)
 			roCols, globalsCol, cols := f.GridLayout()
 			if cols != tc.wantCols {
 				t.Errorf("cols = %d, want %d", cols, tc.wantCols)
@@ -2297,7 +2232,7 @@ func TestGridLayout(t *testing.T) {
 func TestGridRenderContainsAllFields(t *testing.T) {
 	// 18 Req+Opt + 3 globals + wide terminal → 3-col grid; every field name
 	// should appear in the rendered view.
-	f := makeGridForm(t, 3, 18, 3, 240, true)
+	f := makeGridForm(t, 3, 18, 3, 240)
 	view := f.View()
 	for i := 0; i < 18; i++ {
 		want := fmt.Sprintf("--req%d", i)
@@ -2316,7 +2251,7 @@ func TestGridRenderContainsAllFields(t *testing.T) {
 }
 
 func TestGridRenderSingleColFallbackInEditMode(t *testing.T) {
-	f := makeGridForm(t, 3, 18, 3, 240, true)
+	f := makeGridForm(t, 3, 18, 3, 240)
 	// GridLayout should say 3 columns.
 	_, _, cols := f.GridLayout()
 	if cols != 3 {
@@ -2386,7 +2321,7 @@ func lipglossFg(code string) lipgloss.Style {
 
 func TestCursorHorizontalNavigation(t *testing.T) {
 	// 18 Req+Opt + 3 globals + wide terminal → 3-col grid (9|9|3).
-	f := makeGridForm(t, 3, 18, 3, 240, true)
+	f := makeGridForm(t, 3, 18, 3, 240)
 	roCols, globalsCol, cols := f.GridLayout()
 	if cols != 3 || len(roCols) != 2 || len(globalsCol) != 3 {
 		t.Fatalf("precondition: expected 3 cols with 2 ro + 3 globals, got cols=%d ro=%v globals=%v", cols, roCols, globalsCol)
@@ -2431,7 +2366,7 @@ func TestCursorHorizontalUnequalColumnHeights(t *testing.T) {
 	// 12 Req+Opt (splits into 6|6) + 2 globals + wide → 3 cols with heights 6|6|2.
 	// Navigate to bottom of col 0 (row 5), press 'l' → col 1 row 5.
 	// Press 'l' again from col 1 row 5 → col 2 row 1 (clamped, since col 2 has only 2 rows).
-	f := makeGridForm(t, 2, 12, 2, 240, true)
+	f := makeGridForm(t, 2, 12, 2, 240)
 	roCols, globalsCol, cols := f.GridLayout()
 	if cols != 3 {
 		t.Fatalf("precondition: expected 3 cols, got %d", cols)
@@ -2981,7 +2916,7 @@ func pressUp(t *testing.T, f ui.Form) ui.Form {
 // TestVertNavStopsAtTopOfFirstColumn verifies Up at the top of column 0
 // is a no-op (no wraparound, no crash).
 func TestVertNavStopsAtTopOfFirstColumn(t *testing.T) {
-	f := makeGridForm(t, 3, 18, 3, 240, true)
+	f := makeGridForm(t, 3, 18, 3, 240)
 	before := f.Cursor()
 	f = pressUp(t, f)
 	if f.Cursor() != before {
@@ -2992,7 +2927,7 @@ func TestVertNavStopsAtTopOfFirstColumn(t *testing.T) {
 // TestVertNavWrapsToPrevColBottom verifies Up at the top of a non-first
 // column jumps to the last row of the previous column.
 func TestVertNavWrapsToPrevColBottom(t *testing.T) {
-	f := makeGridForm(t, 3, 18, 3, 240, true)
+	f := makeGridForm(t, 3, 18, 3, 240)
 	roCols, _, _ := f.GridLayout()
 	// Jump directly to top of col 1 by advancing 9 Down presses (col 0 has 9).
 	for i := 0; i < 9; i++ {
@@ -3011,7 +2946,7 @@ func TestVertNavWrapsToPrevColBottom(t *testing.T) {
 // TestVertNavWrapsToNextColTop verifies Down at the last row of a
 // non-last column jumps to the top of the next column.
 func TestVertNavWrapsToNextColTop(t *testing.T) {
-	f := makeGridForm(t, 3, 18, 3, 240, true)
+	f := makeGridForm(t, 3, 18, 3, 240)
 	roCols, _, _ := f.GridLayout()
 	// Advance to last row of col 0 (8 presses lands at roCols[0][8]).
 	for i := 0; i < 8; i++ {
@@ -3029,7 +2964,7 @@ func TestVertNavWrapsToNextColTop(t *testing.T) {
 // TestVertNavStopsAtBottomOfLastColumn verifies Down at the last field
 // of the last column is a no-op.
 func TestVertNavStopsAtBottomOfLastColumn(t *testing.T) {
-	f := makeGridForm(t, 3, 18, 3, 240, true)
+	f := makeGridForm(t, 3, 18, 3, 240)
 	roCols, globalsCol, _ := f.GridLayout()
 	total := len(roCols[0]) + len(roCols[1]) + len(globalsCol)
 	// Advance to the very last field (total-1 Down presses from index 0).
@@ -3049,7 +2984,7 @@ func TestVertNavStopsAtBottomOfLastColumn(t *testing.T) {
 // TestVertNavSingleColumnStillWorks verifies flat-index Up/Down still
 // applies when the grid falls back to single-column mode.
 func TestVertNavSingleColumnStillWorks(t *testing.T) {
-	f := makeGridForm(t, 2, 5, 3, 60, true) // narrow term → single col
+	f := makeGridForm(t, 2, 5, 3, 60) // narrow term → single col
 	_, _, cols := f.GridLayout()
 	if cols != 1 {
 		t.Fatalf("precondition: expected cols=1, got %d", cols)
@@ -3129,7 +3064,7 @@ func nameOfField(f ui.Form, idx int) string {
 // times from the top visits every field in visual grid order (col 0
 // top-to-bottom, then col 1, then globals). This is the bug reproducer.
 func TestVertNavSweepFollowsVisualOrder(t *testing.T) {
-	f := makeGridForm(t, 3, 18, 3, 240, true)
+	f := makeGridForm(t, 3, 18, 3, 240)
 	roCols, globalsCol, _ := f.GridLayout()
 	want := make([]int, 0)
 	want = append(want, roCols[0]...)
