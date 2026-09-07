@@ -159,10 +159,23 @@ func TestDoctorStateNoOverrides(t *testing.T) {
 	// Make sure unrelated env vars are NOT shown — only AZFORM_*.
 	t.Setenv("SHELL", "")
 	t.Setenv("PATH", "/bin:/usr/bin")
+	// Clear every AZFORM_* override so the report has none to list.
+	// t.Setenv alone is not enough: it sets the variable to the empty
+	// string rather than removing it, and reportState walks os.Environ()
+	// which still lists "NAME=". The t.Setenv call is what registers the
+	// original value for restoration at cleanup; os.Unsetenv then
+	// actually takes it out of the environment for this test.
+	//
+	// Without the Unsetenv, exporting any AZFORM_* variable in your
+	// shell — including the documented AZFORM_NO_UPDATE_CHECK — made
+	// this test fail on an otherwise healthy tree.
 	for _, kv := range os.Environ() {
 		if strings.HasPrefix(kv, "AZFORM_") {
 			name := kv[:strings.IndexByte(kv, '=')]
 			t.Setenv(name, "")
+			if err := os.Unsetenv(name); err != nil {
+				t.Fatalf("unset %s: %v", name, err)
+			}
 		}
 	}
 
