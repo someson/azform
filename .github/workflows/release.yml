@@ -25,12 +25,21 @@ jobs:
         run: go install github.com/google/go-licenses@latest
 
       # Collect dependency license texts so they can ship inside the archives.
+      # licenses/ is gitignored, so writing it leaves the tree clean.
+      # THIRD_PARTY_LICENSES.md is tracked and must NOT be regenerated here:
+      # goreleaser refuses to build from a dirty tree, which is exactly how
+      # the first v0.1.1 attempt failed. It is verified instead, so a stale
+      # file fails loudly rather than being silently rewritten mid-release.
       - name: bundle dependency licenses
         run: |
           go-licenses check ./... \
             --allowed_licenses=MIT,BSD-2-Clause,BSD-3-Clause,Apache-2.0,ISC,MPL-2.0
           go-licenses save ./... --save_path=./licenses
-          go-licenses report ./... > THIRD_PARTY_LICENSES.md
+          go-licenses report ./... > /tmp/third-party-licenses.md
+          diff -u THIRD_PARTY_LICENSES.md /tmp/third-party-licenses.md || {
+            echo "::error::THIRD_PARTY_LICENSES.md is out of date; regenerate and commit it"
+            exit 1
+          }
 
       - uses: goreleaser/goreleaser-action@v7
         with:

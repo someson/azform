@@ -93,3 +93,14 @@ jobs:
         run: |
           go-licenses check ./... \
             --allowed_licenses=MIT,BSD-2-Clause,BSD-3-Clause,Apache-2.0,ISC,MPL-2.0
+
+      # Catches a stale report on every push instead of at tag time. The
+      # release job only verifies this file, so if it drifts here the release
+      # is already broken — and a dependency bump is what makes it drift.
+      - name: check THIRD_PARTY_LICENSES.md is current
+        run: |
+          go-licenses report ./... > /tmp/third-party-licenses.md
+          diff -u THIRD_PARTY_LICENSES.md /tmp/third-party-licenses.md || {
+            echo "::error::THIRD_PARTY_LICENSES.md is out of date; run go-licenses report ./... > THIRD_PARTY_LICENSES.md and commit"
+            exit 1
+          }
