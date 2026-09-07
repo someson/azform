@@ -61,9 +61,15 @@ fi
 
 azform-widget() {
   local out vars env line
-  out=$(mktemp -t azform-out)
-  vars=$(mktemp -t azform-vars)
-  env=$(mktemp -t azform-env)
+  # Explicit template rather than `mktemp -t azform-out`: BSD mktemp
+  # (macOS) treats -t's argument as a prefix and appends its own random
+  # suffix, but GNU coreutils (Linux) requires the template to contain
+  # at least three X's and errors with "too few X's in template",
+  # leaving the variable empty and every redirect below writing to "".
+  # This form is correct on both.
+  out=$(mktemp "${TMPDIR:-/tmp}/azform-out.XXXXXX")
+  vars=$(mktemp "${TMPDIR:-/tmp}/azform-vars.XXXXXX")
+  env=$(mktemp "${TMPDIR:-/tmp}/azform-env.XXXXXX")
 
   azform_bash_dump_vars "$vars"
 

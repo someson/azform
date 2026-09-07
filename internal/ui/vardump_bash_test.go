@@ -52,7 +52,7 @@ func TestBashDumpVarsFiltersTypes(t *testing.T) {
 	t.Parallel()
 	bash := bashAtLeast4(t)
 	if bash == "" {
-		t.Skip("no bash >= 4 available")
+		skipOrFail(t, "no bash >= 4 available")
 	}
 	out := t.TempDir() + "/vars"
 	script := `

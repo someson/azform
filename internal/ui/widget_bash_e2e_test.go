@@ -4,7 +4,9 @@ import (
 	"io"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"strings"
+	"sync"
 	"testing"
 	"time"
 
@@ -26,25 +28,39 @@ import (
 func TestE2EBashWidgetEnvOut(t *testing.T) {
 	bash := bashAtLeast4(t)
 	if bash == "" {
-		t.Skip("no bash >= 4 available")
+		skipOrFail(t, "no bash >= 4 available")
 	}
 	bin := repoBinary(t)
 	if bin == "" {
-		t.Skip("bin/azform not built; run `make build` first")
+		skipOrFail(t, "bin/azform not built; run `make build` first")
 	}
 
 	tmp := t.TempDir()
 	keep := tmp + "/env-out"
 	rc := tmp + "/rc"
-	rcBody := "source widget/widget.bash\nPS1='PROMPT> '\n"
+	widgetPath, err := filepath.Abs(repoRoot(t) + "/widget/widget.bash")
+	if err != nil {
+		t.Fatalf("resolve widget path: %v", err)
+	}
+	rcBody := "source " + widgetPath + "\nPS1='PROMPT> '\n"
 	if err := os.WriteFile(rc, []byte(rcBody), 0o600); err != nil {
 		t.Fatalf("write rc: %v", err)
+	}
+
+	// Put the freshly built binary first on PATH, resolved absolutely.
+	// $PWD is the *inherited* shell working directory, not the test's,
+	// so building a path from it is wrong — and locally it was masked
+	// by ~/.local/bin/azform from `make install`, meaning this test was
+	// silently exercising the installed binary rather than bin/azform.
+	binDir, err := filepath.Abs(filepath.Dir(bin))
+	if err != nil {
+		t.Fatalf("resolve binary dir: %v", err)
 	}
 
 	cmd := exec.Command(bash, "--noprofile", "--rcfile", rc, "-i")
 	cmd.Dir = repoRoot(t)
 	cmd.Env = append(os.Environ(),
-		"PATH="+os.Getenv("PWD")+"/../../bin:"+os.Getenv("PATH"),
+		"PATH="+binDir+":"+os.Getenv("PATH"),
 		"TERM=xterm-256color",
 		"AZFORM_NO_UPDATE_CHECK=1",
 		"AZFORM_ENV_OUT_KEEP="+keep,
@@ -54,7 +70,33 @@ func TestE2EBashWidgetEnvOut(t *testing.T) {
 		t.Fatalf("pty start: %v", err)
 	}
 	defer func() { _ = f.Close() }()
-	go func() { _, _ = io.Copy(io.Discard, f) }()
+
+	// Capture the pty stream instead of discarding it. The widget runs
+	// inside bash, so anything it or its helpers write to the terminal
+	// — command-not-found, mktemp errors, azform diagnostics — only
+	// surfaces here. Discarding it made a CI-only failure impossible to
+	// diagnose from the logs.
+	var mu sync.Mutex
+	var ptyOut strings.Builder
+	go func() {
+		buf := make([]byte, 4096)
+		for {
+			n, err := f.Read(buf)
+			if n > 0 {
+				mu.Lock()
+				ptyOut.Write(buf[:n])
+				mu.Unlock()
+			}
+			if err != nil {
+				return
+			}
+		}
+	}()
+	dumpPty := func() string {
+		mu.Lock()
+		defer mu.Unlock()
+		return ptyOut.String()
+	}
 
 	seq := func(s string, perByte, settle time.Duration) {
 		for _, b := range []byte(s) {
@@ -83,9 +125,9 @@ func TestE2EBashWidgetEnvOut(t *testing.T) {
 
 	data, err := os.ReadFile(keep)
 	if err != nil {
-		t.Fatalf("read env-out: %v", err)
+		t.Fatalf("read env-out: %v\n--- pty output ---\n%s\n--- end ---", err, dumpPty())
 	}
 	if !strings.Contains(string(data), "bashVar='value1'") {
-		t.Fatalf("env-out missing queued var; got:\n%s", data)
+		t.Fatalf("env-out missing queued var; got:\n%s\n--- pty output ---\n%s\n--- end ---", data, dumpPty())
 	}
 }

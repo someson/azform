@@ -28,11 +28,11 @@ import (
 // binary isn't built.
 func TestE2EWidgetEnvOutRoundTrip(t *testing.T) {
 	if _, err := exec.LookPath("zsh"); err != nil {
-		t.Skip("zsh not on PATH")
+		skipOrFail(t, "zsh not on PATH")
 	}
 	bin := repoBinary(t)
 	if bin == "" {
-		t.Skip("bin/azform not built; run `make build` first")
+		skipOrFail(t, "bin/azform not built; run `make build` first")
 	}
 
 	tmpDir := t.TempDir()
@@ -162,11 +162,11 @@ print -r -- "newVar=$newVar"`)
 // var didn't survive azform exit".
 func TestE2ECancelFlushesEnvOut(t *testing.T) {
 	if _, err := exec.LookPath("zsh"); err != nil {
-		t.Skip("zsh not on PATH")
+		skipOrFail(t, "zsh not on PATH")
 	}
 	bin := repoBinary(t)
 	if bin == "" {
-		t.Skip("bin/azform not built; run `make build` first")
+		skipOrFail(t, "bin/azform not built; run `make build` first")
 	}
 
 	// Use a fixed prefix under the system temp dir so the
