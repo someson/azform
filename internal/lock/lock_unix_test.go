@@ -12,6 +12,11 @@ import (
 	"github.com/someson/azform/internal/lock"
 )
 
+// fakeTTY returns a regular file standing in for a terminal. It is NOT a
+// terminal: TIOCGSID fails on it, so Acquire falls back to this process's
+// session id. That is fine for the file-handling assertions below (paths,
+// permissions, cleanup); anything about terminal *identity* needs a real
+// pty and belongs in lock_pty_test.go.
 func fakeTTY(t *testing.T) *os.File {
 	t.Helper()
 	f, err := os.CreateTemp(t.TempDir(), "fake-tty-*")
@@ -65,7 +70,18 @@ func TestContentionReturnsErrLocked(t *testing.T) {
 	}
 }
 
-func TestDifferentFdsIndependent(t *testing.T) {
+// TestSecondAcquireInSameSessionRefused replaces an earlier
+// TestDifferentFdsIndependent, which handed Acquire two regular temp files
+// and asserted they produced different lock paths. That passed for the wrong
+// reason: temp files have distinct (dev, inode), so it "proved" terminals
+// were independent while the shipped binary — which opens the shared
+// /dev/tty node — locked the whole machine. Two fds inside one process are
+// one terminal session, so the second Acquire must be refused.
+//
+// The property the old test meant to cover, two *real* terminals not
+// blocking each other, is covered by TestTwoTerminalsAreIndependent in
+// lock_pty_test.go, which spawns actual ptys.
+func TestSecondAcquireInSameSessionRefused(t *testing.T) {
 	withRuntimeDir(t, t.TempDir())
 
 	lk1, err := lock.Acquire(fakeTTY(t))
@@ -74,14 +90,8 @@ func TestDifferentFdsIndependent(t *testing.T) {
 	}
 	t.Cleanup(func() { _ = lk1.Close() })
 
-	lk2, err := lock.Acquire(fakeTTY(t))
-	if err != nil {
-		t.Fatalf("second tty blocked: %v", err)
-	}
-	t.Cleanup(func() { _ = lk2.Close() })
-
-	if lk1.Path() == lk2.Path() {
-		t.Errorf("different fds produced same lock path %q", lk1.Path())
+	if _, err := lock.Acquire(fakeTTY(t)); !errors.Is(err, lock.ErrLocked) {
+		t.Errorf("second Acquire in the same session = %v, want ErrLocked", err)
 	}
 }
 
