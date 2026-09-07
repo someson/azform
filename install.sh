@@ -30,7 +30,6 @@ SCRIPT_DIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
 
 MARKER_BEGIN="# >>> azform >>>"
 MARKER_END="# <<< azform <<<"
-WIDGET_LINE="[ -f \"$SHARE_DIR/widget.zsh\" ] && source \"$SHARE_DIR/widget.zsh\""
 
 log() { printf '%s\n' "$*"; }
 err() { log "ERROR: $*" >&2; exit 1; }
@@ -56,6 +55,46 @@ detect_shell() {
         */bash) echo bash ;;
         *) echo sh ;;
     esac
+}
+
+# bash_major echoes the major version of the *login* shell's bash.
+# It must interrogate "$SHELL" specifically: $SHELL, `bash` on PATH and
+# a package-manager bash can be three different binaries at three
+# different versions (macOS ships 3.2 as /bin/bash while Homebrew
+# installs 5.x elsewhere). Echoes 0 when it cannot tell, so an
+# unreadable version is treated as unsupported rather than assumed new.
+bash_major() {
+    "${SHELL:-/bin/bash}" -c 'echo "${BASH_VERSINFO[0]}"' 2>/dev/null || echo 0
+}
+
+# azform_widget_for_shell echoes the widget filename for a shell and a
+# bash major version, or nothing at all when the shell cannot host the
+# widget. bash < 4 lacks READLINE_LINE/READLINE_POINT, so the binding
+# would fire and silently do nothing; sh and dash have no keybinding
+# mechanism whatsoever.
+azform_widget_for_shell() {
+    case "$1" in
+        zsh) echo widget.zsh ;;
+        bash)
+            if [ "${2:-0}" -ge 4 ] 2>/dev/null; then
+                echo widget.bash
+            fi
+            ;;
+        *) : ;;
+    esac
+}
+
+# azform_unsupported_message echoes the explanation a user gets when
+# their shell cannot host the widget. This message is the entire
+# product for those users, so the wording is part of the contract.
+# It deliberately never names a package manager: bash 3.x is a version
+# problem, not a macOS problem.
+azform_unsupported_message() {
+    if [ "$1" = bash ]; then
+        printf "widget not installed: your bash is %s.x; azform's widget needs bash 4+. Upgrade bash, then re-run this installer.\n" "${2:-?}"
+    else
+        printf "widget not installed: your shell is %s; azform's widget supports zsh and bash 4+. Re-run from your target shell.\n" "$1"
+    fi
 }
 
 profile_path() {
@@ -137,14 +176,29 @@ install_binary() {
     mkdir -p "$SHARE_DIR"
 }
 
-WIDGET_SRC="${WIDGET_SRC:-$SCRIPT_DIR/widget/widget.zsh}"
-
 write_widget() {
     mkdir -p "$SHARE_DIR"
-    cp "$WIDGET_SRC" "$SHARE_DIR/widget.zsh"
+    # Both widgets are installed regardless of the current shell: it
+    # costs nothing and means switching shells later works without
+    # re-running the installer.
+    cp "$SCRIPT_DIR/widget/widget.zsh" "$SHARE_DIR/widget.zsh"
+    cp "$SCRIPT_DIR/widget/widget.bash" "$SHARE_DIR/widget.bash"
 }
 
 add_to_profile() {
+    shell=$(detect_shell)
+    major=0
+    [ "$shell" = bash ] && major=$(bash_major)
+    widget=$(azform_widget_for_shell "$shell" "$major")
+
+    # No widget for this shell: install nothing into the profile and
+    # say why. Writing a block that can never work is the bug this
+    # branch exists to prevent.
+    if [ -z "$widget" ]; then
+        log "$(azform_unsupported_message "$shell" "$major")"
+        return 0
+    fi
+
     prof=$(profile_path)
     [ -f "$prof" ] || : > "$prof"
     if grep -qF "$MARKER_BEGIN" "$prof"; then
@@ -153,8 +207,9 @@ add_to_profile() {
     fi
     backup="${prof}.azform.bak.$(date +%s)"
     cp "$prof" "$backup"
+    widget_line="[ -f \"$SHARE_DIR/$widget\" ] && source \"$SHARE_DIR/$widget\""
     {
-        printf '\n%s\n%s\n%s\n' "$MARKER_BEGIN" "$WIDGET_LINE" "$MARKER_END"
+        printf '\n%s\n%s\n%s\n' "$MARKER_BEGIN" "$widget_line" "$MARKER_END"
     } >> "$prof"
     log "added azform block to $prof (backup: $backup)"
 }
@@ -179,6 +234,13 @@ uninstall() {
     done
     log "uninstalled"
 }
+
+# Test seam: sourced with AZFORM_INSTALL_LIB=1, define the functions
+# above and stop. Lets the shell-selection logic be unit tested without
+# downloading a release or writing to a real profile.
+if [ "${AZFORM_INSTALL_LIB:-0}" = "1" ]; then
+    return 0 2>/dev/null || exit 0
+fi
 
 case "${1:-}" in
     --uninstall)
