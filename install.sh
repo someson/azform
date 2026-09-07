@@ -130,14 +130,19 @@ sha256_of() {
     fi
 }
 
+# POSIX sh has no local variables, so every name assigned here is global.
+# Names are vc_-prefixed to keep the function from clobbering its caller:
+# an earlier version assigned plain `archive`, which overwrote
+# install_binary's own `archive` and produced "$work/$work/…" on the next
+# line. Keep the prefix when editing.
 verify_checksum() {
-    archive="$1"
-    checksums="$2"
-    archive_name=$(basename "$archive")
-    expected=$(awk -v n="$archive_name" '$2 == n {print $1}' "$checksums")
-    [ -n "$expected" ] || err "checksum for $archive_name not found"
-    actual=$(sha256_of "$archive")
-    [ "$expected" = "$actual" ] || err "checksum mismatch (expected $expected, got $actual)"
+    vc_archive="$1"
+    vc_checksums="$2"
+    vc_name=$(basename "$vc_archive")
+    vc_expected=$(awk -v n="$vc_name" '$2 == n {print $1}' "$vc_checksums")
+    [ -n "$vc_expected" ] || err "checksum for $vc_name not found"
+    vc_actual=$(sha256_of "$vc_archive")
+    [ "$vc_expected" = "$vc_actual" ] || err "checksum mismatch (expected $vc_expected, got $vc_actual)"
 }
 
 resolve_latest_version() {
@@ -156,13 +161,21 @@ resolve_latest_version() {
     fi
 }
 
+# azform_archive_name echoes the release archive filename for a version
+# and platform. The tag keeps its leading "v" (v0.1.1) but goreleaser's
+# name_template uses {{ .Version }}, which does not — so the "v" is
+# stripped here. Without this every download 404s.
+azform_archive_name() {
+    printf 'azform_%s_%s.tar.gz' "${1#v}" "$2"
+}
+
 install_binary() {
     platform=$1
     version=$2
     work=$(mktemp -d)
     trap 'rm -rf "$work"' EXIT
     base="https://github.com/$REPO/releases/download/${version}"
-    archive="azform_${version}_${platform}.tar.gz"
+    archive=$(azform_archive_name "$version" "$platform")
     download "$base/$archive" "$work/$archive"
     download "$base/checksums.txt" "$work/checksums.txt"
     verify_checksum "$work/$archive" "$work/checksums.txt"

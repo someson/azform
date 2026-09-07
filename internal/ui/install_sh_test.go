@@ -130,3 +130,53 @@ func TestInstallShWriteWidgetFromOutsideRepo(t *testing.T) {
 		}
 	}
 }
+
+// TestInstallShArchiveName pins the archive filename against goreleaser's
+// name_template. The tag carries a leading "v" ("v0.1.1") but
+// {{ .Version }} does not, so the installer must strip it. Getting this
+// wrong makes every download 404 — which is what shipped in v0.1.0 and
+// v0.1.1, undetected, because nothing exercised the download path.
+func TestInstallShArchiveName(t *testing.T) {
+	t.Parallel()
+	cases := []struct {
+		version, platform, want string
+	}{
+		{"v0.1.1", "darwin_arm64", "azform_0.1.1_darwin_arm64.tar.gz"},
+		{"v1.2.3", "linux_amd64", "azform_1.2.3_linux_amd64.tar.gz"},
+		{"0.1.1", "linux_arm64", "azform_0.1.1_linux_arm64.tar.gz"},
+	}
+	for _, tc := range cases {
+		t.Run(tc.version+"_"+tc.platform, func(t *testing.T) {
+			t.Parallel()
+			got := runInstallLib(t, "azform_archive_name "+tc.version+" "+tc.platform)
+			if got != tc.want {
+				t.Errorf("azform_archive_name %s %s = %q, want %q", tc.version, tc.platform, got, tc.want)
+			}
+		})
+	}
+}
+
+// TestInstallShVerifyChecksumKeepsCallerVars guards a POSIX-sh footgun that
+// broke the download path: functions have no locals, so verify_checksum's
+// `archive="$1"` overwrote install_binary's `archive`, and the following
+// `tar -xzf "$work/$archive"` got "$work/$work/azform_….tar.gz". Nothing
+// caught it because no test ever ran a real download.
+func TestInstallShVerifyChecksumKeepsCallerVars(t *testing.T) {
+	t.Parallel()
+	dir := t.TempDir()
+	payload := filepath.Join(dir, "azform_0.1.1_darwin_arm64.tar.gz")
+	if err := os.WriteFile(payload, []byte("payload"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	// sha256 of "payload"
+	sum := "239f59ed55e737c77147cf55ad0c1b030b6d7ee748a7426952f9b852d5a935e5"
+	sums := filepath.Join(dir, "checksums.txt")
+	if err := os.WriteFile(sums, []byte(sum+"  azform_0.1.1_darwin_arm64.tar.gz\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+
+	got := runInstallLib(t, "archive=SENTINEL; work=WORKDIR; verify_checksum "+payload+" "+sums+"; printf '%s|%s' \"$archive\" \"$work\"")
+	if got != "SENTINEL|WORKDIR" {
+		t.Errorf("verify_checksum clobbered caller variables: got %q, want %q", got, "SENTINEL|WORKDIR")
+	}
+}
