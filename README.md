@@ -84,7 +84,7 @@ You press a key. A form opens under your prompt, listing every parameter the com
 
 It is a way to *write* `az` commands. Nothing more than that, and that's the point.
 
-**Under the hood.** `azform` is a single Go binary. When you open a form, it shells out to `az <command> --help` and parses the text — the same help you'd read yourself. It attaches as a shell widget (Ctrl-X Ctrl-A in zsh), takes over the terminal via `/dev/tty` while the form is open, and writes the finished command straight into your shell's line buffer on exit. No daemon, no telemetry, no phone-home. Small state — drafts, remembered variable bindings — lives under `~/.local/state/azform/` as plain files you can delete at any time.
+**Under the hood.** `azform` is a single Go binary. When you open a form, it shells out to `az <command> --help` and parses the text — the same help you'd read yourself. It attaches as a shell widget (Ctrl-X then A, in zsh and bash 4+), takes over the terminal via `/dev/tty` while the form is open, and writes the finished command straight into your shell's line buffer on exit. No daemon, no telemetry, no phone-home. Small state — drafts, remembered variable bindings — lives under `~/.local/state/azform/` as plain files you can delete at any time.
 
 ## What it is not
 

@@ -12,6 +12,11 @@ build: ## Build azform binary into ./bin
 	@mkdir -p bin
 	go build -o bin/azform ./cmd/azform
 
+# Depends on install-bin, NOT build: `build` only writes ./bin/azform,
+# a working-tree artifact nobody runs from. An earlier version of this
+# target was `install: build widget-install`, which silently left the
+# binary in ~/.local/bin frozen at an old commit while every test
+# passed. Do not "simplify" it back.
 install: install-bin widget-install ## Install binary and refresh widget
 
 install-bin: build ## go install into $(BIN_DIR) (depends on build for the local ./bin/azform copy)
