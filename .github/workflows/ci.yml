@@ -27,8 +27,30 @@ jobs:
       - name: go vet
         run: go vet ./...
 
+      # The pty end-to-end tests drive the real binary as a subprocess
+      # and skip themselves when bin/azform is missing. Without this
+      # step they silently skipped on every CI run — internal/ui
+      # finished in ~1.4s instead of ~60s — so the widget round trip
+      # was never actually exercised here.
+      - name: build test binary
+        run: make build
+
+      # ubuntu-latest is the runner where every e2e prerequisite is
+      # guaranteed: bash 5.x ships with the image and zsh is installed
+      # here. That lets AZFORM_E2E_REQUIRED=1 below turn any skip into
+      # a hard failure, so a green run means the tests really ran.
+      #
+      # macos-latest is deliberately left permissive: it ships bash
+      # 3.2, which cannot run the bash widget at all, so the bash e2e
+      # test must stay free to skip there.
+      - name: install zsh (e2e prerequisite)
+        if: matrix.os == 'ubuntu-latest'
+        run: sudo apt-get update && sudo apt-get install -y zsh
+
       - name: test
         run: go test -race -count=1 ./...
+        env:
+          AZFORM_E2E_REQUIRED: ${{ matrix.os == 'ubuntu-latest' && '1' || '' }}
 
   lint:
     name: lint
