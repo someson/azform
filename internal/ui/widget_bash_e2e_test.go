@@ -4,6 +4,7 @@ import (
 	"io"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"strings"
 	"testing"
 	"time"
@@ -36,15 +37,29 @@ func TestE2EBashWidgetEnvOut(t *testing.T) {
 	tmp := t.TempDir()
 	keep := tmp + "/env-out"
 	rc := tmp + "/rc"
-	rcBody := "source widget/widget.bash\nPS1='PROMPT> '\n"
+	widgetPath, err := filepath.Abs(repoRoot(t) + "/widget/widget.bash")
+	if err != nil {
+		t.Fatalf("resolve widget path: %v", err)
+	}
+	rcBody := "source " + widgetPath + "\nPS1='PROMPT> '\n"
 	if err := os.WriteFile(rc, []byte(rcBody), 0o600); err != nil {
 		t.Fatalf("write rc: %v", err)
+	}
+
+	// Put the freshly built binary first on PATH, resolved absolutely.
+	// $PWD is the *inherited* shell working directory, not the test's,
+	// so building a path from it is wrong — and locally it was masked
+	// by ~/.local/bin/azform from `make install`, meaning this test was
+	// silently exercising the installed binary rather than bin/azform.
+	binDir, err := filepath.Abs(filepath.Dir(bin))
+	if err != nil {
+		t.Fatalf("resolve binary dir: %v", err)
 	}
 
 	cmd := exec.Command(bash, "--noprofile", "--rcfile", rc, "-i")
 	cmd.Dir = repoRoot(t)
 	cmd.Env = append(os.Environ(),
-		"PATH="+os.Getenv("PWD")+"/../../bin:"+os.Getenv("PATH"),
+		"PATH="+binDir+":"+os.Getenv("PATH"),
 		"TERM=xterm-256color",
 		"AZFORM_NO_UPDATE_CHECK=1",
 		"AZFORM_ENV_OUT_KEEP="+keep,
