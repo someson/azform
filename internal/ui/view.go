@@ -283,6 +283,8 @@ func (m Form) View() string {
 		writeLine(&sb, errStyle.Render(m.errorMsg))
 	case m.hintMsg != "":
 		writeLine(&sb, hintStyle.Render(m.hintMsg))
+	case m.gridFetchNote() != "":
+		writeLine(&sb, m.gridFetchNote())
 	case focusedFullValue != "":
 		// Grid mode shows a preview of the focused field's full value here so
 		// truncated cells (`…`) don't hide information. Prefix with the field
@@ -687,6 +689,31 @@ func (m *Form) renderFieldSelected(idx int, selected bool, nameWidth int) string
 		return selectedStyle.Render(row)
 	}
 	return row
+}
+
+// gridFetchNote is the footer line describing the focused field's value
+// fetch in grid mode, where the cell itself only has room for a marker.
+// Single-column rows show the same information inline, so it is empty
+// there.
+func (m *Form) gridFetchNote() string {
+	if m.mode != FormModeList {
+		return ""
+	}
+	idx := m.fieldAt(m.cursor)
+	if idx < 0 {
+		return ""
+	}
+	if _, _, cols := m.gridLayout(); cols < 2 {
+		return ""
+	}
+	f := &m.fields[idx]
+	switch {
+	case f.FetchState == FetchError && f.FetchError != "":
+		return errStyle.Render(f.Param.Name + ": " + f.FetchError)
+	case f.FetchState == FetchLoaded && len(f.FetchedChoices) > 0:
+		return hintStyle.Render(fmt.Sprintf("%s: %d values — Enter to pick", f.Param.Name, len(f.FetchedChoices)))
+	}
+	return ""
 }
 
 // fieldsFocused reports whether keyboard focus is on the field grid
@@ -1354,11 +1381,19 @@ func (m *Form) renderGridCell(idx int, selected bool, nameWidth int) string {
 		// the value budget so the cell stays on one line.
 		valDisplay = ansi.Truncate(m.textInput.View(), valueBudget, "")
 	case f.Value == "":
-		placeholder := "—"
-		if f.Param.HasSelectChoices() {
-			placeholder = "▼"
+		// Cells have no room for single-column's "(N options)" suffix, so
+		// the fetch state replaces the empty-value placeholder; the footer
+		// carries the details for the focused cell (gridFetchNote).
+		switch {
+		case f.FetchState == FetchLoading && f.FetchSpinnerShow:
+			valDisplay = m.fieldSpinner.View()
+		case f.FetchState == FetchError:
+			valDisplay = errStyle.Render("!")
+		case f.Param.HasSelectChoices() || (f.FetchState == FetchLoaded && len(f.FetchedChoices) > 0):
+			valDisplay = hintStyle.Render("▼")
+		default:
+			valDisplay = hintStyle.Render("—")
 		}
-		valDisplay = hintStyle.Render(placeholder)
 	case f.Mode == FieldModeVar:
 		status := StatusOf(f.Value, m.sessionVars)
 		var v string
