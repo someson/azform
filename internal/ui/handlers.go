@@ -49,10 +49,10 @@ func (m Form) handleKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 			if m.textInput.Value() != "" {
 				m.fields[m.editIdx].Enabled = true
 			}
-			m.invalidateDependentFetches(m.fields[m.editIdx].Param.Name)
+			refetch := m.invalidateDependentFetches(m.fields[m.editIdx].Param.Name)
 			m.recomputeFindings(nil)
 			m.mode = FormModeList
-			return m, nil
+			return m, refetch
 		default:
 			var cmd tea.Cmd
 			m.textInput, cmd = m.textInput.Update(msg)
@@ -75,6 +75,11 @@ func (m Form) handleKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 				return m, nil
 			}
 			m.mode = FormModeList
+			// Filtering moves focus without the arrow keys, so it must
+			// start the focused field's fetch the way a move does.
+			if idx := m.fieldAt(m.cursor); idx >= 0 {
+				return m, m.maybeFetchField(idx)
+			}
 			return m, nil
 		default:
 			var cmd tea.Cmd

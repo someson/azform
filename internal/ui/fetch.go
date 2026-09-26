@@ -31,6 +31,9 @@ type FieldFetchedMsg struct {
 	FieldIdx int
 	Choices  []string
 	Err      error
+	// Gen is the field's FetchGen when the fetch started; a completion
+	// from before an invalidation carries an older value and is dropped.
+	Gen int
 }
 
 // valuesCacheTTL bounds how long fetched values are reused across form
@@ -44,6 +47,7 @@ type fetchSpec struct {
 	command  string // az command line without the leading "az"
 	sorted   bool   // sort choices; az returns resource lists in no useful order
 	cacheDir string // "" disables the on-disk values cache
+	gen      int    // the field's FetchGen, echoed in FieldFetchedMsg
 }
 
 // runAz runs az with args; a package variable so tests can stub the process.
@@ -62,24 +66,24 @@ var runAz = func(ctx context.Context, args ...string) ([]byte, []byte, error) {
 func fetchField(fieldIdx int, spec fetchSpec) tea.Cmd {
 	return func() tea.Msg {
 		if choices, ok := loadCachedValues(spec.cacheDir, spec.command, time.Now()); ok {
-			return FieldFetchedMsg{FieldIdx: fieldIdx, Choices: choices}
+			return FieldFetchedMsg{FieldIdx: fieldIdx, Gen: spec.gen, Choices: choices}
 		}
 		ctx, cancel := context.WithTimeout(context.Background(), fetchTimeout)
 		defer cancel()
 
 		out, stderr, err := runAz(ctx, buildFetchArgs(spec.command)...)
 		if err != nil {
-			return FieldFetchedMsg{FieldIdx: fieldIdx, Err: fetchError(spec.command, stderr, err)}
+			return FieldFetchedMsg{FieldIdx: fieldIdx, Gen: spec.gen, Err: fetchError(spec.command, stderr, err)}
 		}
 		choices, perr := parseFetchedValues(out)
 		if perr != nil {
-			return FieldFetchedMsg{FieldIdx: fieldIdx, Err: perr}
+			return FieldFetchedMsg{FieldIdx: fieldIdx, Gen: spec.gen, Err: perr}
 		}
 		if spec.sorted {
 			sort.Strings(choices)
 		}
 		saveCachedValues(spec.cacheDir, spec.command, choices, time.Now())
-		return FieldFetchedMsg{FieldIdx: fieldIdx, Choices: choices}
+		return FieldFetchedMsg{FieldIdx: fieldIdx, Gen: spec.gen, Choices: choices}
 	}
 }
 
@@ -111,20 +115,99 @@ func implicitSource(command string, p metadata.Parameter) string {
 		// `az group create` names its new group --name (with
 		// --resource-group only as an alias), so this never lands there.
 		return "az group list"
-	case p.Name == "--name" && existingGroupCommands[command]:
-		return "az group list"
+	case p.Name == "--name":
+		return existingNameSource(command)
+	}
+	for _, ref := range resourceRefs {
+		if p.Name == ref.param && strings.HasPrefix(command+" ", ref.within) {
+			return "az " + ref.list
+		}
 	}
 	return ""
 }
 
-// existingGroupCommands are the `az group` commands whose --name must be
-// an existing resource group.
-var existingGroupCommands = map[string]bool{
-	"group show":   true,
-	"group delete": true,
-	"group update": true,
-	"group wait":   true,
-	"group export": true,
+// existingNameSource returns the list command for the --name of a command
+// that acts on an existing resource: `<group> <verb>` with group in
+// resourceLists and verb in existingVerbs. Creation verbs are never in
+// existingVerbs, and sub-resources (`network vnet subnet show`) fall
+// outside the table because their group is not a key.
+func existingNameSource(command string) string {
+	for group, list := range resourceLists {
+		verb, ok := strings.CutPrefix(command, group+" ")
+		if ok && existingVerbs[verb] {
+			return "az " + list
+		}
+	}
+	return ""
+}
+
+// resourceLists maps a command group to the command listing its resources.
+// Every list here accepts an optional --resource-group (resourceScoped).
+var resourceLists = map[string]string{
+	"group":                           "group list",
+	"vm":                              "vm list",
+	"vmss":                            "vmss list",
+	"aks":                             "aks list",
+	"acr":                             "acr list",
+	"keyvault":                        "keyvault list",
+	"storage account":                 "storage account list",
+	"webapp":                          "webapp list",
+	"functionapp":                     "functionapp list",
+	"appservice plan":                 "appservice plan list",
+	"cosmosdb":                        "cosmosdb list",
+	"redis":                           "redis list",
+	"sql server":                      "sql server list",
+	"postgres flexible-server":        "postgres flexible-server list",
+	"network vnet":                    "network vnet list",
+	"network nsg":                     "network nsg list",
+	"network public-ip":               "network public-ip list",
+	"network lb":                      "network lb list",
+	"network application-gateway":     "network application-gateway list",
+	"network bastion":                 "network bastion list",
+	"eventhubs namespace":             "eventhubs namespace list",
+	"servicebus namespace":            "servicebus namespace list",
+	"monitor log-analytics workspace": "monitor log-analytics workspace list",
+}
+
+// existingVerbs are the verbs whose --name must name an existing resource.
+var existingVerbs = map[string]bool{
+	"show": true, "delete": true, "update": true, "wait": true, "export": true,
+	"start": true, "stop": true, "restart": true, "deallocate": true,
+	"redeploy": true, "resize": true, "get-instance-view": true,
+	"scale": true, "upgrade": true, "get-credentials": true, "get-upgrades": true,
+	"login": true, "browse": true, "show-connection-string": true,
+	"keys list": true, "keys renew": true, "ssh": true, "tunnel": true, "rdp": true,
+}
+
+// resourceRefs are params that point at an existing resource of another
+// type, whatever the verb. within limits a ref to one command family where
+// the param name is ambiguous elsewhere (--account-name is a Cosmos DB
+// account under `cosmosdb`, a storage account under `storage`).
+var resourceRefs = []struct {
+	param, within, list string
+}{
+	{"--vm-name", "", "vm list"},
+	{"--vault-name", "", "keyvault list"},
+	{"--vnet-name", "", "network vnet list"},
+	{"--account-name", "storage ", "storage account list"},
+	{"--server", "sql db ", "sql server list"},
+	{"--plan", "webapp ", "appservice plan list"},
+	{"--plan", "functionapp ", "appservice plan list"},
+	{"--cluster-name", "aks ", "aks list"},
+}
+
+// resourceScoped reports whether list is one of the resource lists above
+// that accepts --resource-group to narrow it (every one but group list).
+func resourceScoped(list string) bool {
+	if list == "group list" {
+		return false
+	}
+	for _, l := range resourceLists {
+		if l == list {
+			return true
+		}
+	}
+	return false
 }
 
 // valuesCachePath maps a fetch command to its cache file.
@@ -281,6 +364,13 @@ func fetchCommand(valuesFrom string, lookup func(param string) string) (cmd stri
 			args = append(args, param, v)
 		}
 	}
+	// Resource lists narrow to the form's group when one is set; without it
+	// they list the whole subscription, which is still useful.
+	if resourceScoped(strings.Join(args, " ")) {
+		if rg := lookup("--resource-group"); rg != "" {
+			args = append(args, "--resource-group", rg)
+		}
+	}
 	// The values must come from the subscription the command will run
 	// against, not the CLI's default one.
 	if sub := lookup("--subscription"); sub != "" {
@@ -297,7 +387,12 @@ func fetchContextParams(valuesFrom string) []string {
 	if len(args) > 0 && args[0] == "az" {
 		args = args[1:]
 	}
-	return append([]string{"--subscription"}, fetchContext[strings.Join(args, " ")]...)
+	path := strings.Join(args, " ")
+	deps := append([]string{"--subscription"}, fetchContext[path]...)
+	if resourceScoped(path) {
+		deps = append(deps, "--resource-group")
+	}
+	return deps
 }
 
 // choiceKeys are the object fields tried, in order, as an item's value.

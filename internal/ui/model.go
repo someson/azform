@@ -399,8 +399,9 @@ func (m Form) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, nil
 		}
 		f := &m.fields[msg.FieldIdx]
-		if f.FetchState != FetchLoading {
-			// Stale completion (e.g. after Esc cancel) — ignore.
+		if f.FetchState != FetchLoading || msg.Gen != f.FetchGen {
+			// Stale completion (after Esc cancel, or started before the
+			// context it depends on changed) — ignore.
 			return m, nil
 		}
 		if msg.Err != nil {
@@ -493,9 +494,10 @@ func (m Form) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.fields[m.enumIdx].VarValue = ""
 			m.fields[m.enumIdx].Mode = FieldModeLiteral
 			m.fields[m.enumIdx].Enabled = true
-			m.invalidateDependentFetches(m.fields[m.enumIdx].Param.Name)
+			refetch := m.invalidateDependentFetches(m.fields[m.enumIdx].Param.Name)
 			m.recomputeFindings(nil)
 			m.mode = FormModeList
+			return m, refetch
 		}
 		return m, nil
 
@@ -623,7 +625,7 @@ func (m *Form) startFetch(idx int, withHints bool) tea.Cmd {
 	f.FetchStartedAt = time.Now()
 	f.FetchedChoices = nil
 	f.FetchError = ""
-	spec := fetchSpec{command: command, sorted: implicit}
+	spec := fetchSpec{command: command, sorted: implicit, gen: f.FetchGen}
 	if m.cache != nil {
 		spec.cacheDir = m.cache.Dir
 	}
@@ -662,24 +664,38 @@ func (m *Form) contextValue(param string) string {
 	return ""
 }
 
-// invalidateDependentFetches drops fetched choices that were computed from
-// param's previous value (vm sizes for another --location, …) so the next
-// focus fetches them again.
-func (m *Form) invalidateDependentFetches(param string) {
+// invalidateDependentFetches drops choices computed from param's previous
+// value (vm sizes for another --location, VMs of another group, …). A
+// fetch still in flight is superseded: its FetchGen is bumped so the late
+// result is ignored. Implicit sources (existing resources) are refetched
+// at once, like the prefetch on open, so the right list is ready when the
+// user gets to the field; others refetch on their next focus.
+func (m *Form) invalidateDependentFetches(param string) tea.Cmd {
+	var cmds []tea.Cmd
 	for i := range m.fields {
 		f := &m.fields[i]
-		source, _ := m.valuesSource(f)
-		if source == "" || f.FetchState == FetchLoading {
+		source, implicit := m.valuesSource(f)
+		if source == "" {
 			continue
 		}
 		for _, p := range fetchContextParams(source) {
-			if p == param {
-				f.FetchState = FetchIdle
-				f.FetchedChoices = nil
-				f.FetchError = ""
+			if p != param {
+				continue
 			}
+			if f.FetchState == FetchLoading {
+				f.FetchGen++
+				f.FetchSpinnerShow = false
+			}
+			f.FetchState = FetchIdle
+			f.FetchedChoices = nil
+			f.FetchError = ""
+			if implicit {
+				cmds = append(cmds, m.startFetch(i, false))
+			}
+			break
 		}
 	}
+	return tea.Batch(cmds...)
 }
 
 // anyFieldLoading reports whether any field is currently mid-fetch; used to

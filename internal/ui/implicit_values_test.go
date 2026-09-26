@@ -41,8 +41,30 @@ func TestImplicitSource(t *testing.T) {
 		{"group delete", name, "az group list"},
 		// A new group is being named here: listing existing ones is wrong.
 		{"group create", name, ""},
-		{"vm show", metadata.Parameter{Name: "--name"}, ""},
 		{"vm create", metadata.Parameter{Name: "--location"}, ""},
+
+		// --name of an existing resource.
+		{"vm show", metadata.Parameter{Name: "--name"}, "az vm list"},
+		{"vm start", metadata.Parameter{Name: "--name"}, "az vm list"},
+		{"storage account keys list", metadata.Parameter{Name: "--name"}, "az storage account list"},
+		{"aks get-credentials", metadata.Parameter{Name: "--name"}, "az aks list"},
+		{"network bastion ssh", metadata.Parameter{Name: "--name"}, "az network bastion list"},
+		// ... but never where --name is being created or is a child.
+		{"vm create", metadata.Parameter{Name: "--name"}, ""},
+		{"storage container create", metadata.Parameter{Name: "--name"}, ""},
+		{"keyvault secret set", metadata.Parameter{Name: "--name"}, ""},
+		{"network vnet subnet show", metadata.Parameter{Name: "--name"}, ""},
+		{"sql db show", metadata.Parameter{Name: "--name"}, ""},
+
+		// References to another existing resource.
+		{"keyvault secret set", metadata.Parameter{Name: "--vault-name"}, "az keyvault list"},
+		{"network vnet subnet create", metadata.Parameter{Name: "--vnet-name"}, "az network vnet list"},
+		{"storage container create", metadata.Parameter{Name: "--account-name"}, "az storage account list"},
+		{"sql db create", metadata.Parameter{Name: "--server"}, "az sql server list"},
+		{"webapp create", metadata.Parameter{Name: "--plan"}, "az appservice plan list"},
+		// Same param name, different meaning outside its family.
+		{"cosmosdb sql database create", metadata.Parameter{Name: "--account-name"}, ""},
+		{"postgres flexible-server create", metadata.Parameter{Name: "--server"}, ""},
 	}
 	for _, tc := range cases {
 		if got := implicitSource(tc.command, tc.p); got != tc.want {
@@ -64,6 +86,97 @@ func TestFetchCommandPassesSubscription(t *testing.T) {
 	}
 	if deps := fetchContextParams("az group list"); len(deps) != 1 || deps[0] != "--subscription" {
 		t.Errorf("fetchContextParams = %v, want [--subscription]", deps)
+	}
+}
+
+// Resource lists narrow to the form's group when one is set, and a change
+// of group invalidates them.
+func TestResourceListScopedByGroup(t *testing.T) {
+	values := map[string]string{}
+	lookup := func(p string) string { return values[p] }
+	if got, _ := fetchCommand("az vm list", lookup); got != "vm list" {
+		t.Errorf("without group: %q", got)
+	}
+	values["--resource-group"] = "prod-rg"
+	if got, _ := fetchCommand("az vm list", lookup); got != "vm list --resource-group prod-rg" {
+		t.Errorf("with group: %q", got)
+	}
+	if got, _ := fetchCommand("az group list", lookup); got != "group list" {
+		t.Errorf("group list must not be scoped by a group: %q", got)
+	}
+	deps := strings.Join(fetchContextParams("az vm list"), ",")
+	if deps != "--subscription,--resource-group" {
+		t.Errorf("vm list deps = %q", deps)
+	}
+}
+
+// vm show: the groups and, scoped to the chosen group, the VMs.
+func TestVMNamesFollowResourceGroup(t *testing.T) {
+	calls := stubAz(t, func(args []string) ([]byte, []byte, error) {
+		if strings.Join(args[:2], " ") == "vm list" {
+			return []byte(`[{"name":"web-2"},{"name":"web-1"}]`), nil, nil
+		}
+		return []byte(`[{"name":"prod-rg"}]`), nil, nil
+	})
+	f := NewForm("vm show", "/tmp/out.txt", t.TempDir(), "test", nil)
+	m, cmd := f.Update(MetadataLoadedMsg{Params: []metadata.Parameter{
+		{Name: "--name", TakesValue: true, ValueKind: metadata.ValueKindString},
+		{Name: "--resource-group", TakesValue: true, ValueKind: metadata.ValueKindString},
+	}})
+	f = m.(Form)
+	for _, msg := range runCmd(cmd) {
+		if fm, ok := msg.(FieldFetchedMsg); ok {
+			m, _ = f.Update(fm)
+			f = m.(Form)
+		}
+	}
+	name := f.FieldIndex("--name")
+	if got := strings.Join(f.fields[name].FetchedChoices, ","); got != "web-1,web-2" {
+		t.Errorf("vm names = %q", got)
+	}
+	// Choosing a group drops the subscription-wide list and lists that
+	// group's VMs right away.
+	rg := f.FieldIndex("--resource-group")
+	f.fields[rg].Value = "prod-rg"
+	f.fields[rg].Enabled = true
+	refetch := f.invalidateDependentFetches("--resource-group")
+	if f.fields[name].FetchState != FetchLoading || f.fields[name].FetchedChoices != nil {
+		t.Fatalf("vm names not refetched on group change: state=%v", f.fields[name].FetchState)
+	}
+	runCmd(refetch)
+	if last := (*calls)[len(*calls)-1]; last != "vm list --resource-group prod-rg --output json" {
+		t.Errorf("last az call = %q", last)
+	}
+}
+
+// A fetch started before its context changed must not overwrite the list
+// fetched for the new context.
+func TestSupersededFetchResultIgnored(t *testing.T) {
+	stubAz(t, func([]string) ([]byte, []byte, error) { return []byte(`[{"name":"x"}]`), nil, nil })
+	f := NewForm("vm show", "/tmp/out.txt", t.TempDir(), "test", nil)
+	m, _ := f.Update(MetadataLoadedMsg{Params: []metadata.Parameter{
+		{Name: "--name", TakesValue: true, ValueKind: metadata.ValueKindString},
+		{Name: "--resource-group", TakesValue: true, ValueKind: metadata.ValueKindString},
+	}})
+	f = m.(Form)
+	name := f.FieldIndex("--name")
+	if f.fields[name].FetchState != FetchLoading {
+		t.Fatalf("precondition: vm names should be prefetching")
+	}
+	old := f.fields[name].FetchGen
+	f.invalidateDependentFetches("--resource-group")
+	if f.fields[name].FetchGen == old {
+		t.Fatalf("in-flight fetch not superseded")
+	}
+	m, _ = f.Update(FieldFetchedMsg{FieldIdx: name, Choices: []string{"stale-vm"}, Gen: old})
+	f = m.(Form)
+	if f.fields[name].FetchState != FetchLoading || f.fields[name].FetchedChoices != nil {
+		t.Errorf("stale result applied: state=%v choices=%v", f.fields[name].FetchState, f.fields[name].FetchedChoices)
+	}
+	m, _ = f.Update(FieldFetchedMsg{FieldIdx: name, Choices: []string{"fresh-vm"}, Gen: f.fields[name].FetchGen})
+	f = m.(Form)
+	if got := strings.Join(f.fields[name].FetchedChoices, ","); got != "fresh-vm" {
+		t.Errorf("current result not applied: %q", got)
 	}
 }
 
@@ -148,7 +261,8 @@ func TestResourceGroupsPrefetchedAndPickable(t *testing.T) {
 	calls := stubAz(t, func([]string) ([]byte, []byte, error) {
 		return []byte(`[{"name":"prod-rg"},{"name":"dev-rg"}]`), nil, nil
 	})
-	f := NewForm("vm show", "/tmp/out.txt", t.TempDir(), "test", nil)
+	// vm create: --name is a new VM, so only the groups are listed.
+	f := NewForm("vm create", "/tmp/out.txt", t.TempDir(), "test", nil)
 	m, cmd := f.Update(MetadataLoadedMsg{Params: []metadata.Parameter{
 		{Name: "--name", Required: true, TakesValue: true, ValueKind: metadata.ValueKindString},
 		{Name: "--resource-group", Required: true, TakesValue: true, ValueKind: metadata.ValueKindString},
@@ -168,7 +282,7 @@ func TestResourceGroupsPrefetchedAndPickable(t *testing.T) {
 		t.Fatalf("choices = %q (calls %v)", got, *calls)
 	}
 	if n := len(*calls); n != 1 {
-		t.Errorf("az ran %d times, want 1 (--name has no source)", n)
+		t.Errorf("az ran %d times, want 1 (--name of vm create has no source)", n)
 	}
 
 	// Move to --resource-group, open the picker, pick the first group.
@@ -200,9 +314,12 @@ func TestSubscriptionEditInvalidatesResourceGroups(t *testing.T) {
 	rg := f.FieldIndex("--resource-group")
 	f.fields[rg].FetchState = FetchLoaded
 	f.fields[rg].FetchedChoices = []string{"old-rg"}
-	f.invalidateDependentFetches("--subscription")
-	if f.fields[rg].FetchState != FetchIdle {
-		t.Errorf("groups not invalidated after --subscription change")
+	stubAz(t, func([]string) ([]byte, []byte, error) { return []byte(`[]`), nil, nil })
+	if cmd := f.invalidateDependentFetches("--subscription"); cmd == nil {
+		t.Errorf("no refetch scheduled")
+	}
+	if f.fields[rg].FetchState != FetchLoading || f.fields[rg].FetchedChoices != nil {
+		t.Errorf("groups not refetched after --subscription change: state=%v", f.fields[rg].FetchState)
 	}
 }
 
