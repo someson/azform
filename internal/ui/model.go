@@ -477,8 +477,16 @@ func (m Form) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case EnumSelectedMsg:
 		if m.mode == FormModeEnum && msg.Value == manualEntryChoice {
 			// Fetched choices are suggestions, not a closed set: the
-			// first popup row switches to free-text input instead.
-			return m, m.openEditor(m.enumIdx)
+			// first popup row switches to free-text input instead. A
+			// search that found nothing is usually the value the user
+			// wants to type (a resource that does not exist yet), so it
+			// seeds the editor.
+			cmd := m.openEditor(m.enumIdx)
+			if msg.Query != "" {
+				m.textInput.SetValue(msg.Query)
+				m.textInput.CursorEnd()
+			}
+			return m, cmd
 		}
 		if m.mode == FormModeEnum {
 			m.fields[m.enumIdx].Value = msg.Value

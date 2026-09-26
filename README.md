@@ -256,7 +256,7 @@ overlay listing every binding in the current context.
 Enter             edit field / open enum popup / confirm
 Space             toggle optional parameter on/off (required fields show a hint)
 Esc               close popup; from list, cancel and save draft
-/                 filter by parameter name and help text
+/                 filter by parameter name and help text; inside a popup list, search it (Esc ends the search)
 Tab  Shift-Tab    cycle list → Done → Cancel → list
 g                 open a popup to set a shell variable (`name=value`, or just `name` to re-declare the current session value) — the widget evals the line in your shell after the form closes, so the var persists until you unset it; the var also appears in the Ctrl+G picker for the same session
 a                 show all collapsed parameters

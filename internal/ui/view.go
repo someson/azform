@@ -125,7 +125,7 @@ func (m Form) View() string {
 			var popupHeight int
 			switch m.mode {
 			case FormModeEnum:
-				popupHeight = enumPopupHeight(m.enumPop.choices)
+				popupHeight = enumPopupHeight(m.enumPop.choices, m.enumPop.Header())
 			case FormModeVarPick:
 				popupHeight = len(m.buildVarPickerBox())
 			}
@@ -173,7 +173,7 @@ func (m Form) View() string {
 			// Same bordered, right-aligned popup as grid mode. Lines
 			// are padded with leading spaces so the popup box hugs the
 			// terminal's right edge; content inside stays left-aligned.
-			popupLines := buildPopupLines(m.enumPop.choices, m.enumPop.cursor)
+			popupLines := buildPopupLines(m.enumPop.choices, m.enumPop.cursor, m.enumPop.Header())
 			popupWidth := 0
 			for _, ln := range popupLines {
 				if w := runewidth.StringWidth(stripANSI(ln)); w > popupWidth {
@@ -440,7 +440,7 @@ func (m Form) renderHelp() string {
 				{"space", "toggle optional field on/off (required fields show a hint)"},
 				{"ctrl+g", "insert variable reference ($NAME) at cursor (edit mode)"},
 				{"esc", "close popup / cancel edit"},
-				{"/", "filter visible parameters"},
+				{"/", "filter visible parameters; in a popup list, search it"},
 				{"g", "set a shell variable (writes export to calling shell)"},
 			},
 		},
@@ -903,7 +903,7 @@ func (m *Form) renderGrid(roCols [][]int, globalsCol []int) (body string, cursor
 // the separator / preview region. When there's no room below, the
 // overlay anchors above the focused cell instead.
 func (m *Form) spliceEnumOverlay(lines []string, focusedRow, focusedCol int, cellWidths []int) []string {
-	return m.spliceOverlay(lines, focusedRow, focusedCol, cellWidths, m.enumPop.choices, m.enumPop.cursor)
+	return m.spliceOverlay(lines, focusedRow, focusedCol, cellWidths, m.enumPop.choices, m.enumPop.cursor, m.enumPop.Header())
 }
 
 // spliceVarOverlay is the variable-picker's twin of spliceEnumOverlay.
@@ -1128,16 +1128,10 @@ func buildTopBorder(innerWidth, cols, visibleCols, offset int) string {
 }
 
 // enumPopupHeight returns the number of terminal rows the enum popup
-// will occupy for the given choices (top + visible items + bottom).
-func enumPopupHeight(choices []string) int {
-	n := len(choices)
-	if n == 0 {
-		return 0
-	}
-	if n > maxPopupItems {
-		n = maxPopupItems
-	}
-	return n + 2
+// will occupy: borders, the header row when there is one, and the visible
+// items (a "no matches" row stands in for an empty search result).
+func enumPopupHeight(choices []string, header string) int {
+	return len(buildPopupLines(choices, 0, header))
 }
 
 // maxPopupItems caps the visible choice rows in an enum popup. Longer
@@ -1152,21 +1146,23 @@ const maxPopupItems = 7
 // than maxPopupItems choices are present, the visible slice slides to
 // keep the cursor in view and clipped sides are marked in the border.
 // Returns an empty slice when choices is empty (caller skips drawing).
-func buildPopupLines(choices []string, cursor int) []string {
+func buildPopupLines(choices []string, cursor int, header string) []string {
 	n := len(choices)
-	if n == 0 {
+	if n == 0 && header == "" {
 		return nil
 	}
-	// Width = longest choice + cursor + padding, floored at gridValueBudget
-	// so single-character choices still get a comfortable popup. Matches
-	// the original spliceOverlay's min-width floor.
-	popupWidth := gridValueBudget
-	for _, c := range choices {
-		if w := runewidth.StringWidth(c) + 4; w > popupWidth {
-			popupWidth = w
+	popupWidth := popupWidthFor(choices, header)
+	interior := popupWidth - 2
+	if n == 0 {
+		// A search that matches nothing still shows its query, so the
+		// user can see why the list is empty and edit it.
+		return []string{
+			borderLine("┌", "┐", interior, false, ""),
+			popupRow(header, interior, hintStyle),
+			popupRow("(no matches)", interior, hintStyle),
+			borderLine("└", "┘", interior, false, ""),
 		}
 	}
-	interior := popupWidth - 2
 
 	visible := n
 	if visible > maxPopupItems {
@@ -1188,6 +1184,9 @@ func buildPopupLines(choices []string, cursor int) []string {
 
 	var out []string
 	out = append(out, borderLine("┌", "┐", interior, clipTop, "↑"))
+	if header != "" {
+		out = append(out, popupRow(header, interior, hintStyle))
+	}
 	for i := start; i < end; i++ {
 		choice := choices[i]
 		prefix := "  "
@@ -1223,6 +1222,30 @@ func buildPopupLines(choices []string, cursor int) []string {
 // borderLine builds a horizontal border ("┌────┐" style). When clipped
 // is true, the middle of the border shows `glyph` to signal off-screen
 // choices in that direction.
+// popupWidthFor is the popup's outer width: longest row + cursor +
+// padding, floored at gridValueBudget so single-character choices still
+// get a comfortable popup.
+func popupWidthFor(choices []string, header string) int {
+	w := gridValueBudget
+	for _, c := range append([]string{header}, choices...) {
+		if cw := runewidth.StringWidth(c) + 4; cw > w {
+			w = cw
+		}
+	}
+	return w
+}
+
+// popupRow renders one non-choice row (search header, "no matches")
+// inside the popup borders, indented like the choices.
+func popupRow(text string, interior int, style lipgloss.Style) string {
+	maxText := interior - 2
+	if runewidth.StringWidth(text) > maxText {
+		text = runewidth.Truncate(text, maxText-1, "…")
+	}
+	pad := strings.Repeat(" ", max(interior-2-runewidth.StringWidth(text), 0))
+	return "│  " + style.Render(text) + pad + "│"
+}
+
 func borderLine(left, right string, interior int, clipped bool, glyph string) string {
 	if !clipped || interior < 3 {
 		var b strings.Builder
@@ -1241,7 +1264,7 @@ func borderLine(left, right string, interior int, clipped bool, glyph string) st
 	return b.String()
 }
 
-func (m *Form) spliceOverlay(lines []string, focusedRow, focusedCol int, cellWidths []int, choices []string, cursor int) []string {
+func (m *Form) spliceOverlay(lines []string, focusedRow, focusedCol int, cellWidths []int, choices []string, cursor int, header string) []string {
 	if len(lines) == 0 || focusedRow < 0 || focusedCol < 0 || focusedCol >= len(cellWidths) {
 		return lines
 	}
@@ -1252,19 +1275,14 @@ func (m *Form) spliceOverlay(lines []string, focusedRow, focusedCol int, cellWid
 		return lines
 	}
 
-	if len(choices) == 0 {
+	if len(choices) == 0 && header == "" {
 		return lines
 	}
 
 	// Cap width at the cell's left-edge-to-terminal-right span so the
 	// popup never wraps. Floor at gridValueBudget so single-character
 	// choices still render legibly.
-	popupWidth := gridValueBudget
-	for _, c := range choices {
-		if w := runewidth.StringWidth(c) + 4; w > popupWidth {
-			popupWidth = w
-		}
-	}
+	popupWidth := popupWidthFor(choices, header)
 	// Right-align the popup to the focused cell's right edge (the
 	// end of the value column) so the box hugs the right side of the
 	// param column instead of the terminal. Content inside stays
@@ -1283,7 +1301,7 @@ func (m *Form) spliceOverlay(lines []string, focusedRow, focusedCol int, cellWid
 		}
 	}
 
-	popupLines := buildPopupLines(choices, cursor)
+	popupLines := buildPopupLines(choices, cursor, header)
 	if len(popupLines) == 0 {
 		return lines
 	}
