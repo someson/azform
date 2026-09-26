@@ -1,11 +1,11 @@
 {
   "schema_version": 1,
   "command": "vm create",
-  "summary": "Create an Azure Virtual Machine. For an end-to-end tutorial, see https://learn.microsoft.com/azure/virtual- machines/linux/quick-create-cli.",
+  "summary": "Create an Azure Virtual Machine. For an end-to-end tutorial, see https://learn.microsoft.com/azure/virtual-machines/linux/quick-create-cli.",
   "az_version": "embedded",
   "azform_version": "",
   "source": "help-parser",
-  "generated_at": "2026-09-02T17:41:57.364225Z",
+  "generated_at": "2026-09-26T15:09:13.4103499Z",
   "parse_health": {
     "params": 130,
     "unparsed_lines": 0,
@@ -65,7 +65,7 @@
       "global": false,
       "takes_value": true,
       "value_kind": "bool",
-      "help": "Specify whether to implicitly install the ProxyAgent Extension. This option is currently applicable only for Linux OS. Use with --enable-proxy- agent.",
+      "help": "Specify whether to implicitly install the ProxyAgent Extension. This option is currently applicable only for Linux OS. Use with --enable-proxy-agent.",
       "choices": [
         "false",
         "true"
@@ -119,7 +119,7 @@
       "global": false,
       "takes_value": true,
       "value_kind": "bool",
-      "help": "Specifies if Scheduled Events should be auto- approved when all instances are down. Its default value is true.",
+      "help": "Specifies if Scheduled Events should be auto-approved when all instances are down. Its default value is true.",
       "choices": [
         "false",
         "true"
@@ -189,7 +189,7 @@
       "global": false,
       "takes_value": true,
       "value_kind": "int",
-      "help": "Number of virtual machines to create. Value range is [2, 250], inclusive. Don't specify this parameter if you want to create a normal single VM. The VMs are created in parallel. The output of this command is an array of VMs instead of one single VM. Each VM has its own public IP, NIC. VNET and NSG are shared. It is recommended that no existing public IP, NIC, VNET and NSG are in resource group. When --count is specified, --attach-data- disks, --attach-os- disk, --boot- diagnostics- storage, --computer-name, --host, --host- group, --nics, --os-disk-name, --private-ip- address, --public- ip-address, --public-ip- address-dns-name, --storage-account, --storage- container-name, --subnet, --use- unmanaged-disk, --vnet-name are not allowed. WARNING: Argument '--count' is in preview and under development. Reference and support levels: https://aka.ms/CLI_refstatus",
+      "help": "Number of virtual machines to create. Value range is [2, 250], inclusive. Don't specify this parameter if you want to create a normal single VM. The VMs are created in parallel. The output of this command is an array of VMs instead of one single VM. Each VM has its own public IP, NIC. VNET and NSG are shared. It is recommended that no existing public IP, NIC, VNET and NSG are in resource group. When --count is specified, --attach-data-disks, --attach-os-disk, --boot-diagnostics-storage, --computer-name, --host, --host-group, --nics, --os-disk-name, --private-ip-address, --public-ip-address, --public-ip-address-dns-name, --storage-account, --storage-container-name, --subnet, --use-unmanaged-disk, --vnet-name are not allowed. WARNING: Argument '--count' is in preview and under development. Reference and support levels: https://aka.ms/CLI_refstatus",
       "choices": null,
       "default": null,
       "values_from": null
@@ -202,7 +202,7 @@
       "global": false,
       "takes_value": true,
       "value_kind": "path",
-      "help": "Custom init script file or text (cloud-init, cloud- config, etc..).",
+      "help": "Custom init script file or text (cloud-init, cloud-config, etc..).",
       "choices": null,
       "default": null,
       "values_from": null
@@ -315,7 +315,7 @@
       "global": false,
       "takes_value": true,
       "value_kind": "bool",
-      "help": "Patch VMs without requiring a reboot. --enable-agent must be set and --patch- mode must be set to AutomaticByPlatform.",
+      "help": "Patch VMs without requiring a reboot. --enable-agent must be set and --patch-mode must be set to AutomaticByPlatform.",
       "choices": [
         "false",
         "true"
@@ -394,7 +394,7 @@
       "required": false,
       "group": "Optional Parameters",
       "global": false,
-      "takes_value": true,
+      "takes_value": false,
       "value_kind": "bool",
       "help": "Enable secure boot.",
       "choices": [
@@ -410,7 +410,7 @@
       "required": false,
       "group": "Optional Parameters",
       "global": false,
-      "takes_value": true,
+      "takes_value": false,
       "value_kind": "bool",
       "help": "Enable vTPM.",
       "choices": [
@@ -457,7 +457,7 @@
       "global": false,
       "takes_value": true,
       "value_kind": "list",
-      "help": "If \"--zone- placement-policy\" is set to \"Any\", availability zone selected by the system must not be present in the list of availability zones passed with \"excludeZones\". If \"--exclude-zones\" is not provided, all availability zones in region will be considered for selection.",
+      "help": "If \"--zone-placement-policy\" is set to \"Any\", availability zone selected by the system must not be present in the list of availability zones passed with \"excludeZones\". If \"--exclude-zones\" is not provided, all availability zones in region will be considered for selection.",
       "choices": null,
       "default": null,
       "values_from": null
@@ -470,10 +470,10 @@
       "global": false,
       "takes_value": true,
       "value_kind": "string",
-      "help": "The name of the operating system image as a URN alias, URN, custom image name or ID, custom image version ID, or VHD blob URI. In addition, it also supports shared gallery image. Please use the image alias including the version of the distribution you want to use. For example: please use Debian11 instead of Debian.' This parameter is required unless using `--attach-os- disk.` Valid URN format: \"Publisher: Offer:Sku:Version\". For more information, see ht tps://learn.microso ft.com/azure/virtua l- machines/linux/cli- ps-findimage.",
+      "help": "The name of the operating system image as a URN alias, URN, custom image name or ID, custom image version ID, or VHD blob URI. In addition, it also supports shared gallery image. Please use the image alias including the version of the distribution you want to use. For example: please use Debian11 instead of Debian.' This parameter is required unless using `--attach-os-disk.` Valid URN format: \"Publisher: Offer:Sku:Version\". For more information, see ht tps://learn.microso ft.com/azure/virtua l-machines/linux/cli-ps-findimage.",
       "choices": null,
       "default": null,
-      "values_from": "az vm image list, az vm image show, az sig image-version show- shared"
+      "values_from": "az vm image list, az vm image show, az sig image-version show-shared"
     },
     {
       "name": "--imds-access-control-profile-reference-id",
@@ -514,7 +514,7 @@
       "global": false,
       "takes_value": true,
       "value_kind": "list",
-      "help": "If \"--zone- placement-policy\" is set to \"Any\", availability zone selected by the system must be present in the list of availability zones passed with \" --include-zones\". If \"--include- zones\" is not provided, all availability zones in region will be considered for selection.",
+      "help": "If \"--zone-placement-policy\" is set to \"Any\", availability zone selected by the system must be present in the list of availability zones passed with \" --include-zones\". If \"--include-zones\" is not provided, all availability zones in region will be considered for selection.",
       "choices": null,
       "default": null,
       "values_from": null
@@ -540,7 +540,7 @@
       "global": false,
       "takes_value": true,
       "value_kind": "enum",
-      "help": "Specifies that the Windows image or disk was licensed on-premises. To enable Azure Hybrid Benefit for Windows Server, use 'Windows_Server'. To enable Multi- tenant Hosting Rights for Windows 10, use 'Windows_Client'. For more information see the Azure Windows VM online docs.",
+      "help": "Specifies that the Windows image or disk was licensed on-premises. To enable Azure Hybrid Benefit for Windows Server, use 'Windows_Server'. To enable Multi-tenant Hosting Rights for Windows 10, use 'Windows_Client'. For more information see the Azure Windows VM online docs.",
       "choices": [
         "None",
         "RHEL_BASE",
@@ -643,7 +643,7 @@
       "global": false,
       "takes_value": true,
       "value_kind": "enum",
-      "help": "Mode of in-guest patching to IaaS virtual machine. Allowed values for Windows VM: AutomaticByOS, Auto maticByPlatform, Manual. Allowed values for Linux VM: AutomaticByPlat form, ImageDefault. Manual - You control the application of patches to a virtual machine. You do this by applying patches manually inside the VM. In this mode, automatic updates are disabled; the paramater --enable- auto-update must be false. AutomaticByOS - The virtual machine will automatically be updated by the OS. The parameter --enable-auto- update must be true. AutomaticByPlatform - the virtual machine will automatically updated by the OS. ImageDefault - The virtual machine's default patching configuration is used. The parameter --enable-agent and --enable-auto- update must be true.",
+      "help": "Mode of in-guest patching to IaaS virtual machine. Allowed values for Windows VM: AutomaticByOS, Auto maticByPlatform, Manual. Allowed values for Linux VM: AutomaticByPlat form, ImageDefault. Manual - You control the application of patches to a virtual machine. You do this by applying patches manually inside the VM. In this mode, automatic updates are disabled; the paramater --enable-auto-update must be false. AutomaticByOS - The virtual machine will automatically be updated by the OS. The parameter --enable-auto-update must be true. AutomaticByPlatform - the virtual machine will automatically updated by the OS. ImageDefault - The virtual machine's default patching configuration is used. The parameter --enable-agent and --enable-auto-update must be true.",
       "choices": [
         "AutomaticByOS",
         "Auto maticByPlatform",
@@ -722,7 +722,7 @@
       "global": false,
       "takes_value": true,
       "value_kind": "string",
-      "help": "Specifies the api- version to determine which Scheduled Events configuration schema version will be delivered.",
+      "help": "Specifies the api-version to determine which Scheduled Events configuration schema version will be delivered.",
       "choices": null,
       "default": null,
       "values_from": null
@@ -830,7 +830,7 @@
       "global": false,
       "takes_value": true,
       "value_kind": "string",
-      "help": "Specify the ratio of vCPU to physical core. Setting this property to 1 also means that hyper- threading is disabled.",
+      "help": "Specify the ratio of vCPU to physical core. Setting this property to 1 also means that hyper-threading is disabled.",
       "choices": null,
       "default": null,
       "values_from": null
@@ -1057,7 +1057,7 @@
       "global": false,
       "takes_value": true,
       "value_kind": "string",
-      "help": "Name or resource ID of the dedicated host group that the VM will reside in. --host and --host- group can't be used together. WARNING: Argument '--host-group' is in preview and under development. Reference and support levels: https://aka.ms/CLI_refstatus",
+      "help": "Name or resource ID of the dedicated host group that the VM will reside in. --host and --host-group can't be used together. WARNING: Argument '--host-group' is in preview and under development. Reference and support levels: https://aka.ms/CLI_refstatus",
       "choices": null,
       "default": null,
       "values_from": null
@@ -1094,8 +1094,8 @@
       "required": false,
       "group": "Managed Service Identity Arguments",
       "global": false,
-      "takes_value": false,
-      "value_kind": "bool",
+      "takes_value": true,
+      "value_kind": "list",
       "help": "Accept system or user assigned identities separated by spaces. Use '[system]' to refer system assigned identity, or a resource id to refer user assigned identity. Check out help for more examples.",
       "choices": null,
       "default": null,
@@ -1198,7 +1198,7 @@
       "required": false,
       "group": "Network Arguments",
       "global": false,
-      "takes_value": true,
+      "takes_value": false,
       "value_kind": "bool",
       "help": "Enable accelerated networking. Unless specified, CLI will enable it based on machine image and size.",
       "choices": [
@@ -1356,7 +1356,7 @@
       "global": false,
       "takes_value": true,
       "value_kind": "string",
-      "help": "The name of the subnet when creating a new VNet or referencing an existing one. Can also reference an existing subnet by ID. If both vnet- name and subnet are omitted, an appropriate VNet and subnet will be selected automatically, or a new one will be created.",
+      "help": "The name of the subnet when creating a new VNet or referencing an existing one. Can also reference an existing subnet by ID. If both vnet-name and subnet are omitted, an appropriate VNet and subnet will be selected automatically, or a new one will be created.",
       "choices": null,
       "default": null,
       "values_from": null
@@ -1500,7 +1500,7 @@
       "required": false,
       "group": "Storage Arguments",
       "global": false,
-      "takes_value": true,
+      "takes_value": false,
       "value_kind": "bool",
       "help": "Enable Host Encryption for the VM or VMSS. This will enable the encryption for all the disks including Resource/Temp disk at host itself.",
       "choices": [
@@ -1554,7 +1554,7 @@
       "global": false,
       "takes_value": true,
       "value_kind": "enum",
-      "help": "Only applicable when used with `--ephemeral-os- disk`. Allows you to choose the Ephemeral OS disk provisioning location.",
+      "help": "Only applicable when used with `--ephemeral-os-disk`. Allows you to choose the Ephemeral OS disk provisioning location.",
       "choices": [
         "CacheDisk",
         "NvmeDisk",
@@ -1735,7 +1735,7 @@
       "global": false,
       "takes_value": true,
       "value_kind": "string",
-      "help": "Only applicable when used with `--use-unmanaged- disk`. The name to use when creating a new storage account or referencing an existing one. If omitted, an appropriate storage account in the same resource group and location will be used, or a new one will be created.",
+      "help": "Only applicable when used with `--use-unmanaged-disk`. The name to use when creating a new storage account or referencing an existing one. If omitted, an appropriate storage account in the same resource group and location will be used, or a new one will be created.",
       "choices": null,
       "default": null,
       "values_from": null
@@ -1748,7 +1748,7 @@
       "global": false,
       "takes_value": true,
       "value_kind": "string",
-      "help": "Only applicable when used with `--use-unmanaged- disk`. Name of the storage container for the VM OS disk.",
+      "help": "Only applicable when used with `--use-unmanaged-disk`. Name of the storage container for the VM OS disk.",
       "choices": null,
       "default": "vhds",
       "values_from": null
@@ -1761,7 +1761,7 @@
       "global": false,
       "takes_value": true,
       "value_kind": "enum",
-      "help": "The SKU of the storage account with which to persist VM. Use a singular sku that would be applied across all disks, or specify individual disks. Usage: [--storage- sku SKU | --storage-sku ID=SKU ID=SKU ID=SKU...], where each ID is \"os\" or a 0-indexed lun.",
+      "help": "The SKU of the storage account with which to persist VM. Use a singular sku that would be applied across all disks, or specify individual disks. Usage: [--storage-sku SKU | --storage-sku ID=SKU ID=SKU ID=SKU...], where each ID is \"os\" or a 0-indexed lun.",
       "choices": [
         "Standard_LRS",
         "Premium_LRS",

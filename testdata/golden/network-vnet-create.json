@@ -7,7 +7,7 @@
   },
   "command": {
     "command": "network vnet create",
-    "summary": "Create a virtual network. You may also create a subnet at the same time by specifying a subnet name and (optionally) an address prefix. To learn about how to create a virtual network visit https://learn.microsoft.com/azure/virtual-network/manage-virtual-network#create-a-virtual- network.",
+    "summary": "Create a virtual network. You may also create a subnet at the same time by specifying a subnet name and (optionally) an address prefix. To learn about how to create a virtual network visit https://learn.microsoft.com/azure/virtual-network/manage-virtual-network#create-a-virtual-network.",
     "parameters": [
       {
         "name": "--name",
@@ -47,7 +47,7 @@
         "global": false,
         "takes_value": true,
         "value_kind": "list",
-        "help": "Space-separated list of IP address prefixes for the VNet. If provided, --ipam- allocations should not be specified. Support shorthand-syntax, json-file and yaml-file. Try \"??\" to show more.",
+        "help": "Space-separated list of IP address prefixes for the VNet. If provided, --ipam-allocations should not be specified. Support shorthand-syntax, json-file and yaml-file. Try \"??\" to show more.",
         "choices": null,
         "default": "10.0.0.0/16",
         "values_from": null
@@ -248,7 +248,7 @@
         "global": false,
         "takes_value": true,
         "value_kind": "keyvalue",
-        "help": "Space-separated tags: key[=value] [key[=value]...]. Support shorthand- syntax, json-file and yaml-file. Try \"??\" to show more.",
+        "help": "Space-separated tags: key[=value] [key[=value]...]. Support shorthand-syntax, json-file and yaml-file. Try \"??\" to show more.",
         "choices": null,
         "default": null,
         "values_from": null
@@ -328,7 +328,7 @@
         "global": false,
         "takes_value": true,
         "value_kind": "list",
-        "help": "A configurable list of summarized gateway prefixes advertised for the virtual network. Support shorthand-syntax, json- file and yaml-file. Try \"??\" to show more. WARNING: Argument '--summarized-gateway-prefixes' is in preview and under development. Reference and support levels: https://aka.ms/CLI_refstatus",
+        "help": "A configurable list of summarized gateway prefixes advertised for the virtual network. Support shorthand-syntax, json-file and yaml-file. Try \"??\" to show more. WARNING: Argument '--summarized-gateway-prefixes' is in preview and under development. Reference and support levels: https://aka.ms/CLI_refstatus",
         "choices": null,
         "default": null,
         "values_from": null
@@ -369,7 +369,7 @@
         "global": false,
         "takes_value": true,
         "value_kind": "list",
-        "help": "Space-separated list of address prefixes in CIDR format for the new subnet. If omitted, automatically reserves a /24 (or as large as available) block within the VNet address space. Support shorthand- syntax, json-file and yaml-file. Try \"??\" to show more.",
+        "help": "Space-separated list of address prefixes in CIDR format for the new subnet. If omitted, automatically reserves a /24 (or as large as available) block within the VNet address space. Support shorthand-syntax, json-file and yaml-file. Try \"??\" to show more.",
         "choices": null,
         "default": null,
         "values_from": null
@@ -382,7 +382,7 @@
         "global": false,
         "takes_value": true,
         "value_kind": "list",
-        "help": "Manage a list of subnets in a Virtual Network (similar to `az network vnet subnet`). Support shorthand-syntax, json- file and yaml-file. Try \"??\" to show more.",
+        "help": "Manage a list of subnets in a Virtual Network (similar to `az network vnet subnet`). Support shorthand-syntax, json-file and yaml-file. Try \"??\" to show more.",
         "choices": null,
         "default": null,
         "values_from": null

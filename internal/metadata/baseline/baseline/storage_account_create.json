@@ -5,7 +5,7 @@
   "az_version": "embedded",
   "azform_version": "",
   "source": "help-parser",
-  "generated_at": "2026-09-02T17:41:57.364225Z",
+  "generated_at": "2026-09-26T15:09:13.4103499Z",
   "parse_health": {
     "params": 76,
     "unparsed_lines": 0,
@@ -242,7 +242,7 @@
       "required": false,
       "group": "Optional Parameters",
       "global": false,
-      "takes_value": true,
+      "takes_value": false,
       "value_kind": "bool",
       "help": "Enable local user features.",
       "choices": [
@@ -274,7 +274,7 @@
       "required": false,
       "group": "Optional Parameters",
       "global": false,
-      "takes_value": true,
+      "takes_value": false,
       "value_kind": "bool",
       "help": "Enable Secure File Transfer Protocol.",
       "choices": [
@@ -294,7 +294,7 @@
       "global": false,
       "takes_value": true,
       "value_kind": "enum",
-      "help": "Set the encryption key type for Queue service. \"Account\": Queue will be encrypted with account-scoped encryption key. \"Service\": Queue will always be encrypted with service- scoped keys. Currently the default encryption key type is \"Service\".",
+      "help": "Set the encryption key type for Queue service. \"Account\": Queue will be encrypted with account-scoped encryption key. \"Service\": Queue will always be encrypted with service-scoped keys. Currently the default encryption key type is \"Service\".",
       "choices": [
         "Account",
         "Service"
@@ -312,7 +312,7 @@
       "global": false,
       "takes_value": true,
       "value_kind": "enum",
-      "help": "Set the encryption key type for Table service. \"Account\": Table will be encrypted with account-scoped encryption key. \"Service\": Table will always be encrypted with service- scoped keys. Currently the default encryption key type is \"Service\".",
+      "help": "Set the encryption key type for Table service. \"Account\": Table will be encrypted with account-scoped encryption key. \"Service\": Table will always be encrypted with service-scoped keys. Currently the default encryption key type is \"Service\".",
       "choices": [
         "Account",
         "Service"
@@ -617,7 +617,7 @@
       "global": false,
       "takes_value": true,
       "value_kind": "enum",
-      "help": "Defines the mode of the policy. Disabled state disables the policy, Unlocked state allows increase and decrease of immutability retention time and also allows toggling allow- protected-append-write property, Locked state only allows the increase of the immutability retention time. A policy can only be created in a Disabled or Unlocked state and can be toggled between the two states. Only a policy in an Unlocked state can transition to a Locked state which cannot be reverted.",
+      "help": "Defines the mode of the policy. Disabled state disables the policy, Unlocked state allows increase and decrease of immutability retention time and also allows toggling allow-protected-append-write property, Locked state only allows the increase of the immutability retention time. A policy can only be created in a Disabled or Unlocked state and can be toggled between the two states. Only a policy in an Unlocked state can transition to a Locked state which cannot be reverted.",
       "choices": [
         "Disabled",
         "Locked",
@@ -689,7 +689,7 @@
       "global": false,
       "takes_value": true,
       "value_kind": "string",
-      "help": "Specify the security identifier (SID). Required when --enable-files- adds is set to True.",
+      "help": "Specify the security identifier (SID). Required when --enable-files-adds is set to True.",
       "choices": null,
       "default": null,
       "values_from": null
@@ -702,7 +702,7 @@
       "global": false,
       "takes_value": true,
       "value_kind": "string",
-      "help": "Specify the Active Directory forest to get. Required when --enable-files- adds is set to True.",
+      "help": "Specify the Active Directory forest to get. Required when --enable-files-adds is set to True.",
       "choices": null,
       "default": null,
       "values_from": null
@@ -759,7 +759,7 @@
       "required": false,
       "group": "Azure Files Identity Based Authentication Arguments",
       "global": false,
-      "takes_value": true,
+      "takes_value": false,
       "value_kind": "bool",
       "help": "Enable Azure Active Directory Domain Services authentication for Azure Files.",
       "choices": [
@@ -775,7 +775,7 @@
       "required": false,
       "group": "Azure Files Identity Based Authentication Arguments",
       "global": false,
-      "takes_value": true,
+      "takes_value": false,
       "value_kind": "bool",
       "help": "Enable Azure Files Active Directory Domain Service Kerberos Authentication for the storage account.",
       "choices": [
@@ -791,9 +791,9 @@
       "required": false,
       "group": "Azure Files Identity Based Authentication Arguments",
       "global": false,
-      "takes_value": true,
+      "takes_value": false,
       "value_kind": "bool",
-      "help": "Enable Azure Files Active Directory Domain Service Authentication for storage account. When --enable-files- adds is set to true, Azure Active Directory Properties arguments must be provided.",
+      "help": "Enable Azure Files Active Directory Domain Service Authentication for storage account. When --enable-files-adds is set to true, Azure Active Directory Properties arguments must be provided.",
       "choices": [
         "false",
         "true"

@@ -5,7 +5,7 @@
   "az_version": "embedded",
   "azform_version": "",
   "source": "help-parser",
-  "generated_at": "2026-09-02T17:41:57.364225Z",
+  "generated_at": "2026-09-26T15:09:13.4103499Z",
   "parse_health": {
     "params": 43,
     "unparsed_lines": 0,
@@ -89,8 +89,8 @@
       "required": false,
       "group": "Optional Parameters",
       "global": false,
-      "takes_value": false,
-      "value_kind": "bool",
+      "takes_value": true,
+      "value_kind": "list",
       "help": "Accept system or user assigned identities separated by spaces. Use '[system]' to refer system assigned identity, or a resource id to refer user assigned identity. Check out help for more examples.",
       "choices": null,
       "default": null,
@@ -122,7 +122,7 @@
       "global": false,
       "takes_value": true,
       "value_kind": "string",
-      "help": "The container custom image name and optionally the tag name (e.g., `\u003cregistry- name\u003e/\u003cimage-name\u003e:\u003ctag\u003e`). Note: if --container-registry-url is also provided, use `\u003cimage-name\u003e:\u003ctag\u003e` without the registry name.",
+      "help": "The container custom image name and optionally the tag name (e.g., `\u003cregistry-name\u003e/\u003cimage-name\u003e:\u003ctag\u003e`). Note: if --container-registry-url is also provided, use `\u003cimage-name\u003e:\u003ctag\u003e` without the registry name.",
       "choices": null,
       "default": null,
       "values_from": null
@@ -282,7 +282,7 @@
       "required": false,
       "group": "Optional Parameters",
       "global": false,
-      "takes_value": true,
+      "takes_value": false,
       "value_kind": "bool",
       "help": "Enable or disable end-to-end encryption between the Front End and the Workers.",
       "choices": [
@@ -426,7 +426,7 @@
       "required": false,
       "group": "Optional Parameters",
       "global": false,
-      "takes_value": true,
+      "takes_value": false,
       "value_kind": "bool",
       "help": "Enable or disable site-scoped certificates.",
       "choices": [

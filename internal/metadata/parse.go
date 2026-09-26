@@ -402,6 +402,7 @@ func inferValueKind(p *Parameter, choices []string, defaultValue *string) ValueK
 		return ValueKindKeyValue
 	}
 	if strings.Contains(lowerHelp, "space-separated") || strings.Contains(lowerHelp, "comma-separated") ||
+		strings.Contains(lowerHelp, "separated by spaces") ||
 		strings.Contains(lowerHelp, "one or more") || strings.Contains(lowerHelp, "list of") {
 		return ValueKindList
 	}
@@ -448,10 +449,14 @@ func isBoolChoiceSet(choices []string) bool {
 
 func looksLikeSwitch(name, help string) bool {
 	switch name {
+	// Only names that are a bare switch on every command belong here.
+	// --identity, --assign-identity and --service-principal are switches on
+	// `az login` / `az vm create` but take a value elsewhere (`acr create
+	// --identity <id>`, `aks create --service-principal <id>`, …); their
+	// switch forms are recognised from the help text below instead.
 	case "--debug", "--help", "--only-show-errors", "--verbose", "--yes",
-		"--no-wait", "--service-principal", "--use-device-code", "--identity",
-		"--assign-identity", "--generate-ssh-keys", "--validate", "--force",
-		"--skip-subscription-discovery", "--skip-authorization-header":
+		"--no-wait", "--use-device-code", "--generate-ssh-keys", "--validate",
+		"--force", "--skip-subscription-discovery", "--skip-authorization-header":
 		return true
 	}
 	if strings.HasPrefix(name, "--no-") {
@@ -625,11 +630,31 @@ func cleanupHelp(s string) string {
 	return strings.TrimSpace(s)
 }
 
+// joinText appends a wrapped continuation line. az's help formatter breaks
+// hyphenated words at the hyphen ("comma-" / "separated", "list-" /
+// "locations"); rejoining those with a space would corrupt both the help
+// text and anything parsed out of it — "comma- separated" misses the list
+// heuristic and "Values from: az account list- locations" runs a command
+// that does not exist. A trailing hyphen glued to a word, followed by a
+// line starting with a lowercase letter, is therefore joined without the
+// space.
 func joinText(a, b string) string {
 	if a == "" {
 		return b
 	}
+	if isWrappedHyphen(a, b) {
+		return a + b
+	}
 	return a + " " + b
+}
+
+func isWrappedHyphen(a, b string) bool {
+	if len(a) < 2 || a[len(a)-1] != '-' {
+		return false
+	}
+	prev, _ := utf8.DecodeLastRuneInString(a[:len(a)-1])
+	next, _ := utf8.DecodeRuneInString(b)
+	return (unicode.IsLetter(prev) || unicode.IsDigit(prev)) && unicode.IsLower(next)
 }
 
 func leadingSpaces(s string) int {

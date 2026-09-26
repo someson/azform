@@ -62,7 +62,7 @@
         "required": false,
         "group": "Optional Parameters",
         "global": false,
-        "takes_value": false,
+        "takes_value": true,
         "value_kind": "bool",
         "help": "Assign identity for database.",
         "choices": [

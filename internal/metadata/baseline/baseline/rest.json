@@ -1,11 +1,11 @@
 {
   "schema_version": 1,
   "command": "rest",
-  "summary": "Invoke a custom request. This command automatically authenticates using the logged-in credential: If Authorization header is not set, it attaches header `Authorization: Bearer \u003ctoken\u003e`, where `\u003ctoken\u003e` is retrieved from AAD. The target resource of the token is derived from --url if --url starts with an endpoint from `az cloud show --query endpoints`. You may also use --resource for a custom resource. If Content-Type header is not set and --body is a valid JSON string, Content-Type header will default to application/json. For passing JSON in PowerShell, see https://github.com/Azure/azure-cli/blob/dev/doc/quoting- issues-with-powershell.md.",
+  "summary": "Invoke a custom request. This command automatically authenticates using the logged-in credential: If Authorization header is not set, it attaches header `Authorization: Bearer \u003ctoken\u003e`, where `\u003ctoken\u003e` is retrieved from AAD. The target resource of the token is derived from --url if --url starts with an endpoint from `az cloud show --query endpoints`. You may also use --resource for a custom resource. If Content-Type header is not set and --body is a valid JSON string, Content-Type header will default to application/json. For passing JSON in PowerShell, see https://github.com/Azure/azure-cli/blob/dev/doc/quoting-issues-with-powershell.md.",
   "az_version": "embedded",
   "azform_version": "",
   "source": "help-parser",
-  "generated_at": "2026-09-02T17:41:57.364225Z",
+  "generated_at": "2026-09-26T15:09:13.4103499Z",
   "parse_health": {
     "params": 17,
     "unparsed_lines": 0,
@@ -38,7 +38,7 @@
       "global": false,
       "takes_value": true,
       "value_kind": "path",
-      "help": "Request body. Use @{file} to load from a file. For quoting issues in different terminals, see https://github.com/Azure/azure- cli/blob/dev/doc/use_cli_effectively.md#quoting-issues.",
+      "help": "Request body. Use @{file} to load from a file. For quoting issues in different terminals, see https://github.com/Azure/azure-cli/blob/dev/doc/use_cli_effectively.md#quoting-issues.",
       "choices": null,
       "default": null,
       "values_from": null

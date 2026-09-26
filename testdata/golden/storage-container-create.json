@@ -7,7 +7,7 @@
   },
   "command": {
     "command": "storage container create",
-    "summary": "Create a container in a storage account. By default, container data is private (\"off\") to the account owner. Use \"blob\" to allow public read access for blobs. Use \"container\" to allow public read and list access to the entire container. You can configure the --public-access using `az storage container set- permission -n CONTAINER_NAME --public-access blob/container/off`.",
+    "summary": "Create a container in a storage account. By default, container data is private (\"off\") to the account owner. Use \"blob\" to allow public read access for blobs. Use \"container\" to allow public read and list access to the entire container. You can configure the --public-access using `az storage container set-permission -n CONTAINER_NAME --public-access blob/container/off`.",
     "parameters": [
       {
         "name": "--name",

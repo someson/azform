@@ -5,7 +5,7 @@
   "az_version": "embedded",
   "azform_version": "",
   "source": "help-parser",
-  "generated_at": "2026-09-02T17:41:57.364225Z",
+  "generated_at": "2026-09-26T15:09:13.4103499Z",
   "parse_health": {
     "params": 30,
     "unparsed_lines": 0,
@@ -97,7 +97,7 @@
       "required": false,
       "group": "Optional Parameters",
       "global": false,
-      "takes_value": true,
+      "takes_value": false,
       "value_kind": "bool",
       "help": "Enable or disable the metadata-search feature for the registry. If not specified, this is set to disabled by default. WARNING: Argument '--allow-metadata-search' is in preview and under development. Reference and support levels: https://aka.ms/CLI_refstatus",
       "choices": [
@@ -205,8 +205,8 @@
       "required": false,
       "group": "Customer managed key Arguments",
       "global": false,
-      "takes_value": false,
-      "value_kind": "bool",
+      "takes_value": true,
+      "value_kind": "string",
       "help": "Use assigned managed identity resource id or name if in the same resource group.",
       "choices": null,
       "default": null,
@@ -273,7 +273,7 @@
       "required": false,
       "group": "Network Rule Arguments",
       "global": false,
-      "takes_value": true,
+      "takes_value": false,
       "value_kind": "bool",
       "help": "Enable dedicated data endpoint for client firewall configuration.",
       "choices": [
