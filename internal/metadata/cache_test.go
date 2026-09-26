@@ -383,6 +383,7 @@ func TestAzureCLIInstallRoot(t *testing.T) {
 	}{
 		{name: "homebrew cellar", path: filepath.Join(sep, "opt", "homebrew", "Cellar", "azure-cli", "2.89.1", "bin", "az"), want: filepath.Join(sep, "opt", "homebrew", "Cellar", "azure-cli", "2.89.1")},
 		{name: "deb layout", path: filepath.Join(sep, "opt", "az", "bin", "az"), want: filepath.Join(sep, "opt", "az")},
+		{name: "rhel usr layout", path: filepath.Join(sep, "usr", "lib64", "az", "bin", "az"), want: filepath.Join(sep, "usr", "lib64", "az")},
 		{name: "rhel layout", path: filepath.Join(sep, "lib64", "az", "bin", "az"), want: filepath.Join(sep, "lib64", "az")},
 		{name: "generic bin", path: filepath.Join(sep, "tmp", "cli", "bin", "az"), want: filepath.Join(sep, "tmp", "cli")},
 	}
@@ -538,4 +539,72 @@ func nonEmptyLines(s string) []string {
 		}
 	}
 	return out
+}
+
+// deb/rpm install az as a launcher script in /usr/bin, so the path alone
+// resolves to /usr, whose mtime never changes on an az upgrade. The
+// launcher names the real install, and an upgrade renames the
+// azure_cli-*.dist-info directory inside its site-packages.
+func TestDetectEnvironmentFollowsLauncherInterpreter(t *testing.T) {
+	tmp := t.TempDir()
+	install := filepath.Join(tmp, "opt", "az")
+	site := filepath.Join(install, "lib", "python3.12", "site-packages")
+	if err := os.MkdirAll(site, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.MkdirAll(filepath.Join(install, "bin"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	binDir := filepath.Join(tmp, "usr", "bin")
+	if err := os.MkdirAll(binDir, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	launcher := "#!/usr/bin/env bash\n" + install + "/bin/python3 -Im azure.cli \"$@\"\n"
+	if err := os.WriteFile(filepath.Join(binDir, "az"), []byte(launcher), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	t.Setenv("PATH", binDir)
+
+	old := time.Date(2020, 1, 1, 0, 0, 0, 0, time.UTC)
+	upgraded := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
+	for _, p := range []string{install, filepath.Join(install, "lib"), filepath.Join(install, "lib", "python3.12")} {
+		_ = os.Chtimes(p, old, old)
+	}
+	if err := os.Chtimes(site, upgraded, upgraded); err != nil {
+		t.Fatal(err)
+	}
+
+	env, err := DetectEnvironment()
+	if err != nil {
+		t.Fatalf("DetectEnvironment: %v", err)
+	}
+	if env.InstallPath != install {
+		t.Errorf("InstallPath = %q, want %q", env.InstallPath, install)
+	}
+	if !env.InstallModTime.Equal(upgraded) {
+		t.Errorf("InstallModTime = %v, want site-packages mtime %v", env.InstallModTime, upgraded)
+	}
+}
+
+func TestInterpreterRoot(t *testing.T) {
+	dir := t.TempDir()
+	write := func(name, content string) string {
+		p := filepath.Join(dir, name)
+		if err := os.WriteFile(p, []byte(content), 0o755); err != nil {
+			t.Fatal(err)
+		}
+		return p
+	}
+	cases := []struct{ name, content, want string }{
+		{"deb", "#!/usr/bin/env bash\n/opt/az/bin/python3 -Im azure.cli \"$@\"\n", "/opt/az"},
+		{"brew", "#!/bin/bash\nexec \"/opt/homebrew/Cellar/azure-cli/2.70.0/libexec/bin/python\" -Im azure.cli \"$@\"\n", "/opt/homebrew/Cellar/azure-cli/2.70.0/libexec"},
+		{"pip", "#!/home/u/.venv/bin/python3.12\nimport sys\n", "/home/u/.venv"},
+		{"binary", "\x7fELF\x00\x00/opt/az/bin/python3", ""},
+		{"none", "#!/bin/sh\necho hi\n", ""},
+	}
+	for _, tc := range cases {
+		if got := interpreterRoot(write(tc.name, tc.content)); got != tc.want {
+			t.Errorf("%s: interpreterRoot = %q, want %q", tc.name, got, tc.want)
+		}
+	}
 }

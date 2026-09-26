@@ -5,7 +5,7 @@
   "az_version": "embedded",
   "azform_version": "",
   "source": "help-parser",
-  "generated_at": "2026-09-02T17:41:57.364225Z",
+  "generated_at": "2026-09-26T15:09:13.4103499Z",
   "parse_health": {
     "params": 193,
     "unparsed_lines": 0,
@@ -122,7 +122,7 @@
       "global": false,
       "takes_value": true,
       "value_kind": "enum",
-      "help": "Set transit encryption type for ACNS security. Configures pod-to-pod encryption for Cilium-based clusters. Once enabled, all traffic between Cilium managed pods will be encrypted when it leaves the node boundary. Valid values are \"WireGuard\" and \"None\". On cluster creation, this must be used together with \"--enable- acns\".",
+      "help": "Set transit encryption type for ACNS security. Configures pod-to-pod encryption for Cilium-based clusters. Once enabled, all traffic between Cilium managed pods will be encrypted when it leaves the node boundary. Valid values are \"WireGuard\" and \"None\". On cluster creation, this must be used together with \"--enable-acns\".",
       "choices": [
         "None",
         "WireGuard"
@@ -192,7 +192,7 @@
       "global": false,
       "takes_value": true,
       "value_kind": "string",
-      "help": "The ID of a subnet in an existing VNet into which to assign control plane apiserver pods(requires --enable-apiserver-vnet- integration).",
+      "help": "The ID of a subnet in an existing VNet into which to assign control plane apiserver pods(requires --enable-apiserver-vnet-integration).",
       "choices": null,
       "default": null,
       "values_from": null
@@ -223,8 +223,8 @@
       "required": false,
       "group": "Optional Parameters",
       "global": false,
-      "takes_value": false,
-      "value_kind": "bool",
+      "takes_value": true,
+      "value_kind": "string",
       "help": "Specify an existing user assigned identity for control plane's usage in order to manage cluster resource group.",
       "choices": null,
       "default": null,
@@ -597,7 +597,7 @@
       "global": false,
       "takes_value": true,
       "value_kind": "string",
-      "help": "An IP address assigned to the Kubernetes DNS service. This address must be within the Kubernetes service address range specified by \"--service- cidr\". For example, 10.0.0.10.",
+      "help": "An IP address assigned to the Kubernetes DNS service. This address must be within the Kubernetes service address range specified by \"--service-cidr\". For example, 10.0.0.10.",
       "choices": null,
       "default": null,
       "values_from": null
@@ -649,9 +649,9 @@
       "required": false,
       "group": "Optional Parameters",
       "global": false,
-      "takes_value": false,
-      "value_kind": "bool",
-      "help": "Enable the Kubernetes addons in a comma- separated list. These addons are available: - http_application_routing: configure ingress with automatic public DNS name creation. - monitoring: turn on Log Analytics monitoring. Uses the Log Analytics Default Workspace if it exists, else creates one. Specify \"--workspace-resource-id\" to use an existing workspace. Specify \"--enable-msi-auth-for-monitoring\" to use Managed Identity Auth. Specify \"--enable-syslog\" to enable syslog data collection from nodes. Note MSI must be enabled Specify \"--data-collection-settings\" to configure data collection settings Specify \"--ampls-resource-id\" for private link. Note MSI must be enabled. Specify \"--enable-high-log-scale-mode\" to enable high log scale mode for container logs. Note MSI must be enabled. If monitoring addon is enabled --no-wait argument will have no effect - azure-policy: enable Azure policy. The Azure Policy add-on for AKS enables at-scale enforcements and safeguards on your clusters in a centralized, consistent manner. Learn more at aka.ms/aks/policy. - virtual-node: enable AKS Virtual Node. Requires --aci-subnet-name to provide the name of an existing subnet for the Virtual Node to use. aci-subnet-name must be in the same vnet which is specified by --vnet-subnet-id (required as well). - confcom: enable confcom addon, this will enable SGX device plugin by default. - open-service-mesh: enable Open Service Mesh addon. - azure-keyvault-secrets-provider: enable Azure Keyvault Secrets Provider addon.",
+      "takes_value": true,
+      "value_kind": "list",
+      "help": "Enable the Kubernetes addons in a comma-separated list. These addons are available: - http_application_routing: configure ingress with automatic public DNS name creation. - monitoring: turn on Log Analytics monitoring. Uses the Log Analytics Default Workspace if it exists, else creates one. Specify \"--workspace-resource-id\" to use an existing workspace. Specify \"--enable-msi-auth-for-monitoring\" to use Managed Identity Auth. Specify \"--enable-syslog\" to enable syslog data collection from nodes. Note MSI must be enabled Specify \"--data-collection-settings\" to configure data collection settings Specify \"--ampls-resource-id\" for private link. Note MSI must be enabled. Specify \"--enable-high-log-scale-mode\" to enable high log scale mode for container logs. Note MSI must be enabled. If monitoring addon is enabled --no-wait argument will have no effect - azure-policy: enable Azure policy. The Azure Policy add-on for AKS enables at-scale enforcements and safeguards on your clusters in a centralized, consistent manner. Learn more at aka.ms/aks/policy. - virtual-node: enable AKS Virtual Node. Requires --aci-subnet-name to provide the name of an existing subnet for the Virtual Node to use. aci-subnet-name must be in the same vnet which is specified by --vnet-subnet-id (required as well). - confcom: enable confcom addon, this will enable SGX device plugin by default. - open-service-mesh: enable Open Service Mesh addon. - azure-keyvault-secrets-provider: enable Azure Keyvault Secrets Provider addon.",
       "choices": null,
       "default": null,
       "values_from": null
@@ -718,7 +718,7 @@
       "global": false,
       "takes_value": false,
       "value_kind": "bool",
-      "help": "Enable Gateway API based ingress on App Routing via Istio without service mesh functionality. This enables an ingress-only version of Istio that reconciles Gateway API resources for App Routing. It does not provide service mesh functionality (e.g. mTLS, traffic management between services). Cannot be used simultaneously with the Istio service mesh add-on (--enable-azure-service- mesh).",
+      "help": "Enable Gateway API based ingress on App Routing via Istio without service mesh functionality. This enables an ingress-only version of Istio that reconciles Gateway API resources for App Routing. It does not provide service mesh functionality (e.g. mTLS, traffic management between services). Cannot be used simultaneously with the Istio service mesh add-on (--enable-azure-service-mesh).",
       "choices": null,
       "default": null,
       "values_from": null
@@ -852,7 +852,7 @@
       "global": false,
       "takes_value": false,
       "value_kind": "bool",
-      "help": "Enable collection of Azure Monitor managed Prometheus control plane metrics for managed cluster components (controlplane- apiserver and controlplane-etcd targets by default). Requires Azure Monitor metrics to be enabled (already enabled or via --enable-azure-monitor-metrics).",
+      "help": "Enable collection of Azure Monitor managed Prometheus control plane metrics for managed cluster components (controlplane-apiserver and controlplane-etcd targets by default). Requires Azure Monitor metrics to be enabled (already enabled or via --enable-azure-monitor-metrics).",
       "choices": null,
       "default": null,
       "values_from": null
@@ -865,7 +865,7 @@
       "global": false,
       "takes_value": false,
       "value_kind": "bool",
-      "help": "Enable exporting Kubernetes Namespace and Deployment details to the Cost Analysis views in the Azure portal. For more information see aka.ms/aks/docs/cost- analysis.",
+      "help": "Enable exporting Kubernetes Namespace and Deployment details to the Cost Analysis views in the Azure portal. For more information see aka.ms/aks/docs/cost-analysis.",
       "choices": null,
       "default": null,
       "values_from": null
@@ -928,9 +928,9 @@
       "required": false,
       "group": "Optional Parameters",
       "global": false,
-      "takes_value": true,
+      "takes_value": false,
       "value_kind": "bool",
-      "help": "Enable High Log Scale Mode for Container Logs. Auto-enabled when --enable-container- network-logs is specified.",
+      "help": "Enable High Log Scale Mode for Container Logs. Auto-enabled when --enable-container-network-logs is specified.",
       "choices": [
         "false",
         "true"
@@ -1053,7 +1053,7 @@
       "global": false,
       "takes_value": false,
       "value_kind": "bool",
-      "help": "Enable secret rotation. Use with azure- keyvault-secrets-provider addon.",
+      "help": "Enable secret rotation. Use with azure-keyvault-secrets-provider addon.",
       "choices": null,
       "default": null,
       "values_from": null
@@ -1103,7 +1103,7 @@
       "required": false,
       "group": "Optional Parameters",
       "global": false,
-      "takes_value": true,
+      "takes_value": false,
       "value_kind": "bool",
       "help": "Enable syslog data collection for Monitoring addon.",
       "choices": [
@@ -1410,7 +1410,7 @@
       "global": false,
       "takes_value": true,
       "value_kind": "list",
-      "help": "Comma-separated list of additional Kubernetes label keys that will be used in the resource' labels metric. By default the metric contains only name and namespace labels. To include additional labels provide a list of resource names in their plural form and Kubernetes label keys you would like to allow for them (e.g.'=namespa ces=[k8s-label-1,k8s-label- n,...],pods=[app],...)'. A single '*' can be provided per resource instead to allow any labels, but that has severe performance implications (e.g. '=pods=[*]').",
+      "help": "Comma-separated list of additional Kubernetes label keys that will be used in the resource' labels metric. By default the metric contains only name and namespace labels. To include additional labels provide a list of resource names in their plural form and Kubernetes label keys you would like to allow for them (e.g.'=namespa ces=[k8s-label-1,k8s-label-n,...],pods=[app],...)'. A single '*' can be provided per resource instead to allow any labels, but that has severe performance implications (e.g. '=pods=[*]').",
       "choices": null,
       "default": null,
       "values_from": null
@@ -1423,7 +1423,7 @@
       "global": false,
       "takes_value": true,
       "value_kind": "list",
-      "help": "Comma-separated list of additional Kubernetes label keys that will be used in the resource' labels metric. By default the metric contains only name and namespace labels. To include additional labels provide a list of resource names in their plural form and Kubernetes label keys you would like to allow for them (e.g. '=namesp aces=[k8s-label-1,k8s-label- n,...],pods=[app],...)'. A single '*' can be provided per resource instead to allow any labels, but that has severe performance implications (e.g. '=pods=[*]').",
+      "help": "Comma-separated list of additional Kubernetes label keys that will be used in the resource' labels metric. By default the metric contains only name and namespace labels. To include additional labels provide a list of resource names in their plural form and Kubernetes label keys you would like to allow for them (e.g. '=namesp aces=[k8s-label-1,k8s-label-n,...],pods=[app],...)'. A single '*' can be provided per resource instead to allow any labels, but that has severe performance implications (e.g. '=pods=[*]').",
       "choices": null,
       "default": null,
       "values_from": null
@@ -1592,7 +1592,7 @@
       "help": "Location. You can configure the default location using `az configure --defaults location=\u003clocation\u003e`.",
       "choices": null,
       "default": null,
-      "values_from": "az account list- locations"
+      "values_from": "az account list-locations"
     },
     {
       "name": "--max-count",
@@ -1698,7 +1698,7 @@
       "global": false,
       "takes_value": true,
       "value_kind": "enum",
-      "help": "The Kubernetes network plugin to use. Specify \"azure\" for highly scalable networking, \"kubenet\" for IP assignment from subnet NAT- based routing, or \"none\" for no networking configured. Defaults to \"azure\".",
+      "help": "The Kubernetes network plugin to use. Specify \"azure\" for highly scalable networking, \"kubenet\" for IP assignment from subnet NAT-based routing, or \"none\" for no networking configured. Defaults to \"azure\".",
       "choices": [
         "azure",
         "kubenet",
@@ -1947,7 +1947,7 @@
       "global": false,
       "takes_value": true,
       "value_kind": "list",
-      "help": "Expose host ports on the node pool. When specified, format should be a space- separated list of ranges with protocol, eg. `80/TCP 443/TCP 4000-5000/TCP`.",
+      "help": "Expose host ports on the node pool. When specified, format should be a space-separated list of ranges with protocol, eg. `80/TCP 443/TCP 4000-5000/TCP`.",
       "choices": null,
       "default": null,
       "values_from": null
@@ -2213,8 +2213,8 @@
       "required": false,
       "group": "Optional Parameters",
       "global": false,
-      "takes_value": false,
-      "value_kind": "bool",
+      "takes_value": true,
+      "value_kind": "string",
       "help": "Service principal used for authentication to Azure APIs.",
       "choices": null,
       "default": null,
@@ -2402,7 +2402,7 @@
       "global": false,
       "takes_value": true,
       "value_kind": "list",
-      "help": "Comma-separated list of VM sizes. Valid for VirtualMachines node pool only. If `--vm- sizes` not specified but `--node-vm-size` specified, value of `--node-vm-size` will be used. If neither of them specified, defaults to Standard_DS2_v2 for Linux or Standard_D2s_v3 for Windows.",
+      "help": "Comma-separated list of VM sizes. Valid for VirtualMachines node pool only. If `--vm-sizes` not specified but `--node-vm-size` specified, value of `--node-vm-size` will be used. If neither of them specified, defaults to Standard_DS2_v2 for Linux or Standard_D2s_v3 for Windows.",
       "choices": null,
       "default": null,
       "values_from": null
@@ -2512,7 +2512,7 @@
       "global": false,
       "takes_value": true,
       "value_kind": "string",
-      "help": "Resource Id of an existing Application Gateway to use with AGIC. Use with ingress- azure addon.",
+      "help": "Resource Id of an existing Application Gateway to use with AGIC. Use with ingress-azure addon.",
       "choices": null,
       "default": null,
       "values_from": null

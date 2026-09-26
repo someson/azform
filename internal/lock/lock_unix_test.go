@@ -6,6 +6,7 @@ import (
 	"errors"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"testing"
 
@@ -181,5 +182,67 @@ func TestCloseNilSafe(t *testing.T) {
 func TestAcquireNilTTY(t *testing.T) {
 	if _, err := lock.Acquire(nil); err == nil {
 		t.Error("Acquire(nil tty) returned nil error, want non-nil")
+	}
+}
+
+// Without XDG_RUNTIME_DIR the lock lives in a private per-user directory,
+// not in the shared temp dir where other users could pre-create it.
+func TestRuntimeDirFallbackIsPrivate(t *testing.T) {
+	t.Setenv("XDG_RUNTIME_DIR", "")
+	t.Setenv("TMPDIR", t.TempDir())
+	lk, err := lock.Acquire(fakeTTY(t))
+	if err != nil {
+		t.Fatalf("Acquire: %v", err)
+	}
+	t.Cleanup(func() { _ = lk.Close() })
+	dir := filepath.Dir(lk.Path())
+	if dir == os.TempDir() {
+		t.Fatalf("lock placed directly in the shared temp dir: %s", lk.Path())
+	}
+	info, err := os.Stat(dir)
+	if err != nil {
+		t.Fatalf("stat: %v", err)
+	}
+	if perm := info.Mode().Perm(); perm != 0o700 {
+		t.Errorf("lock dir perm = %o, want 0700", perm)
+	}
+}
+
+func TestRuntimeDirFallbackRejectsSharedDir(t *testing.T) {
+	t.Setenv("XDG_RUNTIME_DIR", "")
+	tmp := t.TempDir()
+	t.Setenv("TMPDIR", tmp)
+	dir := filepath.Join(tmp, "azform-"+strconv.Itoa(os.Getuid()))
+	if err := os.Mkdir(dir, 0o777); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Chmod(dir, 0o777); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := lock.Acquire(fakeTTY(t)); err == nil {
+		t.Error("Acquire accepted a world-writable lock directory")
+	}
+}
+
+func TestAcquireRefusesSymlink(t *testing.T) {
+	tty := fakeTTY(t)
+	dir := t.TempDir()
+	withRuntimeDir(t, dir)
+	lk, err := lock.Acquire(tty)
+	if err != nil {
+		t.Fatalf("Acquire: %v", err)
+	}
+	path := lk.Path()
+	_ = lk.Close()
+	target := filepath.Join(t.TempDir(), "victim")
+	if err := os.WriteFile(target, []byte("keep"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Symlink(target, path); err != nil {
+		t.Fatal(err)
+	}
+	if lk, err := lock.Acquire(tty); err == nil {
+		_ = lk.Close()
+		t.Error("Acquire followed a symlink at the lock path")
 	}
 }

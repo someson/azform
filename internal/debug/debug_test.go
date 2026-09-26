@@ -192,3 +192,22 @@ var _ io.WriteCloser = nopCloser{bytes.NewBuffer(nil)}
 // future debug sinks like a write-through in-memory buffer for tests.)
 var _ = nopCloser{}
 var _ = bytes.NewBuffer
+
+// Background commands may still log while main closes the logger; run
+// with -race to catch unsynchronised access to the writer.
+func TestEventConcurrentWithClose(t *testing.T) {
+	l, err := debug.Open(t.TempDir())
+	if err != nil {
+		t.Fatalf("Open: %v", err)
+	}
+	done := make(chan struct{})
+	go func() {
+		defer close(done)
+		for i := 0; i < 200; i++ {
+			l.Event("tick", map[string]any{"i": i})
+		}
+	}()
+	_ = l.Close()
+	<-done
+	l.Event("after-close", nil) // must be a no-op, not a panic
+}

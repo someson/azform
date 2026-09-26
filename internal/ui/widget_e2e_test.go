@@ -50,15 +50,24 @@ func TestE2EWidgetEnvOutRoundTrip(t *testing.T) {
 		"--vars", varsPath,
 		"--env-out", envPath,
 		"--cwd", tmpDir,
+		// A private state dir: the default one is shared with every other
+		// run on the machine, and a draft left there (the bash e2e test
+		// cancels "group create") would be restored into this form.
+		"--state-dir", tmpDir+"/state",
 		"--no-update-check",
 	)
 	ptmx, err := pty.Start(cmd)
 	if err != nil {
 		t.Fatalf("pty.Start: %v", err)
 	}
+	// One goroutine owns cmd.Wait (calling it twice is a data race);
+	// exited is closed, not sent on, so every reader sees it.
+	exited := make(chan struct{})
+	var waitErr error
+	go func() { waitErr = cmd.Wait(); close(exited) }()
 	defer func() {
 		_ = cmd.Process.Kill()
-		_ = cmd.Wait()
+		<-exited
 		_ = ptmx.Close()
 	}()
 
@@ -111,12 +120,10 @@ func TestE2EWidgetEnvOutRoundTrip(t *testing.T) {
 	writeRunes("\t", 80*time.Millisecond, 400*time.Millisecond)
 	writeRunes("\r", 80*time.Millisecond, 1500*time.Millisecond) // confirm Done
 
-	done := make(chan error, 1)
-	go func() { done <- cmd.Wait() }()
 	select {
-	case err := <-done:
-		if err != nil {
-			t.Logf("azform exited with (possibly expected) error: %v", err)
+	case <-exited:
+		if waitErr != nil {
+			t.Logf("azform exited with (possibly expected) error: %v", waitErr)
 		}
 	case <-time.After(20 * time.Second):
 		if data, err := os.ReadFile(envPath); err == nil {
@@ -196,15 +203,24 @@ func TestE2ECancelFlushesEnvOut(t *testing.T) {
 		"--vars", varsPath,
 		"--env-out", envPath,
 		"--cwd", tmpDir,
+		// A private state dir: the default one is shared with every other
+		// run on the machine, and a draft left there (the bash e2e test
+		// cancels "group create") would be restored into this form.
+		"--state-dir", tmpDir+"/state",
 		"--no-update-check",
 	)
 	ptmx, err := pty.Start(cmd)
 	if err != nil {
 		t.Fatalf("pty.Start: %v", err)
 	}
+	// One goroutine owns cmd.Wait (calling it twice is a data race);
+	// exited is closed, not sent on, so every reader sees it.
+	exited := make(chan struct{})
+	var waitErr error
+	go func() { waitErr = cmd.Wait(); close(exited) }()
 	defer func() {
 		_ = cmd.Process.Kill()
-		_ = cmd.Wait()
+		<-exited
 		_ = ptmx.Close()
 	}()
 	if err := pty.Setsize(ptmx, &pty.Winsize{Rows: 40, Cols: 200}); err != nil {
@@ -240,12 +256,10 @@ func TestE2ECancelFlushesEnvOut(t *testing.T) {
 	// Esc from list mode closes the form (confirmCancel path).
 	writeRunes("\033", 150*time.Millisecond, 3*time.Second)
 
-	done := make(chan error, 1)
-	go func() { done <- cmd.Wait() }()
 	select {
-	case err := <-done:
-		if err != nil {
-			t.Logf("azform exited with (possibly expected) error: %v", err)
+	case <-exited:
+		if waitErr != nil {
+			t.Logf("azform exited with (possibly expected) error: %v", waitErr)
 		}
 	case <-time.After(20 * time.Second):
 		if data, err := os.ReadFile(envPath); err == nil {

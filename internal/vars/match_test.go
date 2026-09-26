@@ -51,6 +51,19 @@ func TestMatchNameSuffix(t *testing.T) {
 	}
 }
 
+// Environment names that merely end in the letters "name" (no separator)
+// are not a _NAME suffix and must not bind to --name.
+func TestMatchNameSuffixNeedsSeparator(t *testing.T) {
+	in := []vars.Variable{
+		{Name: "USERNAME", Value: "alice"},
+		{Name: "HOSTNAME", Value: "laptop"},
+		{Name: "LOGNAME", Value: "alice"},
+	}
+	if got := vars.MatchVariables(in, matchParams); len(got) != 0 {
+		t.Errorf("got %+v, want no matches", got)
+	}
+}
+
 func TestMatchValueSignal(t *testing.T) {
 	// Unusual var name, but value matches --sku's choices.
 	in := []vars.Variable{{Name: "WEIRD_VAR", Value: "Standard_LRS"}}

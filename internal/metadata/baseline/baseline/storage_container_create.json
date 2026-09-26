@@ -1,11 +1,11 @@
 {
   "schema_version": 1,
   "command": "storage container create",
-  "summary": "Create a container in a storage account. By default, container data is private (\"off\") to the account owner. Use \"blob\" to allow public read access for blobs. Use \"container\" to allow public read and list access to the entire container. You can configure the --public-access using `az storage container set- permission -n CONTAINER_NAME --public-access blob/container/off`.",
+  "summary": "Create a container in a storage account. By default, container data is private (\"off\") to the account owner. Use \"blob\" to allow public read access for blobs. Use \"container\" to allow public read and list access to the entire container. You can configure the --public-access using `az storage container set-permission -n CONTAINER_NAME --public-access blob/container/off`.",
   "az_version": "embedded",
   "azform_version": "",
   "source": "help-parser",
-  "generated_at": "2026-09-02T17:41:57.364225Z",
+  "generated_at": "2026-09-26T15:09:13.4103499Z",
   "parse_health": {
     "params": 23,
     "unparsed_lines": 0,
@@ -137,7 +137,7 @@
       "required": false,
       "group": "Encryption Policy Arguments",
       "global": false,
-      "takes_value": true,
+      "takes_value": false,
       "value_kind": "bool",
       "help": "Block override of encryption scope from the container default. WARNING: Argument '--prevent-encryption-scope-override' is in preview and under development. Reference and support levels: https://aka.ms/CLI_refstatus",
       "choices": [

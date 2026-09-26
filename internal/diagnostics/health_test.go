@@ -79,3 +79,38 @@ func splitLines(data []byte) [][]byte {
 	}
 	return out
 }
+
+// A full log (exactly 200 entries) is left alone: rotation rewrites the
+// file only when an append takes it past the limit.
+func TestAppendHealthNoRewriteAtLimit(t *testing.T) {
+	dir := t.TempDir()
+	now := time.Now()
+	for i := 0; i < 199; i++ {
+		_ = diagnostics.AppendHealth(dir, diagnostics.Entry{Command: "cmd", Params: i, SectionsOK: true}, now)
+	}
+	path := filepath.Join(dir, "parse-health.log")
+	before, err := os.Stat(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	// The 200th entry fits: rotation (temp file + rename) must not run.
+	_ = diagnostics.AppendHealth(dir, diagnostics.Entry{Command: "cmd", Params: 199, SectionsOK: true}, now)
+	at, _ := os.Stat(path)
+	if !os.SameFile(before, at) {
+		t.Errorf("log rewritten at exactly 200 entries")
+	}
+	before = at
+	data, _ := os.ReadFile(path)
+	if n := len(splitLines(data)); n != 200 {
+		t.Fatalf("log has %d entries, want 200", n)
+	}
+	_ = diagnostics.AppendHealth(dir, diagnostics.Entry{Command: "cmd", Params: 1, SectionsOK: true}, now)
+	after, _ := os.Stat(path)
+	if os.SameFile(before, after) {
+		t.Errorf("201st entry should rotate the log")
+	}
+	data, _ = os.ReadFile(path)
+	if n := len(splitLines(data)); n != 200 {
+		t.Errorf("after rotation: %d entries, want 200", n)
+	}
+}

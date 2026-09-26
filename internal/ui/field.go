@@ -64,6 +64,12 @@ type Field struct {
 	Enabled  bool // whether this param is included in the output command
 	Source   FieldSource
 
+	// EmitBare is set when the buffer carried this value-taking flag with
+	// no value (`--assign-identity` before another flag). Several az flags
+	// accept an optional value (nargs='?'/'*'), so while the field stays
+	// empty the flag is emitted bare instead of being dropped.
+	EmitBare bool
+
 	// Lazy fetch state (spec §6.1). Idle for fields with no ValuesFrom; the
 	// cursor-move logic in model.go promotes Idle → Loading on focus.
 	FetchState       FetchState

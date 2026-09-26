@@ -70,14 +70,17 @@ func findSegments(line string) []azSegment {
 			isBacktick := tok.Raw != "" && tok.Raw[0] == '`'
 			innerSegs := findSegments(inner)
 			for _, s := range innerSegs {
-				var prefix, suffix string
+				open, closing := "$(", ")"
 				if isBacktick {
-					prefix = line[:tok.Start] + "`" + s.prefix
-					suffix = s.suffix + "`" + line[tok.End:]
-				} else {
-					prefix = line[:tok.Start] + "$(" + s.prefix
-					suffix = s.suffix + ")" + line[tok.End:]
+					open, closing = "`", "`"
 				}
+				if tok.Unclosed {
+					// The user has not typed the closing delimiter yet;
+					// the rebuilt line must not invent one.
+					closing = ""
+				}
+				prefix := line[:tok.Start] + open + s.prefix
+				suffix := s.suffix + closing + line[tok.End:]
 				segs = append(segs, azSegment{
 					commandPath: s.commandPath,
 					flagTokens:  s.flagTokens,
@@ -132,10 +135,13 @@ func extractSegment(tokens []Token, azIdx int, line string) (azSegment, int) {
 }
 
 // selectTarget picks the az segment that contains cursor, or the first segment
-// when cursor is outside all segments.
+// when cursor is outside all segments. The end bound is inclusive: a cursor
+// sitting right after a segment's last character — the usual spot once the
+// user has finished typing it, e.g. end of line in `az a && az b` — belongs
+// to that segment.
 func selectTarget(segs []azSegment, cursor int) *azSegment {
 	for i := range segs {
-		if cursor >= segs[i].outerStart && cursor < segs[i].outerEnd {
+		if cursor >= segs[i].outerStart && cursor <= segs[i].outerEnd {
 			return &segs[i]
 		}
 	}

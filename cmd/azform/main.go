@@ -52,6 +52,7 @@ func run(args []string) int {
 		outPath       string
 		envOutPath    string
 		cursor        int
+		cursorPrefix  string
 		varsPath      string
 		cwd           string
 		cacheDir      string
@@ -66,7 +67,8 @@ func run(args []string) int {
 	fs.StringVar(&line, "line", "", "current shell buffer contents")
 	fs.StringVar(&outPath, "out", "", "file path to write the assembled command")
 	fs.StringVar(&envOutPath, "env-out", "", "file path to write pending shell-variable exports (g-popup); empty = disabled")
-	fs.IntVar(&cursor, "cursor", 0, "cursor position in --line")
+	fs.IntVar(&cursor, "cursor", 0, "cursor position in --line, in bytes")
+	fs.StringVar(&cursorPrefix, "cursor-prefix", "", "text of --line left of the cursor; overrides --cursor (zsh's CURSOR counts characters, not bytes)")
 	fs.StringVar(&varsPath, "vars", "", "NUL-separated NAME=VALUE file from the shell widget")
 	fs.StringVar(&cwd, "cwd", "", "shell working directory (for @ path completion)")
 	fs.StringVar(&cacheDir, "cache-dir", "", "override metadata cache directory")
@@ -135,7 +137,7 @@ func run(args []string) int {
 	}
 
 	// Parse the shell buffer to locate the az command.
-	raw, ok := shell.ParseRaw(line, cursor)
+	raw, ok := shell.ParseRaw(line, cursorByte(line, cursor, cursorPrefix))
 	if !ok {
 		if len(fs.Args()) == 0 {
 			fs.Usage()
@@ -256,6 +258,17 @@ func runTUI(raw shell.RawBuffer, shellVars, azureDefaults []vars.Variable, outPa
 		return 2
 	}
 	return 0
+}
+
+// cursorByte returns the cursor as a byte offset into line, which is what
+// the tokenizer works in. zsh's CURSOR and bash 5's READLINE_POINT count
+// characters, so the widgets also pass the text left of the cursor; its
+// byte length is exact. A prefix that does not match line is ignored.
+func cursorByte(line string, cursor int, prefix string) int {
+	if prefix != "" && strings.HasPrefix(line, prefix) {
+		return len(prefix)
+	}
+	return cursor
 }
 
 func printVersion() {

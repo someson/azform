@@ -22,7 +22,7 @@
         "help": "Location. You can configure the default location using `az configure --defaults location=<location>`.",
         "choices": null,
         "default": null,
-        "values_from": "az account list- locations"
+        "values_from": "az account list-locations"
       },
       {
         "name": "--name",

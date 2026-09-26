@@ -60,7 +60,7 @@
         "global": false,
         "takes_value": true,
         "value_kind": "list",
-        "help": "Space-separated list of address prefixes in CIDR format. If provided, --ipam-allocations should not be specified. Support shorthand-syntax, json- file and yaml-file. Try \"??\" to show more.",
+        "help": "Space-separated list of address prefixes in CIDR format. If provided, --ipam-allocations should not be specified. Support shorthand-syntax, json-file and yaml-file. Try \"??\" to show more.",
         "choices": null,
         "default": null,
         "values_from": null
@@ -112,7 +112,7 @@
         "global": false,
         "takes_value": false,
         "value_kind": "bool",
-        "help": "Disable private endpoint network policies on the subnet. Please note that it will be replaced by `--private- endpoint-network-policies` soon.",
+        "help": "Disable private endpoint network policies on the subnet. Please note that it will be replaced by `--private-endpoint-network-policies` soon.",
         "choices": [
           "0",
           "1",
@@ -136,7 +136,7 @@
         "global": false,
         "takes_value": false,
         "value_kind": "bool",
-        "help": "Disable private link service network policies on the subnet. Please note that it will be replaced by `--private-link- service-network-policies` soon.",
+        "help": "Disable private link service network policies on the subnet. Please note that it will be replaced by `--private-link-service-network-policies` soon.",
         "choices": [
           "0",
           "1",
@@ -160,7 +160,7 @@
         "global": false,
         "takes_value": true,
         "value_kind": "string",
-        "help": "An array of service endpoints. Support shorthand-syntax, json- file and yaml-file. Try \"??\" to show more.",
+        "help": "An array of service endpoints. Support shorthand-syntax, json-file and yaml-file. Try \"??\" to show more.",
         "choices": null,
         "default": null,
         "values_from": null
@@ -175,7 +175,7 @@
         "global": false,
         "takes_value": true,
         "value_kind": "list",
-        "help": "A list of IPAM Pools for allocating IP address prefixes. If provided, --address-prefixes would be ignored by CLI and should not be specified. Support shorthand-syntax, json- file and yaml-file. Try \"??\" to show more.",
+        "help": "A list of IPAM Pools for allocating IP address prefixes. If provided, --address-prefixes would be ignored by CLI and should not be specified. Support shorthand-syntax, json-file and yaml-file. Try \"??\" to show more.",
         "choices": null,
         "default": null,
         "values_from": null
@@ -216,7 +216,7 @@
         "global": false,
         "takes_value": false,
         "value_kind": "bool",
-        "help": "Do not wait for the long- running operation to finish.",
+        "help": "Do not wait for the long-running operation to finish.",
         "choices": [
           "0",
           "1",
@@ -304,10 +304,10 @@
         "global": false,
         "takes_value": true,
         "value_kind": "list",
-        "help": "Space-separated list of services allowed private access to this subnet. Support shorthand- syntax, json-file and yaml- file. Try \"??\" to show more.",
+        "help": "Space-separated list of services allowed private access to this subnet. Support shorthand-syntax, json-file and yaml-file. Try \"??\" to show more.",
         "choices": null,
         "default": null,
-        "values_from": "az network vnet list-endpoint- services"
+        "values_from": "az network vnet list-endpoint-services"
       },
       {
         "name": "--sharing-scope",

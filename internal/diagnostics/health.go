@@ -69,16 +69,14 @@ func rotateIfNeeded(path string) error {
 	if err != nil {
 		return fmt.Errorf("diagnostics: read log for rotation: %w", err)
 	}
-	n := 1
-	for _, b := range data {
-		if b == '\n' {
-			n++
-		}
-	}
-	if n <= healthMaxRows {
+	// Count records, not separators: every entry ends in '\n', so a
+	// full log of healthMaxRows entries holds exactly healthMaxRows
+	// newlines. The previous count started at 1 and rewrote the whole
+	// file on every append once the log was full.
+	lines := splitLines(data)
+	if len(lines) <= healthMaxRows {
 		return nil
 	}
-	lines := splitLines(data)
 	keep := lines[len(lines)-healthMaxRows:]
 	tmp, err := os.CreateTemp(filepath.Dir(path), ".parse-health-*.tmp")
 	if err != nil {

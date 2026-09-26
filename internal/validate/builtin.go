@@ -111,22 +111,28 @@ func usesVarName(value, name string) bool {
 	return false
 }
 
-// escapeError: literal-mode value with unclosed quote or backtick.
+// escapeError: enabled literal-mode value with unclosed quote or backtick.
+// Disabled fields are never rendered, so they cannot break the command.
+//
+// It is a warning, not a blocker: literal values are always emitted inside
+// single quotes, so a lone `"` reaches az intact (`--description 5"`) and
+// the command stays valid. The finding only flags a probable typo, such as
+// a value the user meant to quote themselves.
 type escapeError struct{}
 
 func (escapeError) ID() string { return "builtin/escape-error" }
 func (escapeError) Check(cmd *metadata.Command, st *FormState) []Finding {
 	var out []Finding
 	for name, m := range st.Modes {
-		if m != FieldModeLiteral {
+		if m != FieldModeLiteral || !st.Enabled[name] {
 			continue
 		}
 		val := st.Values[name]
 		if strings.Count(val, `"`)%2 == 1 || strings.Count(val, "`")%2 == 1 {
 			out = append(out, Finding{
 				Param:    name,
-				Severity: SeverityBlocking,
-				Message:  name + ": unclosed quote in value",
+				Severity: SeverityWarning,
+				Message:  name + ": unbalanced quote in value (sent to az as typed)",
 				RuleID:   "builtin/escape-error",
 			})
 		}
@@ -192,7 +198,7 @@ func (unknownFlag) Check(cmd *metadata.Command, st *FormState) []Finding {
 		out = append(out, Finding{
 			Param:    "",
 			Severity: SeverityWarning,
-			Message:  "unknown flag " + f,
+			Message:  "unknown flag " + f + " (kept as typed)",
 			Suggest:  suggestSimilar(f, cmd.Parameters),
 			RuleID:   "builtin/unknown-flag",
 		})

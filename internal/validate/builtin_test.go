@@ -182,6 +182,13 @@ func TestEscapeError(t *testing.T) {
 	if hasRuleID(fs, "builtin/escape-error") {
 		t.Errorf("bare space should not fire")
 	}
+	// A disabled field is never rendered, so it must not block Done.
+	st.Values["--name"] = `unclosed "quote`
+	st.Enabled["--name"] = false
+	fs = runRules(t, st)
+	if hasRuleID(fs, "builtin/escape-error") {
+		t.Errorf("disabled field should not fire")
+	}
 }
 
 func TestEnumOutOfRange(t *testing.T) {

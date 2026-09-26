@@ -229,8 +229,8 @@ func oneLine(s string) string {
 	s = strings.ReplaceAll(s, "\n", " ")
 	s = strings.ReplaceAll(s, "\r", " ")
 	s = strings.TrimSpace(s)
-	if len(s) > 200 {
-		s = s[:197] + "..."
+	if r := []rune(s); len(r) > 200 {
+		s = string(r[:197]) + "..."
 	}
 	return s
 }

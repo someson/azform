@@ -7,7 +7,7 @@
   },
   "command": {
     "command": "postgres flexible-server create",
-    "summary": "Create a PostgreSQL flexible server. Create a PostgreSQL flexible server with custom or default configuration. For more information for network configuration, see - Configure public access https://learn.microsoft.com/azure/postgresql/flexible-server/how-to-manage-firewall-cli - Configure private access https://learn.microsoft.com/azure/postgresql/flexible-server/how-to-manage-virtual-network- cli.",
+    "summary": "Create a PostgreSQL flexible server. Create a PostgreSQL flexible server with custom or default configuration. For more information for network configuration, see - Configure public access https://learn.microsoft.com/azure/postgresql/flexible-server/how-to-manage-firewall-cli - Configure private access https://learn.microsoft.com/azure/postgresql/flexible-server/how-to-manage-virtual-network-cli.",
     "parameters": [
       {
         "name": "--admin-display-name",
@@ -176,8 +176,8 @@
         "required": false,
         "group": "Optional Parameters",
         "global": false,
-        "takes_value": false,
-        "value_kind": "bool",
+        "takes_value": true,
+        "value_kind": "string",
         "help": "The name or resource identifier of the user assigned identity for data encryption.",
         "choices": null,
         "default": null,

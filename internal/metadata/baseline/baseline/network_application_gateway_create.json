@@ -5,7 +5,7 @@
   "az_version": "embedded",
   "azform_version": "",
   "source": "help-parser",
-  "generated_at": "2026-09-02T17:41:57.364225Z",
+  "generated_at": "2026-09-26T15:09:13.4103499Z",
   "parse_health": {
     "params": 52,
     "unparsed_lines": 0,
@@ -390,7 +390,7 @@
       "global": false,
       "takes_value": true,
       "value_kind": "string",
-      "help": "The certificate name. Default will be `\u003capplication- gateway-name\u003eSslCert`.",
+      "help": "The certificate name. Default will be `\u003capplication-gateway-name\u003eSslCert`.",
       "choices": null,
       "default": null,
       "values_from": null
@@ -440,8 +440,8 @@
       "required": false,
       "group": "Identity Arguments",
       "global": false,
-      "takes_value": false,
-      "value_kind": "bool",
+      "takes_value": true,
+      "value_kind": "string",
       "help": "Name or ID of the ManagedIdentity Resource.",
       "choices": null,
       "default": null,
@@ -455,7 +455,7 @@
       "global": false,
       "takes_value": true,
       "value_kind": "string",
-      "help": "The application gateway trusted client certificate. Usage: --trusted-client-certificates name=client1 data=client.cer name: Required. Name of the trusted client certificate that is unique within an Application Gateway data: Required. Certificate public data. Multiple trusted client certificates can be specified by using more than one `--trusted- client-certificates` argument. WARNING: Argument '--trusted-client-cert' is in preview and under development. Reference and support levels: https://aka.ms/CLI_refstatus",
+      "help": "The application gateway trusted client certificate. Usage: --trusted-client-certificates name=client1 data=client.cer name: Required. Name of the trusted client certificate that is unique within an Application Gateway data: Required. Certificate public data. Multiple trusted client certificates can be specified by using more than one `--trusted-client-certificates` argument. WARNING: Argument '--trusted-client-cert' is in preview and under development. Reference and support levels: https://aka.ms/CLI_refstatus",
       "choices": null,
       "default": null,
       "values_from": null
@@ -507,7 +507,7 @@
       "global": false,
       "takes_value": true,
       "value_kind": "string",
-      "help": "Name or ID of the subnet. Will create resource if it does not exist. If name specified, also specify --vnet- name. If you want to use an existing subnet in other resource group or subscription, please provide the ID instead of the name of the subnet.",
+      "help": "Name or ID of the subnet. Will create resource if it does not exist. If name specified, also specify --vnet-name. If you want to use an existing subnet in other resource group or subscription, please provide the ID instead of the name of the subnet.",
       "choices": null,
       "default": "default",
       "values_from": null
@@ -627,7 +627,7 @@
       "global": false,
       "takes_value": true,
       "value_kind": "list",
-      "help": "The application gateway ssl profiles. Usage: --ssl-profile name=MySslProfile client-auth-configuration=True cipher- suites=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256 policy-type=Custom min-protocol-version=TLSv1_0 name: Required. Name of the SSL profile that is unique within an Application Gateway. polic-name: Name of Ssl Policy. policy-type: Type of Ssl Policy. min-protocol-version: Minimum version of Ssl protocol to be supported on application gateway. cipher-suites: Ssl cipher suites to be enabled in the specified order to application gateway. disabled-ssl-protocols: Space-separated list of protocols to disable. trusted-client-certificates: Array of references to application gateway trusted client certificates. client-auth-configuration: Client authentication configuration of the application gateway resource. Multiple ssl profiles can be specified by using more than one `--ssl-profile` argument. WARNING: Argument '--ssl-profile' is in preview and under development. Reference and support levels: https://aka.ms/CLI_refstatus",
+      "help": "The application gateway ssl profiles. Usage: --ssl-profile name=MySslProfile client-auth-configuration=True cipher-suites=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256 policy-type=Custom min-protocol-version=TLSv1_0 name: Required. Name of the SSL profile that is unique within an Application Gateway. polic-name: Name of Ssl Policy. policy-type: Type of Ssl Policy. min-protocol-version: Minimum version of Ssl protocol to be supported on application gateway. cipher-suites: Ssl cipher suites to be enabled in the specified order to application gateway. disabled-ssl-protocols: Space-separated list of protocols to disable. trusted-client-certificates: Array of references to application gateway trusted client certificates. client-auth-configuration: Client authentication configuration of the application gateway resource. Multiple ssl profiles can be specified by using more than one `--ssl-profile` argument. WARNING: Argument '--ssl-profile' is in preview and under development. Reference and support levels: https://aka.ms/CLI_refstatus",
       "choices": null,
       "default": null,
       "values_from": null

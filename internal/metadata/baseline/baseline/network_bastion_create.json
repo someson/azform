@@ -5,7 +5,7 @@
   "az_version": "embedded",
   "azform_version": "",
   "source": "help-parser",
-  "generated_at": "2026-09-02T17:41:57.364225Z",
+  "generated_at": "2026-09-26T15:09:13.4103499Z",
   "parse_health": {
     "params": 27,
     "unparsed_lines": 0,
@@ -61,7 +61,7 @@
       "required": false,
       "group": "Optional Parameters",
       "global": false,
-      "takes_value": true,
+      "takes_value": false,
       "value_kind": "bool",
       "help": "Do not wait for the long-running operation to finish.",
       "choices": [
@@ -159,7 +159,7 @@
       "global": false,
       "takes_value": true,
       "value_kind": "string",
-      "help": "Resource tags. Support shorthand-syntax, json-file and yaml- file. Try \"??\" to show more.",
+      "help": "Resource tags. Support shorthand-syntax, json-file and yaml-file. Try \"??\" to show more.",
       "choices": null,
       "default": null,
       "values_from": null
@@ -172,7 +172,7 @@
       "global": false,
       "takes_value": true,
       "value_kind": "list",
-      "help": "A list of availability zones denoting where the resource needs to come from. Support shorthand-syntax, json-file and yaml- file. Try \"??\" to show more.",
+      "help": "A list of availability zones denoting where the resource needs to come from. Support shorthand-syntax, json-file and yaml-file. Try \"??\" to show more.",
       "choices": null,
       "default": null,
       "values_from": null
@@ -305,7 +305,7 @@
       "global": false,
       "takes_value": true,
       "value_kind": "list",
-      "help": "[Supported in Developer SKU only] Network ACLs IP rules. Space- separated list of IP addresses.",
+      "help": "[Supported in Developer SKU only] Network ACLs IP rules. Space-separated list of IP addresses.",
       "choices": null,
       "default": null,
       "values_from": null

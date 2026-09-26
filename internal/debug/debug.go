@@ -48,7 +48,7 @@ func (l *Logger) SetNow(now func() time.Time) {
 // Keys are emitted in alphabetical order for stable diffs. No-op on nil
 // receiver.
 func (l *Logger) Event(name string, fields map[string]any) {
-	if l == nil || l.w == nil {
+	if l == nil {
 		return
 	}
 	e := make(map[string]any, len(fields)+2)
@@ -84,14 +84,24 @@ func (l *Logger) Event(name string, fields map[string]any) {
 	}
 	buf = append(buf, '}', '\n')
 
+	// The writer is checked under the lock: background commands (metadata
+	// resolve and refresh) can still log after main has closed the logger.
 	l.mu.Lock()
-	_, _ = l.w.Write(buf)
+	if l.w != nil {
+		_, _ = l.w.Write(buf)
+	}
 	l.mu.Unlock()
 }
 
-// Close flushes and closes the underlying file. Safe on nil; idempotent.
+// Close flushes and closes the underlying file. Safe on nil; idempotent;
+// safe to call while other goroutines are still logging.
 func (l *Logger) Close() error {
-	if l == nil || l.w == nil {
+	if l == nil {
+		return nil
+	}
+	l.mu.Lock()
+	defer l.mu.Unlock()
+	if l.w == nil {
 		return nil
 	}
 	err := l.w.Close()

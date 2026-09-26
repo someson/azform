@@ -5,7 +5,7 @@
   "az_version": "embedded",
   "azform_version": "",
   "source": "help-parser",
-  "generated_at": "2026-09-02T17:41:57.364225Z",
+  "generated_at": "2026-09-26T15:09:13.4103499Z",
   "parse_health": {
     "params": 33,
     "unparsed_lines": 0,
@@ -52,7 +52,7 @@
       "global": false,
       "takes_value": true,
       "value_kind": "string",
-      "help": "Name or ID of the app service environment. If you want to create the app service plan in different subscription than the app service environment, please use the resource ID for --app- service-environment parameter.",
+      "help": "Name or ID of the app service environment. If you want to create the app service plan in different subscription than the app service environment, please use the resource ID for --app-service-environment parameter.",
       "choices": null,
       "default": null,
       "values_from": null
@@ -178,7 +178,7 @@
       "required": false,
       "group": "Optional Parameters",
       "global": false,
-      "takes_value": true,
+      "takes_value": false,
       "value_kind": "bool",
       "help": "Enable system-assigned managed identity for this app service plan.",
       "choices": [
@@ -246,7 +246,7 @@
       "required": false,
       "group": "Optional Parameters",
       "global": false,
-      "takes_value": true,
+      "takes_value": false,
       "value_kind": "bool",
       "help": "Enable RDP. Requires is-custom-mode to be true.",
       "choices": [
@@ -336,7 +336,7 @@
       "global": false,
       "takes_value": true,
       "value_kind": "string",
-      "help": "Storage mount configurations. Provide key-value pairs for `name=\u003cname\u003e source=\u003csource\u003e type=\u003ctype\u003e destination- path=\u003cpath\u003e credentials-secret-uri=\u003curi\u003e`.",
+      "help": "Storage mount configurations. Provide key-value pairs for `name=\u003cname\u003e source=\u003csource\u003e type=\u003ctype\u003e destination-path=\u003cpath\u003e credentials-secret-uri=\u003curi\u003e`.",
       "choices": null,
       "default": null,
       "values_from": null

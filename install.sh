@@ -13,7 +13,8 @@
 #   - Print a one-screen summary with the next user action.
 #
 # --uninstall reverses the above (binary, share dir, profile block). State
-# (drafts/bindings) is preserved unless --purge is given.
+# (drafts/bindings) and the metadata cache are preserved unless --purge is
+# also given (or PURGE_STATE=1 is set).
 #
 # POSIX sh compatible (dash on Debian).
 set -eu
@@ -21,7 +22,6 @@ set -eu
 REPO="${AZFORM_REPO:-someson/azform}"
 BIN_DIR="${AZFORM_BIN_DIR:-$HOME/.local/bin}"
 SHARE_DIR="${AZFORM_SHARE_DIR:-$HOME/.local/share/azform}"
-STATE_DIR="${AZFORM_STATE_DIR:-$HOME/.local/state/azform}"
 VERSION="${AZFORM_VERSION:-}"
 
 MARKER_BEGIN="# >>> azform >>>"
@@ -235,11 +235,41 @@ add_to_profile() {
     log "added azform block to $prof (backup: $backup)"
 }
 
+# state_dir and cache_dir mirror state.DefaultStateDir and
+# metadata.DefaultCacheDir, so --purge removes the directories the binary
+# really uses (on macOS that is ~/Library/..., not ~/.local/...). Note the
+# asymmetry, copied from the Go side: XDG_STATE_HOME wins over the macOS
+# default, while the macOS cache default wins over XDG_CACHE_HOME.
+state_dir() {
+    if [ -n "${AZFORM_STATE_DIR:-}" ]; then
+        echo "$AZFORM_STATE_DIR"
+    elif [ -n "${XDG_STATE_HOME:-}" ]; then
+        echo "$XDG_STATE_HOME/azform"
+    elif [ "$(uname -s)" = Darwin ]; then
+        echo "$HOME/Library/Application Support/azform"
+    else
+        echo "$HOME/.local/state/azform"
+    fi
+}
+
+cache_dir() {
+    if [ -n "${AZFORM_CACHE_DIR:-}" ]; then
+        echo "$AZFORM_CACHE_DIR"
+    elif [ "$(uname -s)" = Darwin ]; then
+        echo "$HOME/Library/Caches/azform"
+    elif [ -n "${XDG_CACHE_HOME:-}" ]; then
+        echo "$XDG_CACHE_HOME/azform"
+    else
+        echo "$HOME/.cache/azform"
+    fi
+}
+
 uninstall() {
     rm -f "$BIN_DIR/azform"
     rm -rf "$SHARE_DIR"
     if [ "${PURGE_STATE:-0}" = "1" ]; then
-        rm -rf "$STATE_DIR"
+        rm -rf "$(state_dir)" "$(cache_dir)"
+        log "removed state and metadata cache"
     fi
     for prof in "$HOME/.zshrc" "$HOME/.bashrc" "$HOME/.bash_profile" "$HOME/.profile"; do
         if [ -f "$prof" ] && grep -qF "$MARKER_BEGIN" "$prof"; then
@@ -263,12 +293,19 @@ if [ "${AZFORM_INSTALL_LIB:-0}" = "1" ]; then
     return 0 2>/dev/null || exit 0
 fi
 
-case "${1:-}" in
-    --uninstall)
-        uninstall
-        exit 0
-        ;;
-esac
+UNINSTALL=0
+for arg in "$@"; do
+    case "$arg" in
+        --uninstall) UNINSTALL=1 ;;
+        --purge) PURGE_STATE=1 ;;
+        *) err "unknown argument: $arg" ;;
+    esac
+done
+if [ "$UNINSTALL" = 1 ]; then
+    uninstall
+    exit 0
+fi
+[ "${PURGE_STATE:-0}" = "1" ] && err "--purge is only valid with --uninstall"
 
 platform=$(detect_platform)
 version=$(resolve_latest_version)

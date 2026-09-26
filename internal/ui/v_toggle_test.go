@@ -145,15 +145,14 @@ func TestVCycleIgnoresUnresolvingVar(t *testing.T) {
 	_ = before
 }
 
-// Regression for the 2026-09-06 "v doesn't work" bug: a draft-restored
-// required field has Value="$RG" as literal text (Mode=Literal,
-// VarValue="" — drafts don't preserve var info). The cycle used to
-// only fire when Mode==FieldModeVar, so pressing v on such a field
-// was a no-op. The rendering now detects "$REF" text independently of
-// Mode and honours the cycle for any required field whose value is a
-// resolving var ref. Lookup is view-only (m.src.Vars), no field state
-// mutation.
-func TestVCycleDraftRestoredLiteral(t *testing.T) {
+// Regression for the 2026-09-06 "v doesn't work" bug: drafts persist
+// only the raw string, so a draft-restored "$RG" used to come back as
+// literal text (Mode=Literal, VarValue="") — which both disabled the v
+// cycle and rendered the command as `--resource-group '$RG'`, handing az
+// the four characters instead of the variable. Draft restore now derives
+// the mode from the value, so the field is a resolving var reference and
+// the cycle is purely view-side.
+func TestVCycleDraftRestoredVar(t *testing.T) {
 	dir := t.TempDir()
 	store := state.NewDraftStore(dir)
 	if err := store.Save("storage account create", map[string]string{
@@ -169,8 +168,8 @@ func TestVCycleDraftRestoredLiteral(t *testing.T) {
 	f = m.(ui.Form)
 
 	rg := f.Fields()[f.FieldIndex("--resource-group")]
-	if rg.Mode != ui.FieldModeLiteral || rg.VarValue != "" || rg.Source != ui.FieldSourceDraft {
-		t.Fatalf("precondition: expected literal draft $RG, got mode=%s varValue=%q source=%s",
+	if rg.Mode != ui.FieldModeVar || rg.VarValue != "myResourceGroup" || rg.Source != ui.FieldSourceDraft {
+		t.Fatalf("precondition: expected var-mode draft $RG, got mode=%s varValue=%q source=%s",
 			ui.ModeName(rg.Mode), rg.VarValue, rg.Source.Name())
 	}
 
@@ -205,10 +204,9 @@ func TestVCycleDraftRestoredLiteral(t *testing.T) {
 		t.Errorf("after 2nd v: want $RG; got: %q", row)
 	}
 
-	// Field state must NOT have changed — still draft literal with empty
-	// VarValue. The cycle is view-only.
+	// Field state must NOT have changed. The cycle is view-only.
 	rg = f.Fields()[f.FieldIndex("--resource-group")]
-	if rg.Mode != ui.FieldModeLiteral || rg.VarValue != "" || rg.Value != "$RG" {
+	if rg.Mode != ui.FieldModeVar || rg.VarValue != "myResourceGroup" || rg.Value != "$RG" {
 		t.Errorf("cycle mutated field state: mode=%s value=%q varValue=%q",
 			ui.ModeName(rg.Mode), rg.Value, rg.VarValue)
 	}

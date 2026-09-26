@@ -462,7 +462,7 @@
         "global": false,
         "takes_value": true,
         "value_kind": "enum",
-        "help": "Defines the mode of the policy. Disabled state disables the policy, Unlocked state allows increase and decrease of immutability retention time and also allows toggling allow- protected-append-write property, Locked state only allows the increase of the immutability retention time. A policy can only be created in a Disabled or Unlocked state and can be toggled between the two states. Only a policy in an Unlocked state can transition to a Locked state which cannot be reverted.",
+        "help": "Defines the mode of the policy. Disabled state disables the policy, Unlocked state allows increase and decrease of immutability retention time and also allows toggling allow-protected-append-write property, Locked state only allows the increase of the immutability retention time. A policy can only be created in a Disabled or Unlocked state and can be toggled between the two states. Only a policy in an Unlocked state can transition to a Locked state which cannot be reverted.",
         "choices": [
           "Disabled",
           "Locked",
@@ -534,7 +534,7 @@
         "global": false,
         "takes_value": true,
         "value_kind": "string",
-        "help": "Specify the security identifier (SID). Required when --enable-files- adds is set to True.",
+        "help": "Specify the security identifier (SID). Required when --enable-files-adds is set to True.",
         "choices": null,
         "default": null,
         "values_from": null
@@ -547,7 +547,7 @@
         "global": false,
         "takes_value": true,
         "value_kind": "string",
-        "help": "Specify the Active Directory forest to get. Required when --enable-files- adds is set to True.",
+        "help": "Specify the Active Directory forest to get. Required when --enable-files-adds is set to True.",
         "choices": null,
         "default": null,
         "values_from": null
@@ -638,7 +638,7 @@
         "global": false,
         "takes_value": false,
         "value_kind": "bool",
-        "help": "Enable Azure Files Active Directory Domain Service Authentication for storage account. When --enable-files- adds is set to true, Azure Active Directory Properties arguments must be provided.",
+        "help": "Enable Azure Files Active Directory Domain Service Authentication for storage account. When --enable-files-adds is set to true, Azure Active Directory Properties arguments must be provided.",
         "choices": [
           "false",
           "true"
@@ -913,7 +913,7 @@
         "global": false,
         "takes_value": true,
         "value_kind": "list",
-        "help": "One or more resource IDs (space- delimited). It should be a complete resource ID containing all information of 'Resource Id' arguments. You should provide either --ids or other 'Resource Id' arguments.",
+        "help": "One or more resource IDs (space-delimited). It should be a complete resource ID containing all information of 'Resource Id' arguments. You should provide either --ids or other 'Resource Id' arguments.",
         "choices": null,
         "default": null,
         "values_from": null

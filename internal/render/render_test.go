@@ -26,6 +26,14 @@ func TestEscapePOSIX(t *testing.T) {
 		{"a?b", "'a?b'"},
 		{"a[b]", "'a[b]'"},
 		{"a\\b", `'a\b'`},
+		{"#tag", "'#tag'"},
+		{"~/file", "'~/file'"},
+		{"{a,b}", "'{a,b}'"},
+		{"^neg", "'^neg'"},
+		{"=value", "'=value'"},
+		{"key=value", "key=value"},
+		{"a\x01b", "'a\x01b'"},
+		{"@file.json", "@file.json"},
 	}
 	for _, tc := range cases {
 		t.Run(tc.in, func(t *testing.T) {

@@ -101,43 +101,86 @@ func newerThan(current, candidate string) string {
 	return ""
 }
 
-// compareSemver returns -1/0/1 for a vs b. Numeric components compare
-// numerically; non-numeric components fall back to lexical comparison.
+// compareSemver returns -1/0/1 for a vs b following SemVer precedence:
+// the numeric core (major.minor.patch, missing parts = 0) decides first;
+// on a tie a release outranks any of its pre-releases (1.0.0 > 1.0.0-rc1),
+// and pre-releases compare identifier by identifier (numeric ones
+// numerically and below alphanumeric ones). Build metadata (+…) is
+// ignored. A non-numeric core such as the "dev" of a local build compares
+// lexically, which keeps "dev" above every release so it is never nagged.
 func compareSemver(a, b string) int {
-	pa := splitSemver(a)
-	pb := splitSemver(b)
-	n := len(pa)
-	if len(pb) > n {
-		n = len(pb)
+	coreA, preA := splitSemver(a)
+	coreB, preB := splitSemver(b)
+	if c := compareIdentifiers(coreA, coreB, true); c != 0 {
+		return c
 	}
+	switch {
+	case len(preA) == 0 && len(preB) == 0:
+		return 0
+	case len(preA) == 0:
+		return 1
+	case len(preB) == 0:
+		return -1
+	}
+	return compareIdentifiers(preA, preB, false)
+}
+
+// compareIdentifiers compares dot-separated identifier lists. With
+// padZero, a missing trailing identifier counts as "0" (1.2 == 1.2.0);
+// otherwise the shorter list ranks lower (rc.1 < rc.1.1).
+func compareIdentifiers(a, b []string, padZero bool) int {
+	n := max(len(a), len(b))
 	for i := 0; i < n; i++ {
-		if i >= len(pa) {
+		var x, y string
+		switch {
+		case i < len(a) && i < len(b):
+			x, y = a[i], b[i]
+		case padZero:
+			x, y = "0", "0"
+			if i < len(a) {
+				x = a[i]
+			} else {
+				y = b[i]
+			}
+		case i >= len(a):
 			return -1
-		}
-		if i >= len(pb) {
+		default:
 			return 1
 		}
-		if pa[i] != pb[i] {
-			na, errA := strconv.Atoi(pa[i])
-			nb, errB := strconv.Atoi(pb[i])
-			if errA == nil && errB == nil {
-				if na < nb {
-					return -1
-				}
-				return 1
-			}
-			if pa[i] < pb[i] {
+		if x == y {
+			continue
+		}
+		nx, errX := strconv.Atoi(x)
+		ny, errY := strconv.Atoi(y)
+		switch {
+		case errX == nil && errY == nil:
+			if nx < ny {
 				return -1
 			}
+			return 1
+		case errX == nil:
+			return -1 // numeric identifiers rank below alphanumeric ones
+		case errY == nil:
+			return 1
+		case x < y:
+			return -1
+		default:
 			return 1
 		}
 	}
 	return 0
 }
 
-func splitSemver(s string) []string {
+// splitSemver splits "v1.2.3-rc.1+build" into (["1","2","3"], ["rc","1"]).
+func splitSemver(s string) (core, pre []string) {
 	s = strings.TrimPrefix(s, "v")
-	return strings.Split(s, ".")
+	s, _, _ = strings.Cut(s, "+")
+	s, preStr, hasPre := strings.Cut(s, "-")
+	core = strings.Split(s, ".")
+	if hasPre && preStr != "" {
+		pre = strings.Split(preStr, ".")
+	}
+	return core, pre
 }
 
 type cachedEntry struct {

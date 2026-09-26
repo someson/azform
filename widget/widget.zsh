@@ -62,7 +62,9 @@ azform-widget() {
       print -r -- "  BUFFER=${(qq)BUFFER}"
     } >> /tmp/azform-widget.log
   fi
-  azform --line "$BUFFER" --cursor "$CURSOR" --out "$out" --vars "$vars" --env-out "$env" --cwd "$PWD" </dev/tty >/dev/tty 2>&1
+  # --cursor-prefix: CURSOR counts characters but azform needs a byte
+  # offset; LBUFFER (the text left of the cursor) gives it exactly.
+  azform --line "$BUFFER" --cursor "$CURSOR" --cursor-prefix "$LBUFFER" --out "$out" --vars "$vars" --env-out "$env" --cwd "$PWD" </dev/tty >/dev/tty 2>&1
   local buf_after=""
   if [[ -s "$out" ]]; then
     BUFFER=$(cat "$out")
