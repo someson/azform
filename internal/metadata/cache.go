@@ -1,13 +1,16 @@
 package metadata
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"os"
 	"os/exec"
 	"path/filepath"
+	"regexp"
 	"runtime"
 	"strings"
 	"time"
@@ -456,15 +459,22 @@ func DetectEnvironment() (Environment, error) {
 		azPath = resolved
 	}
 	installPath := azureCLIInstallRoot(azPath)
+	if root := interpreterRoot(azPath); root != "" {
+		installPath = root
+	}
 	installInfo, err := os.Stat(installPath)
 	if err != nil {
 		return Environment{}, fmt.Errorf("metadata: stat Azure CLI install root %s: %w", installPath, err)
+	}
+	modTime := installInfo.ModTime()
+	if sp := sitePackagesModTime(installPath); sp.After(modTime) {
+		modTime = sp
 	}
 
 	env := Environment{
 		AZPath:         azPath,
 		InstallPath:    installPath,
-		InstallModTime: installInfo.ModTime().UTC(),
+		InstallModTime: modTime.UTC(),
 	}
 	env.ExtensionsPath = azureExtensionsDir()
 	if info, err := os.Stat(env.ExtensionsPath); err == nil {
@@ -473,10 +483,65 @@ func DetectEnvironment() (Environment, error) {
 	return env, nil
 }
 
+// launcherPythonRE finds the interpreter an az launcher script runs:
+// `/opt/az/bin/python3 -Im azure.cli` (deb), `/usr/lib64/az/bin/python3`
+// (rpm), `…/Cellar/azure-cli/<v>/libexec/bin/python` (Homebrew) or a
+// `#!/path/to/venv/bin/python3` shebang (pip).
+var launcherPythonRE = regexp.MustCompile(`(/[^\s"'=:;]+)/bin/python[0-9.]*`)
+
+// interpreterRoot returns the prefix of the Python environment the az
+// launcher at azPath runs, or "" when it cannot tell (a binary, an
+// unreadable file, no interpreter path). Every packaged install ships az as
+// such a launcher, and on deb/rpm it is a plain file in /usr/bin, so the
+// path alone points at /usr rather than at the real install.
+func interpreterRoot(azPath string) string {
+	f, err := os.Open(azPath)
+	if err != nil {
+		return ""
+	}
+	defer func() { _ = f.Close() }()
+	buf := make([]byte, 4096)
+	n, _ := io.ReadFull(f, buf)
+	head := buf[:n]
+	if bytes.IndexByte(head, 0) >= 0 {
+		return ""
+	}
+	m := launcherPythonRE.FindSubmatch(head)
+	if m == nil {
+		return ""
+	}
+	return string(m[1])
+}
+
+// sitePackagesModTime returns the newest mtime among root's Python package
+// directories. Upgrading azure-cli with apt, dnf or pip renames its
+// *.dist-info directory there, which bumps the directory's mtime even when
+// nothing at the install root itself changes.
+func sitePackagesModTime(root string) time.Time {
+	var newest time.Time
+	for _, pattern := range []string{
+		filepath.Join(root, "lib*", "python3*", "site-packages"),
+		filepath.Join(root, "lib*", "python3*", "dist-packages"),
+		filepath.Join(root, "lib", "python3", "dist-packages"),
+	} {
+		matches, _ := filepath.Glob(pattern)
+		for _, dir := range matches {
+			if info, err := os.Stat(dir); err == nil && info.ModTime().After(newest) {
+				newest = info.ModTime()
+			}
+		}
+	}
+	return newest
+}
+
 func azureCLIInstallRoot(azPath string) string {
 	clean := filepath.Clean(azPath)
 	sep := string(filepath.Separator)
-	for _, root := range []string{sep + filepath.Join("opt", "az"), sep + filepath.Join("lib64", "az")} {
+	for _, root := range []string{
+		sep + filepath.Join("opt", "az"),
+		sep + filepath.Join("usr", "lib64", "az"),
+		sep + filepath.Join("lib64", "az"),
+	} {
 		if clean == root || strings.HasPrefix(clean, root+sep) {
 			return root
 		}
