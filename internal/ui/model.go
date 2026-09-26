@@ -399,8 +399,9 @@ func (m Form) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, nil
 		}
 		f := &m.fields[msg.FieldIdx]
-		if f.FetchState != FetchLoading {
-			// Stale completion (e.g. after Esc cancel) — ignore.
+		if f.FetchState != FetchLoading || msg.Gen != f.FetchGen {
+			// Stale completion (after Esc cancel, or started before the
+			// context it depends on changed) — ignore.
 			return m, nil
 		}
 		if msg.Err != nil {
@@ -477,17 +478,26 @@ func (m Form) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case EnumSelectedMsg:
 		if m.mode == FormModeEnum && msg.Value == manualEntryChoice {
 			// Fetched choices are suggestions, not a closed set: the
-			// first popup row switches to free-text input instead.
-			return m, m.openEditor(m.enumIdx)
+			// first popup row switches to free-text input instead. A
+			// search that found nothing is usually the value the user
+			// wants to type (a resource that does not exist yet), so it
+			// seeds the editor.
+			cmd := m.openEditor(m.enumIdx)
+			if msg.Query != "" {
+				m.textInput.SetValue(msg.Query)
+				m.textInput.CursorEnd()
+			}
+			return m, cmd
 		}
 		if m.mode == FormModeEnum {
 			m.fields[m.enumIdx].Value = msg.Value
 			m.fields[m.enumIdx].VarValue = ""
 			m.fields[m.enumIdx].Mode = FieldModeLiteral
 			m.fields[m.enumIdx].Enabled = true
-			m.invalidateDependentFetches(m.fields[m.enumIdx].Param.Name)
+			refetch := m.invalidateDependentFetches(m.fields[m.enumIdx].Param.Name)
 			m.recomputeFindings(nil)
 			m.mode = FormModeList
+			return m, refetch
 		}
 		return m, nil
 
@@ -550,14 +560,46 @@ func (m Form) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return m, nil
 }
 
-// sessionVarNames returns the union of vars.SessionVars names and vars.Vars
-// names available in the current shell.
+// valuesSource returns the command that lists f's values: az's own
+// `Values from:` hint, else an implicit source for params that name an
+// existing resource (implicitSource). implicit reports the latter; those
+// lists are sorted and prefetched.
+func (m *Form) valuesSource(f *Field) (source string, implicit bool) {
+	if vf := f.Param.ValuesFrom; vf != nil && *vf != "" {
+		return *vf, false
+	}
+	if s := implicitSource(m.command, f.Param); s != "" {
+		return s, true
+	}
+	return "", false
+}
+
 // maybeFetchField promotes a field from Idle to Loading and schedules the
 // three tea.Tick thresholds + the subprocess fetch. Returns nil when the
-// field is not eligible (already loading/loaded, no ValuesFrom, metadata
+// field is not eligible (already loading/loaded, no values source, metadata
 // already supplied choices). Caller chains the returned cmd with whatever
 // they were already returning.
 func (m *Form) maybeFetchField(idx int) tea.Cmd {
+	return m.startFetch(idx, true)
+}
+
+// prefetchImplicit starts fetches for every field with an implicit source
+// (resource groups, …) as soon as the form opens, so the list is usually
+// ready by the time the user reaches the field. No slow/cancel footer
+// hints: they would describe a field the user is not looking at.
+func (m *Form) prefetchImplicit() tea.Cmd {
+	var cmds []tea.Cmd
+	for i := range m.fields {
+		if _, implicit := m.valuesSource(&m.fields[i]); implicit {
+			if cmd := m.startFetch(i, false); cmd != nil {
+				cmds = append(cmds, cmd)
+			}
+		}
+	}
+	return tea.Batch(cmds...)
+}
+
+func (m *Form) startFetch(idx int, withHints bool) tea.Cmd {
 	if idx < 0 || idx >= len(m.fields) {
 		return nil
 	}
@@ -565,14 +607,14 @@ func (m *Form) maybeFetchField(idx int) tea.Cmd {
 	if f.FetchState != FetchIdle {
 		return nil
 	}
-	vf := f.Param.ValuesFrom
-	if vf == nil || *vf == "" {
+	source, implicit := m.valuesSource(f)
+	if source == "" {
 		return nil
 	}
 	if len(f.Param.Choices) > 0 {
 		return nil
 	}
-	command, ok := fetchCommand(*vf, m.contextValue)
+	command, ok := fetchCommand(source, m.contextValue)
 	if !ok {
 		// A required context param (e.g. --location for vm list-sizes) is
 		// still empty. Stay idle; focusing the field again retries.
@@ -583,18 +625,27 @@ func (m *Form) maybeFetchField(idx int) tea.Cmd {
 	f.FetchStartedAt = time.Now()
 	f.FetchedChoices = nil
 	f.FetchError = ""
-	return tea.Batch(
+	spec := fetchSpec{command: command, sorted: implicit, gen: f.FetchGen}
+	if m.cache != nil {
+		spec.cacheDir = m.cache.Dir
+	}
+	cmds := []tea.Cmd{
 		tea.Tick(fetchSpinnerDelay, func(time.Time) tea.Msg {
 			return FieldSpinnerShowMsg{FieldIdx: idx}
 		}),
-		tea.Tick(fetchSlowThreshold, func(time.Time) tea.Msg {
-			return FieldFetchSlowMsg{FieldIdx: idx}
-		}),
-		tea.Tick(fetchCancelOffer, func(time.Time) tea.Msg {
-			return FieldFetchOfferCancelMsg{FieldIdx: idx}
-		}),
-		fetchField(idx, command),
-	)
+		fetchField(idx, spec),
+	}
+	if withHints {
+		cmds = append(cmds,
+			tea.Tick(fetchSlowThreshold, func(time.Time) tea.Msg {
+				return FieldFetchSlowMsg{FieldIdx: idx}
+			}),
+			tea.Tick(fetchCancelOffer, func(time.Time) tea.Msg {
+				return FieldFetchOfferCancelMsg{FieldIdx: idx}
+			}),
+		)
+	}
+	return tea.Batch(cmds...)
 }
 
 // contextValue returns the value an enabled param will pass to az — the
@@ -613,23 +664,38 @@ func (m *Form) contextValue(param string) string {
 	return ""
 }
 
-// invalidateDependentFetches drops fetched choices that were computed from
-// param's previous value (vm sizes for another --location, …) so the next
-// focus fetches them again.
-func (m *Form) invalidateDependentFetches(param string) {
+// invalidateDependentFetches drops choices computed from param's previous
+// value (vm sizes for another --location, VMs of another group, …). A
+// fetch still in flight is superseded: its FetchGen is bumped so the late
+// result is ignored. Implicit sources (existing resources) are refetched
+// at once, like the prefetch on open, so the right list is ready when the
+// user gets to the field; others refetch on their next focus.
+func (m *Form) invalidateDependentFetches(param string) tea.Cmd {
+	var cmds []tea.Cmd
 	for i := range m.fields {
 		f := &m.fields[i]
-		if f.Param.ValuesFrom == nil || f.FetchState == FetchLoading {
+		source, implicit := m.valuesSource(f)
+		if source == "" {
 			continue
 		}
-		for _, p := range fetchContextParams(*f.Param.ValuesFrom) {
-			if p == param {
-				f.FetchState = FetchIdle
-				f.FetchedChoices = nil
-				f.FetchError = ""
+		for _, p := range fetchContextParams(source) {
+			if p != param {
+				continue
 			}
+			if f.FetchState == FetchLoading {
+				f.FetchGen++
+				f.FetchSpinnerShow = false
+			}
+			f.FetchState = FetchIdle
+			f.FetchedChoices = nil
+			f.FetchError = ""
+			if implicit {
+				cmds = append(cmds, m.startFetch(i, false))
+			}
+			break
 		}
 	}
+	return tea.Batch(cmds...)
 }
 
 // anyFieldLoading reports whether any field is currently mid-fetch; used to
@@ -643,6 +709,8 @@ func anyFieldLoading(fs []Field) bool {
 	return false
 }
 
+// sessionVarNames returns the union of vars.SessionVars names and vars.Vars
+// names available in the current shell.
 func (m *Form) sessionVarNames() map[string]bool {
 	set := map[string]bool{}
 	for _, n := range m.src.SessionVars {

@@ -77,6 +77,7 @@ type Field struct {
 	FetchError       string    // populated when FetchState == FetchError
 	FetchStartedAt   time.Time // when Loading began; used by the 3 s / 10 s ticks
 	FetchSpinnerShow bool      // gated by the 150 ms visibility tick; suppresses flicker on fast loads
+	FetchGen         int       // bumped when an in-flight fetch is superseded; see FieldFetchedMsg.Gen
 }
 
 // ToRenderValue returns the value and whether it is a var ref (for render.Build).

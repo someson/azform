@@ -74,6 +74,7 @@ func (m Form) handleMetadataLoaded(msg MetadataLoadedMsg) (tea.Model, tea.Cmd) {
 	if msg.Stale && msg.refresh != nil {
 		cmds = append(cmds, refreshMetadata(msg.refresh))
 	}
+	cmds = append(cmds, m.prefetchImplicit())
 	// Kick off a lazy fetch for the initially focused field (spec §6.1).
 	if idx := m.fieldAt(m.cursor); idx >= 0 {
 		if cmd := m.maybeFetchField(idx); cmd != nil {

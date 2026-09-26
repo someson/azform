@@ -256,7 +256,7 @@ overlay listing every binding in the current context.
 Enter             edit field / open enum popup / confirm
 Space             toggle optional parameter on/off (required fields show a hint)
 Esc               close popup; from list, cancel and save draft
-/                 filter by parameter name and help text
+/                 filter by parameter name and help text; inside a popup list, search it (Esc ends the search)
 Tab  Shift-Tab    cycle list → Done → Cancel → list
 g                 open a popup to set a shell variable (`name=value`, or just `name` to re-declare the current session value) — the widget evals the line in your shell after the form closes, so the var persists until you unset it; the var also appears in the Ctrl+G picker for the same session
 a                 show all collapsed parameters
@@ -322,6 +322,33 @@ Use `v` to preview what `az` will actually receive:
 Pressing `v` while in text-edit mode types `v` into the input; press
 `Esc` first to leave the field, then `v` to cycle.
 
+## Live values
+
+Parameters that name something you already have get a list of the real
+resources on `Enter`, fetched with read-only `az … list` calls:
+
+- `--resource-group` in every command, and `--name` of `az group
+  show/delete/update/…`
+- `--name` when a command acts on an existing resource — `show`,
+  `delete`, `update`, `start`, `stop`, `scale`, `get-credentials`, … of
+  VMs, AKS clusters, registries, key vaults, storage accounts, web and
+  function apps, App Service plans, SQL/PostgreSQL servers, Cosmos DB,
+  Redis, virtual networks, NSGs, public IPs, load balancers, gateways,
+  Bastion hosts, Event Hubs/Service Bus namespaces and Log Analytics
+  workspaces. Never on `create`, where the name is new.
+- references to another resource: `--vault-name`, `--vnet-name`,
+  `--vm-name`, `--account-name` (storage commands), `--server` (`sql db`),
+  `--plan` (web and function apps), `--cluster-name` (`aks`)
+- anything the CLI's own help marks with `Values from:` (locations, VM
+  sizes, Kubernetes versions)
+
+Resource lists are narrowed to the form's `--resource-group` once it is
+set, follow its `--subscription`, and load in the background as soon as
+the form opens. In a list, `/` searches; the first row, *type a
+value…*, switches to free text (a search that found nothing is carried
+over, handy for a name that does not exist yet). If `az` is signed out
+the field says so and you type the value as usual.
+
 ## Privacy
 
 `azform` runs entirely on your machine and holds nothing on a server.
@@ -337,6 +364,12 @@ Drafts and bindings store *names* of variables, not resolved values —
 itself. The only literal values persisted are enum parameters with a
 closed value set (such as `--sku Standard_LRS`), where the alternative
 would be to re-pick from the list each time.
+
+The one exception is the short-lived cache behind *Live values*: the
+names of the resources a list showed (resource groups, VMs, …) are kept
+in the cache directory for three minutes, so reopening the form does not
+wait for `az` again. It is private to your user, holds names only, and
+is ignored as soon as `az login`, `az logout` or `az account set` runs.
 
 `azform` does not handle Azure authentication in any form. Tokens,
 device-code flows, and credential caches live entirely inside the

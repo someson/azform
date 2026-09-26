@@ -3,14 +3,21 @@ package ui
 import (
 	"bytes"
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
+	"errors"
 	"fmt"
+	"os"
 	"os/exec"
+	"path/filepath"
 	"sort"
 	"strings"
 	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
+
+	"github.com/someson/azform/internal/metadata"
 )
 
 // fetchTimeout caps the subprocess invocation. 30 s matches the spec's 10 s
@@ -24,40 +31,267 @@ type FieldFetchedMsg struct {
 	FieldIdx int
 	Choices  []string
 	Err      error
+	// Gen is the field's FetchGen when the fetch started; a completion
+	// from before an invalidation carries an older value and is dropped.
+	Gen int
 }
 
-// fetchField runs `az <valuesFrom> --output json`, parses the result, and
+// valuesCacheTTL bounds how long fetched values are reused across form
+// invocations. Short on purpose: the lists are the user's live resources,
+// and a group created a few minutes ago should show up. The picker's
+// free-text row covers anything newer.
+const valuesCacheTTL = 3 * time.Minute
+
+// fetchSpec says what to run for a field's values and how to present them.
+type fetchSpec struct {
+	command  string // az command line without the leading "az"
+	sorted   bool   // sort choices; az returns resource lists in no useful order
+	cacheDir string // "" disables the on-disk values cache
+	gen      int    // the field's FetchGen, echoed in FieldFetchedMsg
+}
+
+// runAz runs az with args; a package variable so tests can stub the process.
+var runAz = func(ctx context.Context, args ...string) ([]byte, []byte, error) {
+	cmd := exec.CommandContext(ctx, "az", args...)
+	cmd.Env = append(cmd.Environ(), "AZURE_CORE_NO_COLOR=1")
+	var stderr bytes.Buffer
+	cmd.Stderr = &stderr
+	out, err := cmd.Output()
+	return out, stderr.Bytes(), err
+}
+
+// fetchField runs `az <command> --output json`, parses the result, and
 // returns the choices via FieldFetchedMsg. The command is read-only — the
 // spec forbids `az` invocations that mutate state (§5.4, D6).
-func fetchField(fieldIdx int, valuesFrom string) tea.Cmd {
+func fetchField(fieldIdx int, spec fetchSpec) tea.Cmd {
 	return func() tea.Msg {
+		if choices, ok := loadCachedValues(spec.cacheDir, spec.command, time.Now()); ok {
+			return FieldFetchedMsg{FieldIdx: fieldIdx, Gen: spec.gen, Choices: choices}
+		}
 		ctx, cancel := context.WithTimeout(context.Background(), fetchTimeout)
 		defer cancel()
 
-		args := buildFetchArgs(valuesFrom)
-		cmd := exec.CommandContext(ctx, "az", args...)
-		cmd.Env = append(cmd.Environ(), "AZURE_CORE_NO_COLOR=1")
-		var stderr bytes.Buffer
-		cmd.Stderr = &stderr
-		out, err := cmd.Output()
+		out, stderr, err := runAz(ctx, buildFetchArgs(spec.command)...)
 		if err != nil {
-			return FieldFetchedMsg{
-				FieldIdx: fieldIdx,
-				Err:      fmt.Errorf("az %s: %s", valuesFrom, oneLine(stderr.String())),
-			}
+			return FieldFetchedMsg{FieldIdx: fieldIdx, Gen: spec.gen, Err: fetchError(spec.command, stderr, err)}
 		}
 		choices, perr := parseFetchedValues(out)
 		if perr != nil {
-			return FieldFetchedMsg{
-				FieldIdx: fieldIdx,
-				Err:      perr,
-			}
+			return FieldFetchedMsg{FieldIdx: fieldIdx, Gen: spec.gen, Err: perr}
 		}
-		return FieldFetchedMsg{
-			FieldIdx: fieldIdx,
-			Choices:  choices,
+		if spec.sorted {
+			sort.Strings(choices)
+		}
+		saveCachedValues(spec.cacheDir, spec.command, choices, time.Now())
+		return FieldFetchedMsg{FieldIdx: fieldIdx, Gen: spec.gen, Choices: choices}
+	}
+}
+
+// fetchError turns a failed az run into the one-line message shown next to
+// the field. The two failures every new user hits get a plain explanation
+// instead of az's multi-line stderr.
+func fetchError(command string, stderr []byte, err error) error {
+	msg := string(stderr)
+	lower := strings.ToLower(msg)
+	switch {
+	case errors.Is(err, exec.ErrNotFound):
+		return errors.New("az not found on PATH — type a value")
+	case strings.Contains(lower, "az login"):
+		return errors.New("not signed in (run az login) — type a value")
+	case strings.TrimSpace(msg) == "":
+		msg = err.Error()
+	}
+	return fmt.Errorf("az %s: %s", command, oneLine(msg))
+}
+
+// implicitSource returns the values command for params whose valid values
+// are the user's existing resources but whose help text carries no
+// `Values from:` hint. It is deliberately narrow: listing existing names
+// for a param that names a resource to be *created* would be wrong, so only
+// params that always refer to something that exists are covered.
+func implicitSource(command string, p metadata.Parameter) string {
+	switch p.Name {
+	case "--resource-group":
+		// `az group create` names its new group --name (with
+		// --resource-group only as an alias), so this never lands there.
+		return "az group list"
+	case "--name":
+		return existingNameSource(command)
+	}
+	for _, ref := range resourceRefs {
+		if p.Name == ref.param && strings.HasPrefix(command+" ", ref.within) {
+			return "az " + ref.list
 		}
 	}
+	return ""
+}
+
+// existingNameSource returns the list command for the --name of a command
+// that acts on an existing resource: `<group> <verb>` with group in
+// resourceLists and verb in existingVerbs. Creation verbs are never in
+// existingVerbs, and sub-resources (`network vnet subnet show`) fall
+// outside the table because their group is not a key.
+func existingNameSource(command string) string {
+	for group, list := range resourceLists {
+		verb, ok := strings.CutPrefix(command, group+" ")
+		if ok && existingVerbs[verb] {
+			return "az " + list
+		}
+	}
+	return ""
+}
+
+// resourceLists maps a command group to the command listing its resources.
+// Every list here accepts an optional --resource-group (resourceScoped).
+var resourceLists = map[string]string{
+	"group":                           "group list",
+	"vm":                              "vm list",
+	"vmss":                            "vmss list",
+	"aks":                             "aks list",
+	"acr":                             "acr list",
+	"keyvault":                        "keyvault list",
+	"storage account":                 "storage account list",
+	"webapp":                          "webapp list",
+	"functionapp":                     "functionapp list",
+	"appservice plan":                 "appservice plan list",
+	"cosmosdb":                        "cosmosdb list",
+	"redis":                           "redis list",
+	"sql server":                      "sql server list",
+	"postgres flexible-server":        "postgres flexible-server list",
+	"network vnet":                    "network vnet list",
+	"network nsg":                     "network nsg list",
+	"network public-ip":               "network public-ip list",
+	"network lb":                      "network lb list",
+	"network application-gateway":     "network application-gateway list",
+	"network bastion":                 "network bastion list",
+	"eventhubs namespace":             "eventhubs namespace list",
+	"servicebus namespace":            "servicebus namespace list",
+	"monitor log-analytics workspace": "monitor log-analytics workspace list",
+}
+
+// existingVerbs are the verbs whose --name must name an existing resource.
+var existingVerbs = map[string]bool{
+	"show": true, "delete": true, "update": true, "wait": true, "export": true,
+	"start": true, "stop": true, "restart": true, "deallocate": true,
+	"redeploy": true, "resize": true, "get-instance-view": true,
+	"scale": true, "upgrade": true, "get-credentials": true, "get-upgrades": true,
+	"login": true, "browse": true, "show-connection-string": true,
+	"keys list": true, "keys renew": true, "ssh": true, "tunnel": true, "rdp": true,
+}
+
+// resourceRefs are params that point at an existing resource of another
+// type, whatever the verb. within limits a ref to one command family where
+// the param name is ambiguous elsewhere (--account-name is a Cosmos DB
+// account under `cosmosdb`, a storage account under `storage`).
+var resourceRefs = []struct {
+	param, within, list string
+}{
+	{"--vm-name", "", "vm list"},
+	{"--vault-name", "", "keyvault list"},
+	{"--vnet-name", "", "network vnet list"},
+	{"--account-name", "storage ", "storage account list"},
+	{"--server", "sql db ", "sql server list"},
+	{"--plan", "webapp ", "appservice plan list"},
+	{"--plan", "functionapp ", "appservice plan list"},
+	{"--cluster-name", "aks ", "aks list"},
+}
+
+// resourceScoped reports whether list is one of the resource lists above
+// that accepts --resource-group to narrow it (every one but group list).
+func resourceScoped(list string) bool {
+	if list == "group list" {
+		return false
+	}
+	for _, l := range resourceLists {
+		if l == list {
+			return true
+		}
+	}
+	return false
+}
+
+// valuesCachePath maps a fetch command to its cache file.
+func valuesCachePath(cacheDir, command string) string {
+	sum := sha256.Sum256([]byte(command))
+	return filepath.Join(cacheDir, "values", hex.EncodeToString(sum[:8])+".json")
+}
+
+type cachedValues struct {
+	Command string    `json:"command"`
+	At      time.Time `json:"at"`
+	Profile time.Time `json:"profile"` // azureProfile.json mtime when fetched
+	Choices []string  `json:"choices"`
+}
+
+// profileStamp returns the mtime of the Azure CLI profile. `az login`,
+// `az logout` and `az account set` rewrite it, and any of them can change
+// which subscription (and so which resources) a plain `az group list`
+// sees; cached values from before the change are not reused.
+var profileStamp = func() time.Time {
+	dir := os.Getenv("AZURE_CONFIG_DIR")
+	if dir == "" {
+		home, err := os.UserHomeDir()
+		if err != nil {
+			return time.Time{}
+		}
+		dir = filepath.Join(home, ".azure")
+	}
+	info, err := os.Stat(filepath.Join(dir, "azureProfile.json"))
+	if err != nil {
+		return time.Time{}
+	}
+	return info.ModTime().UTC()
+}
+
+func loadCachedValues(cacheDir, command string, now time.Time) ([]string, bool) {
+	if cacheDir == "" {
+		return nil, false
+	}
+	data, err := os.ReadFile(valuesCachePath(cacheDir, command))
+	if err != nil {
+		return nil, false
+	}
+	var c cachedValues
+	if json.Unmarshal(data, &c) != nil || c.Command != command || len(c.Choices) == 0 {
+		return nil, false
+	}
+	if !c.Profile.Equal(profileStamp()) {
+		return nil, false
+	}
+	if age := now.Sub(c.At); age < 0 || age > valuesCacheTTL {
+		return nil, false
+	}
+	return c.Choices, true
+}
+
+// saveCachedValues is best-effort: a failed write only costs the next
+// invocation an az call.
+func saveCachedValues(cacheDir, command string, choices []string, now time.Time) {
+	if cacheDir == "" {
+		return
+	}
+	path := valuesCachePath(cacheDir, command)
+	if err := os.MkdirAll(filepath.Dir(path), 0o700); err != nil {
+		return
+	}
+	data, err := json.Marshal(cachedValues{Command: command, At: now.UTC(), Profile: profileStamp(), Choices: choices})
+	if err != nil {
+		return
+	}
+	tmp, err := os.CreateTemp(filepath.Dir(path), ".values-*.tmp")
+	if err != nil {
+		return
+	}
+	name := tmp.Name()
+	defer func() { _ = os.Remove(name) }()
+	if _, err := tmp.Write(data); err != nil {
+		_ = tmp.Close()
+		return
+	}
+	if tmp.Close() != nil {
+		return
+	}
+	_ = os.Rename(name, path)
 }
 
 // buildFetchArgs splits a `ValuesFrom` hint into shell-style fields, drops
@@ -130,6 +364,18 @@ func fetchCommand(valuesFrom string, lookup func(param string) string) (cmd stri
 			args = append(args, param, v)
 		}
 	}
+	// Resource lists narrow to the form's group when one is set; without it
+	// they list the whole subscription, which is still useful.
+	if resourceScoped(strings.Join(args, " ")) {
+		if rg := lookup("--resource-group"); rg != "" {
+			args = append(args, "--resource-group", rg)
+		}
+	}
+	// The values must come from the subscription the command will run
+	// against, not the CLI's default one.
+	if sub := lookup("--subscription"); sub != "" {
+		args = append(args, "--subscription", sub)
+	}
 	return strings.Join(args, " "), true
 }
 
@@ -141,7 +387,12 @@ func fetchContextParams(valuesFrom string) []string {
 	if len(args) > 0 && args[0] == "az" {
 		args = args[1:]
 	}
-	return fetchContext[strings.Join(args, " ")]
+	path := strings.Join(args, " ")
+	deps := append([]string{"--subscription"}, fetchContext[path]...)
+	if resourceScoped(path) {
+		deps = append(deps, "--resource-group")
+	}
+	return deps
 }
 
 // choiceKeys are the object fields tried, in order, as an item's value.
@@ -150,8 +401,7 @@ var choiceKeys = []string{"name", "displayName", "version", "kubernetesVersion"}
 
 // parseFetchedValues extracts the choice list from a `az ... --output json`
 // response. Heuristic (spec §4.5): in an array of plain strings each string
-// is a value;
-// for an object, the first of choiceKeys that is a non-empty string, else
+// is a value; for an object, the first of choiceKeys that is a non-empty string, else
 // the first non-empty string field in key order. Duplicates are dropped.
 func parseFetchedValues(raw []byte) ([]string, error) {
 	var v any
