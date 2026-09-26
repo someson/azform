@@ -36,6 +36,8 @@ func main() {
 }
 
 func run(args []string) int {
+	fillBuildInfo()
+
 	// Subcommands are dispatched before flag parsing: `shell-init` is a
 	// bare positional, which the flag path would otherwise mistake for
 	// an az command path.
@@ -80,6 +82,7 @@ func run(args []string) int {
 	fs.BoolVar(&doctorFlag, "doctor", false, "print environment summary and exit (spec §15.3)")
 
 	fs.Usage = func() {
+		fmt.Fprintf(fs.Output(), "%s\n\n", versionString())
 		fmt.Fprintf(fs.Output(), "Usage: azform --line <buffer> --out <path> [--vars <path>] [--cwd <path>]\n")
 		fmt.Fprintf(fs.Output(), "       azform shell-init <bash|zsh>   print the shell widget to stdout\n\n")
 		fmt.Fprintf(fs.Output(), "Flags:\n")
@@ -272,15 +275,7 @@ func cursorByte(line string, cursor int, prefix string) int {
 }
 
 func printVersion() {
-	fmt.Printf("azform %s", version)
-	if commit != "" {
-		fmt.Printf(" (%s", commit)
-		if date != "" {
-			fmt.Printf(", %s", date)
-		}
-		fmt.Printf(")")
-	}
-	fmt.Println()
+	fmt.Println(versionString())
 }
 
 func effectiveCacheDir(override string) string {

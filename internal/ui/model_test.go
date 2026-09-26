@@ -1806,6 +1806,9 @@ func TestHelpOverlayToggles(t *testing.T) {
 	if !strings.Contains(view, "keyboard shortcuts") {
 		t.Errorf("help view should announce itself; got:\n%s", view)
 	}
+	if !strings.Contains(view, "azform test") {
+		t.Errorf("help view should show the azform version; got:\n%s", view)
+	}
 
 	m, _ = form.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("x")})
 	form = m.(ui.Form)

@@ -417,7 +417,19 @@ func (m Form) renderHelp() string {
 	}
 
 	var sb strings.Builder
-	writeLine(&sb, headerStyle.Render("azform — keyboard shortcuts"))
+	// The version sits right-aligned on the title line: the help overlay
+	// is the one place inside the form a user looks for "what is this",
+	// and a bug report needs the version without leaving the form.
+	title := headerStyle.Render("azform — keyboard shortcuts")
+	if m.version != "" {
+		ver := hintStyle.Render("azform " + m.version)
+		if pad := w - ansi.StringWidth(title) - ansi.StringWidth(ver); pad >= 2 {
+			title += strings.Repeat(" ", pad) + ver
+		} else {
+			title += "  " + ver
+		}
+	}
+	writeLine(&sb, title)
 	writeLine(&sb, sep)
 
 	sections := []struct {
