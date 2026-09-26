@@ -1806,8 +1806,11 @@ func TestHelpOverlayToggles(t *testing.T) {
 	if !strings.Contains(view, "keyboard shortcuts") {
 		t.Errorf("help view should announce itself; got:\n%s", view)
 	}
-	if !strings.Contains(view, "azform test") {
-		t.Errorf("help view should show the azform version; got:\n%s", view)
+	// The version must be on the last line: bubbletea drops the top of a
+	// view taller than the terminal, and this overlay often is.
+	lines := strings.Split(strings.TrimRight(view, "\n"), "\n")
+	if last := lines[len(lines)-1]; !strings.Contains(last, "azform test") {
+		t.Errorf("help view's last line should show the azform version; got %q", last)
 	}
 
 	m, _ = form.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("x")})

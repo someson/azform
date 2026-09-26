@@ -417,19 +417,7 @@ func (m Form) renderHelp() string {
 	}
 
 	var sb strings.Builder
-	// The version sits right-aligned on the title line: the help overlay
-	// is the one place inside the form a user looks for "what is this",
-	// and a bug report needs the version without leaving the form.
-	title := headerStyle.Render("azform — keyboard shortcuts")
-	if m.version != "" {
-		ver := hintStyle.Render("azform " + m.version)
-		if pad := w - ansi.StringWidth(title) - ansi.StringWidth(ver); pad >= 2 {
-			title += strings.Repeat(" ", pad) + ver
-		} else {
-			title += "  " + ver
-		}
-	}
-	writeLine(&sb, title)
+	writeLine(&sb, headerStyle.Render("azform — keyboard shortcuts"))
 	writeLine(&sb, sep)
 
 	sections := []struct {
@@ -495,7 +483,22 @@ func (m Form) renderHelp() string {
 	}
 
 	writeLine(&sb, "")
-	writeLine(&sb, hintStyle.Render("Press any key to dismiss."))
+	// The version sits right-aligned on the last line: the help overlay
+	// is the one place inside the form a user looks for "what is this",
+	// and a bug report needs the version without leaving the form. It
+	// must be the bottom line, not the title: the overlay is taller than
+	// many terminals, and bubbletea drops the top lines of a view that
+	// does not fit, so a version on the title line was never seen there.
+	footer := hintStyle.Render("Press any key to dismiss.")
+	if m.version != "" {
+		ver := hintStyle.Render("azform " + m.version)
+		pad := w - ansi.StringWidth(footer) - ansi.StringWidth(ver)
+		if pad < 2 {
+			pad = 2
+		}
+		footer += strings.Repeat(" ", pad) + ver
+	}
+	writeLine(&sb, footer)
 	return sb.String()
 }
 
