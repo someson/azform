@@ -64,6 +64,9 @@ func TestE2EBashWidgetEnvOut(t *testing.T) {
 		"TERM=xterm-256color",
 		"AZFORM_NO_UPDATE_CHECK=1",
 		"AZFORM_ENV_OUT_KEEP="+keep,
+		// Keep this run's draft (Esc saves one) out of the shared default
+		// state dir, where later e2e tests would restore it.
+		"XDG_STATE_HOME="+tmp+"/state",
 	)
 	f, err := pty.StartWithSize(cmd, &pty.Winsize{Rows: 30, Cols: 100})
 	if err != nil {
