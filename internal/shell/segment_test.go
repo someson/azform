@@ -134,6 +134,23 @@ func TestParseRawCursorAtEndSelectsLastSegment(t *testing.T) {
 	}
 }
 
+// An unclosed substitution (the user is still typing it) must round-trip
+// without a closing delimiter being added.
+func TestParseRawUnclosedSubstitution(t *testing.T) {
+	for _, line := range []string{"RG=$(az group show --name x", "RG=`az group show --name x"} {
+		raw, ok := shell.ParseRaw(line, len(line))
+		if !ok {
+			t.Fatalf("%q: ParseRaw returned false", line)
+		}
+		if raw.CommandPath != "group show" {
+			t.Errorf("%q: CommandPath = %q", line, raw.CommandPath)
+		}
+		if got := raw.Prefix + "az group show --name x" + raw.Suffix; got != line {
+			t.Errorf("rebuilt %q, want %q", got, line)
+		}
+	}
+}
+
 func TestParseRawLineContinuation(t *testing.T) {
 	line := "az group create \\\n  --name my-group"
 	raw, ok := shell.ParseRaw(line, 0)

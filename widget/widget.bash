@@ -73,7 +73,11 @@ azform-widget() {
 
   azform_bash_dump_vars "$vars"
 
+  # --cursor-prefix: azform needs a byte offset, but bash 5 counts
+  # READLINE_POINT in characters (checked on 5.2), as does the substring
+  # expansion, so the text left of the cursor is passed instead.
   azform --line "$READLINE_LINE" --cursor "$READLINE_POINT" \
+         --cursor-prefix "${READLINE_LINE:0:READLINE_POINT}" \
          --out "$out" --vars "$vars" --env-out "$env" --cwd "$PWD" \
          </dev/tty >/dev/tty 2>&1
 

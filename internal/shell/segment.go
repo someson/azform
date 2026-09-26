@@ -70,14 +70,17 @@ func findSegments(line string) []azSegment {
 			isBacktick := tok.Raw != "" && tok.Raw[0] == '`'
 			innerSegs := findSegments(inner)
 			for _, s := range innerSegs {
-				var prefix, suffix string
+				open, closing := "$(", ")"
 				if isBacktick {
-					prefix = line[:tok.Start] + "`" + s.prefix
-					suffix = s.suffix + "`" + line[tok.End:]
-				} else {
-					prefix = line[:tok.Start] + "$(" + s.prefix
-					suffix = s.suffix + ")" + line[tok.End:]
+					open, closing = "`", "`"
 				}
+				if tok.Unclosed {
+					// The user has not typed the closing delimiter yet;
+					// the rebuilt line must not invent one.
+					closing = ""
+				}
+				prefix := line[:tok.Start] + open + s.prefix
+				suffix := s.suffix + closing + line[tok.End:]
 				segs = append(segs, azSegment{
 					commandPath: s.commandPath,
 					flagTokens:  s.flagTokens,
