@@ -49,6 +49,7 @@ func (m Form) handleKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 			if m.textInput.Value() != "" {
 				m.fields[m.editIdx].Enabled = true
 			}
+			m.invalidateDependentFetches(m.fields[m.editIdx].Param.Name)
 			m.recomputeFindings(nil)
 			m.mode = FormModeList
 			return m, nil
@@ -235,25 +236,16 @@ func (m Form) handleKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 				m.enumIdx = idx
 				m.mode = FormModeEnum
 			default:
-				m.textInput.SetValue(f.Value)
-				// Constrain the input to the grid value column so the
-				// in-place edit (renderGridCell replaces the value cell
-				// with the textinput) fits without overflowing into the
-				// next column. Single-column mode leaves the input at its
-				// natural width so long values can be edited without
-				// horizontal scrolling.
-				if _, _, cols := m.gridLayout(); cols >= 2 {
-					// Reserve 1 cell for the cursor so bubbles/textinput's
-					// View() output width stays within gridValueBudget and
-					// doesn't overflow into the next grid column.
-					m.textInput.Width = gridValueBudget - 1
-				} else {
-					m.textInput.Width = 0
+				if f.FetchState == FetchLoaded && len(f.FetchedChoices) > 0 {
+					// Lazily fetched values (spec §6.1) are offered as a
+					// picker; the first row falls back to free text.
+					choices := append([]string{manualEntryChoice}, f.FetchedChoices...)
+					m.enumPop = NewEnum(choices, f.Value, m.width-4)
+					m.enumIdx = idx
+					m.mode = FormModeEnum
+					return m, nil
 				}
-				focusCmd := m.textInput.Focus()
-				m.editIdx = idx
-				m.mode = FormModeEdit
-				return m, focusCmd
+				return m, m.openEditor(idx)
 			}
 			return m, nil
 		case "g":
@@ -340,6 +332,31 @@ func (m Form) handleKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		}
 	}
 	return m, nil
+}
+
+// manualEntryChoice is the first row of a fetched-choices popup; picking it
+// opens the free-text editor instead of selecting a value.
+const manualEntryChoice = "✎ type a value…"
+
+// openEditor switches field idx into free-text edit mode.
+func (m *Form) openEditor(idx int) tea.Cmd {
+	m.textInput.SetValue(m.fields[idx].Value)
+	// Constrain the input to the grid value column so the in-place edit
+	// (renderGridCell replaces the value cell with the textinput) fits
+	// without overflowing into the next column. Single-column mode leaves
+	// the input at its natural width so long values can be edited without
+	// horizontal scrolling.
+	if _, _, cols := m.gridLayout(); cols >= 2 {
+		// Reserve 1 cell for the cursor so bubbles/textinput's View()
+		// output width stays within gridValueBudget and doesn't overflow
+		// into the next grid column.
+		m.textInput.Width = gridValueBudget - 1
+	} else {
+		m.textInput.Width = 0
+	}
+	m.editIdx = idx
+	m.mode = FormModeEdit
+	return m.textInput.Focus()
 }
 
 func (m Form) confirmDone() (tea.Model, tea.Cmd) {
