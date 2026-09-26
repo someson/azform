@@ -1,6 +1,6 @@
 // Package lock enforces "one azform per terminal" (spec §15.2). The lock is
-// keyed by the controlling tty's (dev, inode) so multiple terminal windows
-// stay independent.
+// keyed by the terminal's session id (see terminalKey) so multiple terminal
+// windows stay independent.
 package lock
 
 import (
@@ -39,14 +39,4 @@ func (l *Lock) Path() string {
 		return ""
 	}
 	return l.path
-}
-
-// runtimeDir returns the directory where lock files live. Honours
-// $XDG_RUNTIME_DIR per the XDG Base Directory Specification; falls back to
-// the system temp dir when the env var is unset (per spec §15.2).
-func runtimeDir() string {
-	if d := os.Getenv("XDG_RUNTIME_DIR"); d != "" {
-		return d
-	}
-	return os.TempDir()
 }
