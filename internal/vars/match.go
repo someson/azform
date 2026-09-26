@@ -68,17 +68,22 @@ func matchByName(v Variable, params []metadata.Parameter) string {
 	}
 	// Suffix shortcut: variable ends in _NAME / _LOCATION / _GROUP / _SKU
 	// maps to --name / --location / --resource-group / --sku. The longest
-	// matching suffix wins.
+	// matching suffix wins. The separator is required and checked on the
+	// raw name: on the normalised form (separators folded away) every
+	// USERNAME, HOSTNAME and LOGNAME in the environment would bind to
+	// --name.
 	suffixMap := []struct{ suffix, param string }{
 		{"name", "--name"},
 		{"location", "--location"},
 		{"group", "--resource-group"},
 		{"sku", "--sku"},
 	}
+	lower := strings.ToLower(v.Name)
 	bestLen := -1
 	var bestParam string
 	for _, s := range suffixMap {
-		if strings.HasSuffix(vn, s.suffix) && len(s.suffix) > bestLen {
+		hasSuffix := strings.HasSuffix(lower, "_"+s.suffix) || strings.HasSuffix(lower, "-"+s.suffix)
+		if hasSuffix && len(s.suffix) > bestLen {
 			bestLen = len(s.suffix)
 			bestParam = s.param
 		}
