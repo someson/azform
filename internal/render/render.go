@@ -25,14 +25,28 @@ func EscapePOSIX(s string) string {
 	return "'" + strings.ReplaceAll(s, "'", `'\''`) + "'"
 }
 
+// needsQuoting reports whether s must be quoted to reach az as one
+// unchanged argument in bash and zsh. Besides the obvious metacharacters it
+// covers: '#' (starts a comment at the beginning of a word), '~' (tilde
+// expansion), '{' / '}' (brace expansion: `{a,b}` becomes two arguments),
+// '^' (zsh EXTENDED_GLOB negation), a leading '=' (zsh `=cmd` expands to
+// the command's path) and control characters, which are invisible in the
+// rendered command.
 func needsQuoting(s string) bool {
+	if s[0] == '=' {
+		return true
+	}
 	for _, r := range s {
 		switch r {
 		case ' ', '\t', '\n',
 			'$', '`', '\\', '"', '\'',
 			'*', '?', '[', ']',
 			'!', '&', '|', ';', '<', '>',
-			'(', ')':
+			'(', ')',
+			'#', '~', '{', '}', '^':
+			return true
+		}
+		if r < 0x20 || r == 0x7f {
 			return true
 		}
 	}
