@@ -110,6 +110,10 @@ func (m *Form) applyBufferPreFill(params []metadata.Parameter) bool {
 	}
 	parsed := shell.MatchParams(m.src.Buffer, params)
 	for _, pp := range parsed.Params {
+		if pp.Unknown {
+			m.passthrough = append(m.passthrough, rawArg(pp))
+			continue
+		}
 		for i := range m.fields {
 			if m.fields[i].Param.Name == pp.Flag {
 				f := &m.fields[i]
@@ -147,6 +151,7 @@ func (m *Form) applyBufferPreFill(params []metadata.Parameter) bool {
 				f.Mode = mode
 				f.Enabled = true
 				f.Source = FieldSourceBuffer
+				f.EmitBare = !pp.Explicit && value == "" && f.Param.TakesValue
 				break
 			}
 		}
@@ -163,6 +168,14 @@ func (m *Form) applyBufferPreFill(params []metadata.Parameter) bool {
 		}
 	}
 	return true
+}
+
+// rawArg reassembles a parsed flag exactly as the user typed it.
+func rawArg(pp shell.ParsedParam) string {
+	if pp.Inline || pp.RawValue == "" {
+		return pp.RawFlag
+	}
+	return pp.RawFlag + " " + pp.RawValue
 }
 
 // applyEnvPreFill consumes vars.MatchVariables results (priority 5).

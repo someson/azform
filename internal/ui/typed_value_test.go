@@ -6,6 +6,7 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 
 	"github.com/someson/azform/internal/metadata"
+	"github.com/someson/azform/internal/shell"
 	"github.com/someson/azform/internal/state"
 	"github.com/someson/azform/internal/ui"
 	"github.com/someson/azform/internal/validate"
@@ -165,5 +166,37 @@ func TestVarPickerInsertAfterNonASCII(t *testing.T) {
 	f = m.(ui.Form)
 	if got := f.TextInputValue(); got != "é-$RG" {
 		t.Errorf("input = %q, want %q", got, "é-$RG")
+	}
+}
+
+// Flags the metadata does not know (an outdated cache, an extension) used
+// to vanish from the command on Done; they are now kept exactly as typed.
+func TestUnknownBufferFlagsArePassedThrough(t *testing.T) {
+	line := `az group show --name n --resource-group rg --new-flag "a b" --other=x --bare`
+	raw, _ := shell.ParseRaw(line, 0)
+	src := ui.Sources{Engine: validate.NewEngine(validate.BuiltinProvider{}), Buffer: raw}
+	f := ui.NewFormWithSources("group show", "/tmp/out.txt", t.TempDir(), "test", nil, src)
+	m, _ := f.Update(ui.MetadataLoadedMsg{Params: typedValueParams(), Summary: "."})
+	f = submit(t, m.(ui.Form))
+	want := `az group show --name n --resource-group rg --new-flag "a b" --other=x --bare`
+	if f.Result() != want {
+		t.Errorf("Result = %q, want %q (errorMsg=%q)", f.Result(), want, f.ErrorMsg())
+	}
+}
+
+// A value-taking flag typed without a value (optional-value flags such as
+// `vm create --assign-identity`) stays bare instead of being dropped.
+func TestBareOptionalValueFlagIsKept(t *testing.T) {
+	params := append(typedValueParams(), metadata.Parameter{
+		Name: "--assign-identity", TakesValue: true, ValueKind: metadata.ValueKindList, Group: "Optional Parameters",
+	})
+	raw, _ := shell.ParseRaw("az vm create --assign-identity --name n --resource-group rg", 0)
+	src := ui.Sources{Engine: validate.NewEngine(validate.BuiltinProvider{}), Buffer: raw}
+	f := ui.NewFormWithSources("vm create", "/tmp/out.txt", t.TempDir(), "test", nil, src)
+	m, _ := f.Update(ui.MetadataLoadedMsg{Params: params, Summary: "."})
+	f = submit(t, m.(ui.Form))
+	want := "az vm create --name n --resource-group rg --assign-identity"
+	if f.Result() != want {
+		t.Errorf("Result = %q, want %q (errorMsg=%q)", f.Result(), want, f.ErrorMsg())
 	}
 }

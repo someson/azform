@@ -179,6 +179,12 @@ type Form struct {
 	result    string
 	src       Sources
 
+	// passthrough holds buffer flags the metadata does not know, as typed
+	// (quoting preserved). They are re-emitted after the form's fields so
+	// an outdated cache or an extension flag is never silently dropped from
+	// the command; the unknown-flag warning still tells the user about them.
+	passthrough []string
+
 	findings        []validate.Finding
 	warningIdx      int // index of the currently-shown warning in the footer; cycle with 'w'
 	sessionVars     map[string]bool
@@ -469,11 +475,17 @@ func (m Form) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m, nil
 
 	case EnumSelectedMsg:
+		if m.mode == FormModeEnum && msg.Value == manualEntryChoice {
+			// Fetched choices are suggestions, not a closed set: the
+			// first popup row switches to free-text input instead.
+			return m, m.openEditor(m.enumIdx)
+		}
 		if m.mode == FormModeEnum {
 			m.fields[m.enumIdx].Value = msg.Value
 			m.fields[m.enumIdx].VarValue = ""
 			m.fields[m.enumIdx].Mode = FieldModeLiteral
 			m.fields[m.enumIdx].Enabled = true
+			m.invalidateDependentFetches(m.fields[m.enumIdx].Param.Name)
 			m.recomputeFindings(nil)
 			m.mode = FormModeList
 		}
@@ -560,6 +572,12 @@ func (m *Form) maybeFetchField(idx int) tea.Cmd {
 	if len(f.Param.Choices) > 0 {
 		return nil
 	}
+	command, ok := fetchCommand(*vf, m.contextValue)
+	if !ok {
+		// A required context param (e.g. --location for vm list-sizes) is
+		// still empty. Stay idle; focusing the field again retries.
+		return nil
+	}
 	f.FetchState = FetchLoading
 	f.FetchSpinnerShow = false
 	f.FetchStartedAt = time.Now()
@@ -575,8 +593,43 @@ func (m *Form) maybeFetchField(idx int) tea.Cmd {
 		tea.Tick(fetchCancelOffer, func(time.Time) tea.Msg {
 			return FieldFetchOfferCancelMsg{FieldIdx: idx}
 		}),
-		fetchField(idx, *vf),
+		fetchField(idx, command),
 	)
+}
+
+// contextValue returns the value an enabled param will pass to az — the
+// resolved value for a var reference — or "" when it has none.
+func (m *Form) contextValue(param string) string {
+	for i := range m.fields {
+		f := &m.fields[i]
+		if f.Param.Name != param || !f.Enabled {
+			continue
+		}
+		if f.Mode == FieldModeVar {
+			return f.VarValue
+		}
+		return f.Value
+	}
+	return ""
+}
+
+// invalidateDependentFetches drops fetched choices that were computed from
+// param's previous value (vm sizes for another --location, …) so the next
+// focus fetches them again.
+func (m *Form) invalidateDependentFetches(param string) {
+	for i := range m.fields {
+		f := &m.fields[i]
+		if f.Param.ValuesFrom == nil || f.FetchState == FetchLoading {
+			continue
+		}
+		for _, p := range fetchContextParams(*f.Param.ValuesFrom) {
+			if p == param {
+				f.FetchState = FetchIdle
+				f.FetchedChoices = nil
+				f.FetchError = ""
+			}
+		}
+	}
 }
 
 // anyFieldLoading reports whether any field is currently mid-fetch; used to

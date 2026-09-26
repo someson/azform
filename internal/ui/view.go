@@ -738,9 +738,14 @@ func (m *Form) buildCommand() string {
 			Name:     f.Param.Name,
 			Value:    val,
 			IsVar:    isVar,
-			IsSwitch: f.Param.IsSwitch(),
+			IsSwitch: f.Param.IsSwitch() || (f.EmitBare && val == ""),
 			Enabled:  f.Enabled,
 		})
+	}
+	// Unknown buffer flags go out verbatim: a switch-shaped entry emits
+	// its text as-is, with no escaping and no value.
+	for _, raw := range m.passthrough {
+		fvs = append(fvs, render.FieldValue{Name: raw, IsSwitch: true, Enabled: true})
 	}
 	return render.Build(render.Command{
 		Path:   m.command,
