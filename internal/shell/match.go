@@ -194,12 +194,14 @@ func MatchParams(raw RawBuffer, params []metadata.Parameter) ParsedBuffer {
 		// Cursor-to-param mapping (top-level only; inline segments have CursorByte==-1).
 		// tok is the flag token. If a value token was consumed (inlineValue=="" and
 		// RawValue!=""), i has been incremented and tokens[i] is the value token.
+		// End bounds are inclusive so a cursor just past the value (end of
+		// line, the widget's usual position) still focuses that param.
 		if raw.CursorByte >= 0 {
-			if raw.CursorByte >= tok.Start && raw.CursorByte < tok.End {
+			if raw.CursorByte >= tok.Start && raw.CursorByte <= tok.End {
 				pb.CursorParam = len(pb.Params)
 			} else if inlineValue == "" && pp.RawValue != "" {
 				valTok := tokens[i]
-				if raw.CursorByte >= valTok.Start && raw.CursorByte < valTok.End {
+				if raw.CursorByte >= valTok.Start && raw.CursorByte <= valTok.End {
 					pb.CursorParam = len(pb.Params)
 				}
 			}

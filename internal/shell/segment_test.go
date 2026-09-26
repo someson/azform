@@ -118,6 +118,22 @@ func TestParseRawCursorSelectsTarget(t *testing.T) {
 	}
 }
 
+// The widget's usual cursor is end-of-line, one past the last byte of the
+// final segment; it must select that segment, not fall back to the first.
+func TestParseRawCursorAtEndSelectsLastSegment(t *testing.T) {
+	line := "az group list && az vm list"
+	raw, ok := shell.ParseRaw(line, len(line))
+	if !ok {
+		t.Fatal("ParseRaw returned false")
+	}
+	if raw.CommandPath != "vm list" {
+		t.Errorf("CommandPath = %q, want \"vm list\"", raw.CommandPath)
+	}
+	if raw.Prefix != "az group list && " {
+		t.Errorf("Prefix = %q", raw.Prefix)
+	}
+}
+
 func TestParseRawLineContinuation(t *testing.T) {
 	line := "az group create \\\n  --name my-group"
 	raw, ok := shell.ParseRaw(line, 0)

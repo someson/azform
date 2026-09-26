@@ -132,10 +132,13 @@ func extractSegment(tokens []Token, azIdx int, line string) (azSegment, int) {
 }
 
 // selectTarget picks the az segment that contains cursor, or the first segment
-// when cursor is outside all segments.
+// when cursor is outside all segments. The end bound is inclusive: a cursor
+// sitting right after a segment's last character — the usual spot once the
+// user has finished typing it, e.g. end of line in `az a && az b` — belongs
+// to that segment.
 func selectTarget(segs []azSegment, cursor int) *azSegment {
 	for i := range segs {
-		if cursor >= segs[i].outerStart && cursor < segs[i].outerEnd {
+		if cursor >= segs[i].outerStart && cursor <= segs[i].outerEnd {
 			return &segs[i]
 		}
 	}
