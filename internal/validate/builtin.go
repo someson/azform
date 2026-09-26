@@ -111,14 +111,15 @@ func usesVarName(value, name string) bool {
 	return false
 }
 
-// escapeError: literal-mode value with unclosed quote or backtick.
+// escapeError: enabled literal-mode value with unclosed quote or backtick.
+// Disabled fields are never rendered, so they cannot break the command.
 type escapeError struct{}
 
 func (escapeError) ID() string { return "builtin/escape-error" }
 func (escapeError) Check(cmd *metadata.Command, st *FormState) []Finding {
 	var out []Finding
 	for name, m := range st.Modes {
-		if m != FieldModeLiteral {
+		if m != FieldModeLiteral || !st.Enabled[name] {
 			continue
 		}
 		val := st.Values[name]

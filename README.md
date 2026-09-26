@@ -65,10 +65,10 @@ Create a public IP address.
 ──────────────────────────────────────────────────────────────────────────────────────────────────────────
 az network public-ip create \
   --name $PIP \
-  --resource-group '$RG' \
+  --resource-group $RG \
   --allocation-method Static \
   --idle-timeout 15 \
-  --location '$LOC' \
+  --location $LOC \
   --sku StandardV2 \
   --tier Regional \
   --version IPv4 \
@@ -130,10 +130,10 @@ Create a public IP address.
 ──────────────────────────────────────────────────────────────────────────────────────────────────────────
 az network public-ip create \
   --name $PIP \
-  --resource-group '$RG' \
+  --resource-group $RG \
   --allocation-method Static \
   --idle-timeout 15 \
-  --location '$LOC' \
+  --location $LOC \
   --sku StandardV2 \
   --tier Regional \
   --version IPv4 \
@@ -170,10 +170,10 @@ Create a public IP address.
 ──────────────────────────────────────────────────────────────────────────────────────────────────────────
 az network public-ip create \
   --name $PIP \
-  --resource-group '$RG' \
+  --resource-group $RG \
   --allocation-method Static \
   --idle-timeout 15 \
-  --location '$LOC' \
+  --location $LOC \
   --sku StandardV2 \
   --tier Regional \
   --version IPv4 \
@@ -221,10 +221,10 @@ Create a public IP address.
 ──────────────────────────────────────────────────────────────────────────────────────────────────────────
 az network public-ip create \
   --name $PIP \
-  --resource-group '$RG' \
+  --resource-group $RG \
   --allocation-method Static \
   --idle-timeout 15 \
-  --location '$LOC' \
+  --location $LOC \
   --sku StandardV2 \
   --tier Regional \
   --version IPv4 \

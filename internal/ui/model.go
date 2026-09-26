@@ -58,9 +58,24 @@ type MetadataLoadedMsg struct {
 	Stale       bool
 	StaleReason string
 	Health      metadata.ParseHealth
+
+	// refresh, when non-nil, re-parses `az --help` and rewrites the cache
+	// entry. The cache hands it out with every stale result (including the
+	// embedded baseline) but never runs it itself; without calling it a
+	// stale entry would stay stale — and keep its banner — forever.
+	refresh func(context.Context) error
 }
 
 type metadataErrorMsg struct{ err error }
+
+// metadataRefreshedMsg reports the end of a background cache refresh. The
+// open form keeps the metadata it was built from; the fresh record is
+// picked up on the next invocation.
+type metadataRefreshedMsg struct{ err error }
+
+// metadataRefreshTimeout bounds the background refresh. It must outlive
+// metadata.HelpTimeout so the runner's own timeout fires first.
+const metadataRefreshTimeout = 30 * time.Second
 
 // Styles
 var (
@@ -324,7 +339,20 @@ func (m Form) fetchMetadata() tea.Cmd {
 			Stale:       result.Stale,
 			StaleReason: result.StaleReason,
 			Health:      result.Command.ParseHealth,
+			refresh:     result.Refresh,
 		}
+	}
+}
+
+// refreshMetadata runs a stale entry's refresh hook in the background so
+// the on-disk cache catches up with the installed az (spec §3.4). Errors
+// are not surfaced: the form is already usable and the stale banner has
+// told the user what they need to know.
+func refreshMetadata(refresh func(context.Context) error) tea.Cmd {
+	return func() tea.Msg {
+		ctx, cancel := context.WithTimeout(context.Background(), metadataRefreshTimeout)
+		defer cancel()
+		return metadataRefreshedMsg{err: refresh(ctx)}
 	}
 }
 
@@ -429,6 +457,12 @@ func (m Form) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.updateAvailable = msg.Latest
 		return m, nil
 
+	case metadataRefreshedMsg:
+		if msg.err != nil && m.src.Debug != nil {
+			m.src.Debug.Event("cache.refresh", map[string]any{"command": m.command, "error": msg.err.Error()})
+		}
+		return m, nil
+
 	case metadataErrorMsg:
 		m.loadState = LoadStateError
 		m.loadErr = msg.err.Error()
@@ -437,6 +471,8 @@ func (m Form) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case EnumSelectedMsg:
 		if m.mode == FormModeEnum {
 			m.fields[m.enumIdx].Value = msg.Value
+			m.fields[m.enumIdx].VarValue = ""
+			m.fields[m.enumIdx].Mode = FieldModeLiteral
 			m.fields[m.enumIdx].Enabled = true
 			m.recomputeFindings(nil)
 			m.mode = FormModeList
@@ -453,9 +489,15 @@ func (m Form) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		// Insert `$NAME` at the saved textinput cursor position. The
 		// textinput stays in edit mode so the user can keep typing.
 		if m.mode == FormModeVarPick {
-			insert := "$" + msg.Name
-			m.textInput.SetValue(m.textInput.Value()[:m.varEditCursor] + insert + m.textInput.Value()[m.varEditCursor:])
-			m.textInput.SetCursor(m.varEditCursor + len(insert))
+			// textinput positions count runes, not bytes: splice on a
+			// rune slice so non-ASCII text before the cursor neither
+			// panics nor lands the insert mid-character.
+			insert := []rune("$" + msg.Name)
+			value := []rune(m.textInput.Value())
+			at := min(max(m.varEditCursor, 0), len(value))
+			spliced := append(append(append([]rune(nil), value[:at]...), insert...), value[at:]...)
+			m.textInput.SetValue(string(spliced))
+			m.textInput.SetCursor(at + len(insert))
 			m.mode = FormModeEdit
 		}
 		return m, nil
@@ -626,7 +668,10 @@ func (m *Form) buildFormState(params []metadata.Parameter) *validate.FormState {
 		values[f.Param.Name] = f.Value
 		modes[f.Param.Name] = f.Mode
 		enabled[f.Param.Name] = f.Enabled
-		if f.Mode == validate.FieldModeVar && len(f.Value) > 1 && f.Value[0] == '$' && f.Value[1] != '(' {
+		// Only enabled fields reach the command, so only their var refs
+		// can be undefined at exec time. A disabled field holding e.g. a
+		// remembered $OLD_RG must not block Done.
+		if f.Enabled && f.Mode == validate.FieldModeVar && len(f.Value) > 1 && f.Value[0] == '$' && f.Value[1] != '(' {
 			// Walk every whitespace-separated token in the value so multi-var
 			// lists (`$a1 $a2`) report both names to the undefinedVar rule.
 			for _, tok := range strings.Fields(f.Value) {

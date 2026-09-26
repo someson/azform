@@ -47,7 +47,8 @@ func (m Form) handleMetadataLoaded(msg MetadataLoadedMsg) (tea.Model, tea.Cmd) {
 	m.reqIndices = reqIdx
 
 	// Spec §8.5 priority order (higher first; each stage only fills fields
-	// still at FieldSourceNone, so higher-priority sources win):
+	// that are still fillable — unset or holding just the metadata
+	// default — so higher-priority sources win):
 	//   1. Parsed buffer (spec 6.8).
 	//   2. Preset (M6, not implemented).
 	//   3. Draft (spec 6.7) — user's last-in-progress state, applied before
@@ -69,13 +70,17 @@ func (m Form) handleMetadataLoaded(msg MetadataLoadedMsg) (tea.Model, tea.Cmd) {
 	m.rebuildVisible()
 	m.updateLayout()
 	m.logFieldSources()
+	var cmds []tea.Cmd
+	if msg.Stale && msg.refresh != nil {
+		cmds = append(cmds, refreshMetadata(msg.refresh))
+	}
 	// Kick off a lazy fetch for the initially focused field (spec §6.1).
 	if idx := m.fieldAt(m.cursor); idx >= 0 {
 		if cmd := m.maybeFetchField(idx); cmd != nil {
-			return m, cmd
+			cmds = append(cmds, cmd)
 		}
 	}
-	return m, nil
+	return m, tea.Batch(cmds...)
 }
 
 // logFieldSources emits one debug event per field that has a non-zero
@@ -174,7 +179,7 @@ func (m *Form) applyEnvPreFill(params []metadata.Parameter) bool {
 	filled := false
 	for _, mt := range matches {
 		for i := range m.fields {
-			if m.fields[i].Param.Name == mt.ParamName && m.fields[i].Source == FieldSourceNone {
+			if m.fields[i].Param.Name == mt.ParamName && fillable(m.fields[i]) {
 				// Closed choice sets (enum/bool) never take var mode: emit the
 				// resolved value as a literal if allowed, else skip the match.
 				if !valueAllowedForParam(m.fields[i].Param, mt.Value) {
@@ -213,7 +218,7 @@ func (m *Form) applyAzurePreFill() bool {
 			continue
 		}
 		for i := range m.fields {
-			if m.fields[i].Source != FieldSourceNone {
+			if !fillable(m.fields[i]) {
 				continue
 			}
 			if m.fields[i].Param.Name == target {
@@ -269,7 +274,7 @@ func normaliseAzureKey(name string) string {
 }
 
 // applyDraftRestore restores the saved draft for this command (priority 3).
-// Only fields still at FieldSourceNone are restored. Fields the user
+// Only fillable fields (unset or metadata default) are restored. Fields the user
 // explicitly toggled off before cancelling come back Enabled=false so
 // a binding-applied value the user removed stays removed across
 // reopen cycles.
@@ -280,8 +285,8 @@ func (m *Form) applyDraftRestore() {
 	}
 	for k, v := range saved {
 		for i := range m.fields {
-			if m.fields[i].Param.Name == k && m.fields[i].Source == FieldSourceNone {
-				m.fields[i].Value = v
+			if m.fields[i].Param.Name == k && fillable(m.fields[i]) {
+				m.setTypedValue(&m.fields[i], v)
 				m.fields[i].Source = FieldSourceDraft
 				if v != "" {
 					m.fields[i].Enabled = true
@@ -314,7 +319,7 @@ func (m *Form) applyRememberedPreFill(params []metadata.Parameter) bool {
 	filled := false
 	for i := range m.fields {
 		f := &m.fields[i]
-		if f.Param.Name == "" || f.Source != FieldSourceNone {
+		if f.Param.Name == "" || !fillable(*f) {
 			continue
 		}
 		key := state.BindingKey(m.command, f.Param.Name)
@@ -359,6 +364,16 @@ func (m *Form) applyRememberedPreFill(params []metadata.Parameter) bool {
 	return filled
 }
 
+// fillable reports whether a lower-priority pre-fill stage (draft,
+// remembered binding, env heuristic, Azure defaults) may overwrite f. The
+// metadata default is the lowest priority of all (spec §8.5, stage 7) but
+// is applied first, so a field holding only its default must stay
+// fillable; otherwise a draft edit or an AZURE_DEFAULTS_* value for any
+// param with a documented default would be silently ignored.
+func fillable(f Field) bool {
+	return f.Source == FieldSourceNone || f.Source == FieldSourceDefault
+}
+
 // valueAllowedForParam reports whether value may populate p without breaking
 // a closed choice set. Params with a known closed set (enum, or bool with
 // bool-synonym choices) accept only listed values; anything else — including
@@ -378,6 +393,52 @@ func valueAllowedForParam(p metadata.Parameter, value string) bool {
 		}
 	}
 	return false
+}
+
+// setTypedValue stores a value that carries no mode information of its own
+// — text the user typed into the edit input, or a draft restored from disk
+// (drafts persist only the raw string) — and derives Mode from its shape.
+//
+// Mode decides quoting in render.Build: var mode is emitted verbatim,
+// literal mode is single-quoted. Keeping the mode a field happened to have
+// before the edit breaks both ways: a typed `$RG` in a literal field
+// becomes `'$RG'` (az receives the four characters), and a var field
+// edited to `my group` is emitted unquoted and word-split by the shell.
+//
+// A value is var mode when it is a single `$NAME` / `${NAME}` reference, a
+// whole `$(…)` command substitution, or — for list-kind params only — a
+// run of references (`$a1 $a2`), mirroring what shell.MatchParams accepts
+// from the buffer. Closed choice sets never take var mode.
+func (m *Form) setTypedValue(f *Field, value string) {
+	f.Value = value
+	f.VarValue = ""
+	f.Mode = FieldModeLiteral
+	if f.Param.HasSelectChoices() || f.Param.IsSwitch() {
+		return
+	}
+	trimmed := strings.TrimSpace(value)
+	if strings.HasPrefix(trimmed, "$(") && strings.HasSuffix(trimmed, ")") {
+		f.Mode = FieldModeVar
+		return
+	}
+	tokens := strings.Fields(trimmed)
+	if len(tokens) == 0 {
+		return
+	}
+	isList := f.Param.ValueKind == metadata.ValueKindList || f.Param.ValueKind == metadata.ValueKindKeyValue
+	if len(tokens) > 1 && !isList {
+		return
+	}
+	pp := shell.ParsedParam{}
+	for _, tok := range tokens {
+		isVar, name := shell.DetectVarRef(tok)
+		if !isVar {
+			return
+		}
+		pp.VarNames = append(pp.VarNames, name)
+	}
+	f.Mode = FieldModeVar
+	f.VarValue = resolveBufferVars(pp, m.src.Vars)
 }
 
 // resolveBufferVars returns the joined resolved values for a var-mode buffer

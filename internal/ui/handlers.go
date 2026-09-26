@@ -45,7 +45,7 @@ func (m Form) handleKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 			m.mode = FormModeVarPick
 			return m, nil
 		case "enter":
-			m.fields[m.editIdx].Value = m.textInput.Value()
+			m.setTypedValue(&m.fields[m.editIdx], m.textInput.Value())
 			if m.textInput.Value() != "" {
 				m.fields[m.editIdx].Enabled = true
 			}
