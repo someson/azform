@@ -110,12 +110,12 @@ func fetchError(command string, stderr []byte, err error) error {
 // for a param that names a resource to be *created* would be wrong, so only
 // params that always refer to something that exists are covered.
 func implicitSource(command string, p metadata.Parameter) string {
-	switch {
-	case p.Name == "--resource-group":
+	switch p.Name {
+	case "--resource-group":
 		// `az group create` names its new group --name (with
 		// --resource-group only as an alias), so this never lands there.
 		return "az group list"
-	case p.Name == "--name":
+	case "--name":
 		return existingNameSource(command)
 	}
 	for _, ref := range resourceRefs {
