@@ -18,6 +18,7 @@ func TestScriptMatchesSourceFiles(t *testing.T) {
 	cases := map[string]string{
 		"zsh":  "widget.zsh",
 		"bash": "widget.bash",
+		"fish": "widget.fish",
 	}
 	for shell, file := range cases {
 		t.Run(shell, func(t *testing.T) {
@@ -41,7 +42,7 @@ func TestScriptMatchesSourceFiles(t *testing.T) {
 // a caller error, not an empty script.
 func TestScriptUnknownShell(t *testing.T) {
 	t.Parallel()
-	for _, shell := range []string{"fish", "sh", "", "../widget.zsh"} {
+	for _, shell := range []string{"nu", "sh", "", "../widget.zsh"} {
 		got, err := widget.Script(shell)
 		if !errors.Is(err, widget.ErrUnsupportedShell) {
 			t.Errorf("Script(%q): got err %v, want ErrUnsupportedShell", shell, err)
@@ -57,7 +58,7 @@ func TestScriptUnknownShell(t *testing.T) {
 func TestShellsListsSupported(t *testing.T) {
 	t.Parallel()
 	got := widget.Shells()
-	if len(got) != 2 || got[0] != "bash" || got[1] != "zsh" {
-		t.Errorf("Shells() = %v, want [bash zsh]", got)
+	if len(got) != 3 || got[0] != "bash" || got[1] != "fish" || got[2] != "zsh" {
+		t.Errorf("Shells() = %v, want [bash fish zsh]", got)
 	}
 }

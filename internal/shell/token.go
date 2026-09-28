@@ -22,16 +22,33 @@ type Token struct {
 	Start    int    // byte offset in source
 	End      int    // exclusive byte offset
 	Unclosed bool   // true when a quote or $(/`  delimiter was not closed before EOL
+	// Subst is set on a fish word that contains an unquoted (…) command
+	// substitution. Value then holds the substitution verbatim, so the word
+	// must be re-emitted as typed (Raw), never quoted as a literal.
+	Subst bool
 }
 
-// Tokenize splits line into shell tokens, respecting single/double quoting,
+// Syntax selects the quoting rules Tokenize applies. The two differ only
+// inside single quotes: POSIX has no escapes there (a quote always closes
+// it), while fish treats \\ and \' as escapes.
+type Syntax int
+
+const (
+	POSIX Syntax = iota
+	Fish
+)
+
+// Tokenize splits line into POSIX shell tokens; see TokenizeSyntax.
+func Tokenize(line string) []Token { return TokenizeSyntax(line, POSIX) }
+
+// TokenizeSyntax splits line into shell tokens, respecting single/double quoting,
 // backslash escaping, line continuation (\<newline>), command substitution,
 // and shell operators.
 //
 // Whitespace between tokens is consumed silently. Redirections (> < >>) are
 // emitted as TokOp tokens so they terminate words, but their targets are not
 // parsed as special (they become plain TokWord tokens).
-func Tokenize(line string) []Token {
+func TokenizeSyntax(line string, syn Syntax) []Token {
 	var tokens []Token
 	i := 0
 	for i < len(line) {
@@ -53,7 +70,7 @@ func Tokenize(line string) []Token {
 		}
 		// $( command substitution — may appear after bare chars (e.g. RG=$(…))
 		if line[i] == '$' && i+1 < len(line) && line[i+1] == '(' {
-			tok, n := scanCmdSubst(line, i)
+			tok, n := scanCmdSubst(line, i, syn)
 			tokens = append(tokens, tok)
 			i += n
 			continue
@@ -84,7 +101,7 @@ func Tokenize(line string) []Token {
 			continue
 		}
 		// word (bare, quoted, or mix)
-		tok, n := scanWord(line, i)
+		tok, n := scanWord(line, i, syn)
 		if n == 0 {
 			i++ // safety
 			continue
@@ -98,10 +115,11 @@ func Tokenize(line string) []Token {
 // scanWord reads one shell word starting at start. A word ends at unquoted
 // whitespace, a bare operator, or a $( / ` that starts a command substitution
 // at the word boundary.
-func scanWord(line string, start int) (Token, int) {
+func scanWord(line string, start int, syn Syntax) (Token, int) {
 	var raw strings.Builder
 	var val strings.Builder
 	unclosed := false
+	subst := false
 	i := start
 
 	for i < len(line) {
@@ -126,6 +144,14 @@ func scanWord(line string, start int) (Token, int) {
 			raw.WriteByte('\'')
 			i++
 			for i < len(line) && line[i] != '\'' {
+				if syn == Fish && line[i] == '\\' && i+1 < len(line) &&
+					(line[i+1] == '\'' || line[i+1] == '\\') {
+					raw.WriteByte('\\')
+					raw.WriteByte(line[i+1])
+					val.WriteByte(line[i+1])
+					i += 2
+					continue
+				}
 				raw.WriteByte(line[i])
 				val.WriteByte(line[i])
 				i++
@@ -142,8 +168,12 @@ func scanWord(line string, start int) (Token, int) {
 			for i < len(line) && line[i] != '"' {
 				if line[i] == '\\' && i+1 < len(line) {
 					next := line[i+1]
-					switch next {
-					case '"', '\\', '$', '`', '\n':
+					// fish does not escape the backtick in double quotes
+					// (it has no backtick substitution), so \` stays two
+					// characters there.
+					switch {
+					case next == '"' || next == '\\' || next == '$' || next == '\n',
+						next == '`' && syn != Fish:
 						raw.WriteByte('\\')
 						raw.WriteByte(next)
 						if next != '\n' {
@@ -200,6 +230,24 @@ func scanWord(line string, start int) (Token, int) {
 			goto done // backtick CmdSubst handled at top level
 		case ';', '|', '&', '>', '<':
 			goto done
+		case '(':
+			if syn != Fish {
+				raw.WriteByte('(')
+				val.WriteByte('(')
+				i++
+				continue
+			}
+			// fish command substitution: (cmd) anywhere in a word, e.g.
+			// (whoami)-rg. Copied verbatim, spaces and all, so the word
+			// survives as one token and is re-emitted exactly as typed.
+			end, closed := fishSubstEnd(line, i)
+			raw.WriteString(line[i:end])
+			val.WriteString(line[i:end])
+			subst = true
+			if !closed {
+				unclosed = true
+			}
+			i = end
 		default:
 			if i+1 < len(line) {
 				switch line[i : i+2] {
@@ -223,12 +271,46 @@ done:
 		Start:    start,
 		End:      i,
 		Unclosed: unclosed,
+		Subst:    subst,
 	}, i - start
+}
+
+// fishSubstEnd returns the exclusive end of the fish (…) substitution that
+// opens at line[start] and whether its closing paren was found. Nested
+// parens are balanced; quoted text inside is skipped with fish's rules
+// (\\ and \' in single quotes, backslash escapes in double quotes).
+func fishSubstEnd(line string, start int) (int, bool) {
+	depth := 0
+	i := start
+	for i < len(line) {
+		switch line[i] {
+		case '\\':
+			i++ // skip the escaped byte
+		case '(':
+			depth++
+		case ')':
+			depth--
+			if depth == 0 {
+				return i + 1, true
+			}
+		case '\'', '"':
+			q := line[i]
+			i++
+			for i < len(line) && line[i] != q {
+				if line[i] == '\\' && i+1 < len(line) {
+					i++
+				}
+				i++
+			}
+		}
+		i++
+	}
+	return len(line), false
 }
 
 // scanCmdSubst reads a $(...) token starting at start (which is '$').
 // It tracks parenthesis depth, respecting single/double quotes inside.
-func scanCmdSubst(line string, start int) (Token, int) {
+func scanCmdSubst(line string, start int, syn Syntax) (Token, int) {
 	depth := 0
 	i := start + 2 // skip "$("
 	for i < len(line) {
@@ -246,6 +328,9 @@ func scanCmdSubst(line string, start int) (Token, int) {
 		case '\'':
 			i++
 			for i < len(line) && line[i] != '\'' {
+				if syn == Fish && line[i] == '\\' && i+1 < len(line) {
+					i++
+				}
 				i++
 			}
 		case '"':

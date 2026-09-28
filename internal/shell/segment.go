@@ -32,7 +32,14 @@ type azSegment struct {
 // When multiple az segments exist, the one containing cursor is selected;
 // if cursor is outside all segments, the first segment is selected.
 func ParseRaw(line string, cursor int) (RawBuffer, bool) {
-	segs := findSegments(line)
+	return ParseRawSyntax(line, cursor, POSIX)
+}
+
+// ParseRawSyntax is ParseRaw with the quoting rules of syn, so a line
+// typed in fish (where \' escapes a quote inside single quotes) is split
+// into the same words the user sees.
+func ParseRawSyntax(line string, cursor int, syn Syntax) (RawBuffer, bool) {
+	segs := findSegments(line, syn)
 	if len(segs) == 0 {
 		return RawBuffer{}, false
 	}
@@ -53,8 +60,8 @@ func ParseRaw(line string, cursor int) (RawBuffer, bool) {
 
 // findSegments searches line (and recursively inside $() / “ tokens) for
 // all az commands. Segments are returned in document order.
-func findSegments(line string) []azSegment {
-	tokens := Tokenize(line)
+func findSegments(line string, syn Syntax) []azSegment {
+	tokens := TokenizeSyntax(line, syn)
 	var segs []azSegment
 	i := 0
 	for i < len(tokens) {
@@ -68,7 +75,7 @@ func findSegments(line string) []azSegment {
 		if tok.Kind == TokCmdSubst {
 			inner := tok.Inner
 			isBacktick := tok.Raw != "" && tok.Raw[0] == '`'
-			innerSegs := findSegments(inner)
+			innerSegs := findSegments(inner, syn)
 			for _, s := range innerSegs {
 				open, closing := "$(", ")"
 				if isBacktick {

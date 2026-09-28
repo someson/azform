@@ -39,6 +39,10 @@ func TestInstallShWidgetSelection(t *testing.T) {
 		{"bash 5", "bash", "5", "widget.bash"},
 		{"bash 4", "bash", "4", "widget.bash"},
 		{"bash 3", "bash", "3", ""},
+		{"fish 3.7", "fish", "307", "widget.fish"},
+		{"fish 4.0", "fish", "400", "widget.fish"},
+		{"fish 3.3", "fish", "303", ""},
+		{"fish unknown", "fish", "0", ""},
 		{"sh", "sh", "0", ""},
 	}
 	for _, tc := range cases {
@@ -58,7 +62,7 @@ func TestInstallShWidgetSelection(t *testing.T) {
 func TestInstallShUnsupportedMessage(t *testing.T) {
 	t.Parallel()
 	got := runInstallLib(t, "azform_unsupported_message sh 0")
-	want := "widget not installed: your shell is sh; azform's widget supports zsh and bash 4+. Re-run from your target shell."
+	want := "widget not installed: your shell is sh; azform's widget supports zsh, bash 4+ and fish. Re-run from your target shell."
 	if got != want {
 		t.Errorf("got  %q\nwant %q", got, want)
 	}
@@ -78,6 +82,31 @@ func TestInstallShOldBashMessage(t *testing.T) {
 	}
 	if strings.Contains(strings.ToLower(got), "brew") {
 		t.Errorf("message must not hardcode a package manager; got %q", got)
+	}
+}
+
+// TestInstallShFishVersion parses `fish --version` from $SHELL, the
+// login shell the profile block is written for.
+func TestInstallShFishVersion(t *testing.T) {
+	t.Parallel()
+	dir := t.TempDir()
+	fake := filepath.Join(dir, "fish")
+	for _, tc := range []struct{ out, want string }{
+		{"fish, version 3.7.1", "307"},
+		{"fish, version 4.0.2", "400"},
+		{"fish, version 3.10.0-12-gabc", "310"},
+		{"garbage", "0"},
+	} {
+		if err := os.WriteFile(fake, []byte("#!/bin/sh\necho '"+tc.out+"'\n"), 0o755); err != nil {
+			t.Fatal(err)
+		}
+		if got := runInstallLib(t, "SHELL="+fake+" fish_version"); got != tc.want {
+			t.Errorf("%q: fish_version = %q, want %q", tc.out, got, tc.want)
+		}
+	}
+	got := runInstallLib(t, "azform_unsupported_message fish 303")
+	if !strings.Contains(got, "3.3") || !strings.Contains(got, "fish 3.4+") {
+		t.Errorf("fish message should name the version found and the requirement; got %q", got)
 	}
 }
 
@@ -115,7 +144,7 @@ func TestInstallShWriteWidgetFromOutsideRepo(t *testing.T) {
 		t.Fatalf("write_widget from %s: %v\n%s", elsewhere, err, out)
 	}
 
-	for _, name := range []string{"widget.zsh", "widget.bash"} {
+	for _, name := range []string{"widget.zsh", "widget.bash", "widget.fish"} {
 		got, err := os.ReadFile(filepath.Join(shareDir, name))
 		if err != nil {
 			t.Errorf("read installed %s: %v", name, err)
@@ -178,5 +207,77 @@ func TestInstallShVerifyChecksumKeepsCallerVars(t *testing.T) {
 	got := runInstallLib(t, "archive=SENTINEL; work=WORKDIR; verify_checksum "+payload+" "+sums+"; printf '%s|%s' \"$archive\" \"$work\"")
 	if got != "SENTINEL|WORKDIR" {
 		t.Errorf("verify_checksum clobbered caller variables: got %q, want %q", got, "SENTINEL|WORKDIR")
+	}
+}
+
+// TestInstallShFishProfile installs the widget for a fish user into a
+// fake HOME, then proves the profile block does what it claims: it is
+// written once (idempotent), a fresh interactive fish that reads it has
+// azform-widget bound to Ctrl+X A, and --uninstall removes the block.
+func TestInstallShFishProfile(t *testing.T) {
+	fish, err := exec.LookPath("fish")
+	if err != nil {
+		skipOrFail(t, "fish not installed")
+	}
+	root, err := filepath.Abs(repoRoot(t))
+	if err != nil {
+		t.Fatal(err)
+	}
+	home := t.TempDir()
+	binDir := filepath.Join(home, "bin")
+	shareDir := filepath.Join(home, "share")
+	if err := os.MkdirAll(binDir, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	build := exec.Command("go", "build", "-o", filepath.Join(binDir, "azform"), "./cmd/azform")
+	build.Dir = root
+	if out, err := build.CombinedOutput(); err != nil {
+		t.Fatalf("build azform: %v\n%s", err, out)
+	}
+
+	env := []string{
+		"PATH=" + os.Getenv("PATH"), "HOME=" + home, "SHELL=" + fish,
+		"AZFORM_BIN_DIR=" + binDir, "AZFORM_SHARE_DIR=" + shareDir,
+		"TERM=xterm-256color",
+	}
+	sh := func(expr string) string {
+		t.Helper()
+		cmd := exec.Command("sh", "-c", "AZFORM_INSTALL_LIB=1 . "+filepath.Join(root, "install.sh")+"; "+expr)
+		cmd.Dir = home
+		cmd.Env = env
+		out, err := cmd.CombinedOutput()
+		if err != nil {
+			t.Fatalf("%s: %v\n%s", expr, err, out)
+		}
+		return string(out)
+	}
+
+	sh("write_widget; add_to_profile; add_to_profile")
+	prof := filepath.Join(home, ".config", "fish", "config.fish")
+	data, err := os.ReadFile(prof)
+	if err != nil {
+		t.Fatalf("read %s: %v", prof, err)
+	}
+	if n := strings.Count(string(data), "# >>> azform >>>"); n != 1 {
+		t.Errorf("profile has %d azform blocks, want 1:\n%s", n, data)
+	}
+	if !strings.Contains(string(data), filepath.Join(shareDir, "widget.fish")) {
+		t.Errorf("profile block does not source widget.fish:\n%s", data)
+	}
+
+	cmd := exec.Command(fish, "-i", "-c", "bind | string match -q '*azform-widget*'; and echo BOUND")
+	cmd.Env = env
+	out, err := cmd.CombinedOutput()
+	if err != nil || !strings.Contains(string(out), "BOUND") {
+		t.Errorf("fish did not pick up the widget from config.fish: err=%v\n%s", err, out)
+	}
+
+	sh("uninstall")
+	data, err = os.ReadFile(prof)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if strings.Contains(string(data), "azform") {
+		t.Errorf("uninstall left azform in config.fish:\n%s", data)
 	}
 }

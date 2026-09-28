@@ -16,6 +16,7 @@ import (
 	"github.com/someson/azform/internal/debug"
 	"github.com/someson/azform/internal/lock"
 	"github.com/someson/azform/internal/metadata"
+	"github.com/someson/azform/internal/render"
 	"github.com/someson/azform/internal/shell"
 	"github.com/someson/azform/internal/state"
 	"github.com/someson/azform/internal/term"
@@ -64,7 +65,9 @@ func run(args []string) int {
 		noUpdateCheck bool
 		debugFlag     bool
 		doctorFlag    bool
+		shellName     string
 	)
+	fs.StringVar(&shellName, "shell", "", "shell the widget runs in: bash, zsh or fish (default: POSIX quoting, as bash/zsh)")
 	fs.BoolVar(&showVersion, "version", false, "print version and exit")
 	fs.StringVar(&line, "line", "", "current shell buffer contents")
 	fs.StringVar(&outPath, "out", "", "file path to write the assembled command")
@@ -84,7 +87,7 @@ func run(args []string) int {
 	fs.Usage = func() {
 		fmt.Fprintf(fs.Output(), "%s\n\n", versionString())
 		fmt.Fprintf(fs.Output(), "Usage: azform --line <buffer> --out <path> [--vars <path>] [--cwd <path>]\n")
-		fmt.Fprintf(fs.Output(), "       azform shell-init <bash|zsh>   print the shell widget to stdout\n\n")
+		fmt.Fprintf(fs.Output(), "       azform shell-init <bash|zsh|fish>   print the shell widget to stdout\n\n")
 		fmt.Fprintf(fs.Output(), "Flags:\n")
 		fs.PrintDefaults()
 	}
@@ -139,8 +142,14 @@ func run(args []string) int {
 		return runDumpCache(ctx, dumpCache, cacheDir, dbg)
 	}
 
+	syntax, dialect, err := shellDialect(shellName)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "azform: %v\n", err)
+		return 2
+	}
+
 	// Parse the shell buffer to locate the az command.
-	raw, ok := shell.ParseRaw(line, cursorByte(line, cursor, cursorPrefix))
+	raw, ok := shell.ParseRawSyntax(line, cursorByte(line, cursor, cursorPrefix), syntax)
 	if !ok {
 		if len(fs.Args()) == 0 {
 			fs.Usage()
@@ -170,10 +179,10 @@ func run(args []string) int {
 	}
 	azureDefaults := vars.LoadAzureDefaults()
 
-	return runTUI(raw, shellVars, azureDefaults, outPath, envOutPath, stateDir, cacheDir, dbg)
+	return runTUI(raw, shellVars, azureDefaults, outPath, envOutPath, stateDir, cacheDir, dialect, dbg)
 }
 
-func runTUI(raw shell.RawBuffer, shellVars, azureDefaults []vars.Variable, outPath, envOutPath, stateDir, cacheDir string, dbg *debug.Logger) int {
+func runTUI(raw shell.RawBuffer, shellVars, azureDefaults []vars.Variable, outPath, envOutPath, stateDir, cacheDir string, dialect render.Dialect, dbg *debug.Logger) int {
 	cache := metadata.NewCache(cacheDir, version, nil)
 	cache.Debug = dbg
 	sessionNames := make([]string, 0, len(shellVars))
@@ -189,6 +198,7 @@ func runTUI(raw shell.RawBuffer, shellVars, azureDefaults []vars.Variable, outPa
 		SessionVars:   sessionNames,
 		Bindings:      bindings,
 		Debug:         dbg,
+		Dialect:       dialect,
 	}
 	src.UpdateCheck = update.CheckCmd(update.Options{
 		Repo:     "someson/azform",
@@ -261,6 +271,19 @@ func runTUI(raw shell.RawBuffer, shellVars, azureDefaults []vars.Variable, outPa
 		return 2
 	}
 	return 0
+}
+
+// shellDialect maps the --shell flag to the tokenizer syntax and the
+// output dialect. An empty name keeps the historical POSIX behaviour, so
+// widgets that predate the flag keep working.
+func shellDialect(name string) (shell.Syntax, render.Dialect, error) {
+	switch name {
+	case "", "bash", "zsh":
+		return shell.POSIX, render.POSIX, nil
+	case "fish":
+		return shell.Fish, render.Fish, nil
+	}
+	return shell.POSIX, render.POSIX, fmt.Errorf("unknown --shell %q (want bash, zsh or fish)", name)
 }
 
 // cursorByte returns the cursor as a byte offset into line, which is what

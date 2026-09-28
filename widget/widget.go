@@ -14,7 +14,7 @@ import (
 	"fmt"
 )
 
-//go:embed widget.zsh widget.bash
+//go:embed widget.zsh widget.bash widget.fish
 var scripts embed.FS
 
 // ErrUnsupportedShell is returned by Script for a shell that has no
@@ -25,7 +25,7 @@ var ErrUnsupportedShell = errors.New("unsupported shell")
 
 // Shells lists the shells Script accepts, sorted, for usage messages.
 func Shells() []string {
-	return []string{"bash", "zsh"}
+	return []string{"bash", "fish", "zsh"}
 }
 
 // Script returns the widget source for shell, byte-identical to the
@@ -37,6 +37,8 @@ func Script(shell string) ([]byte, error) {
 		name = "widget.zsh"
 	case "bash":
 		name = "widget.bash"
+	case "fish":
+		name = "widget.fish"
 	default:
 		return nil, fmt.Errorf("%q: %w", shell, ErrUnsupportedShell)
 	}

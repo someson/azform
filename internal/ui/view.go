@@ -790,9 +790,10 @@ func (m *Form) buildCommand() string {
 		fvs = append(fvs, render.FieldValue{Name: raw, IsSwitch: true, Enabled: true})
 	}
 	return render.Build(render.Command{
-		Path:   m.command,
-		Fields: fvs,
-		Width:  m.width,
+		Path:    m.command,
+		Fields:  fvs,
+		Dialect: m.src.Dialect,
+		Width:   m.width,
 	})
 }
 

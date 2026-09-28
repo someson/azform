@@ -36,16 +36,16 @@ jobs:
         run: make build
 
       # ubuntu-latest is the runner where every e2e prerequisite is
-      # guaranteed: bash 5.x ships with the image and zsh is installed
-      # here. That lets AZFORM_E2E_REQUIRED=1 below turn any skip into
+      # guaranteed: bash 5.x ships with the image and zsh and fish are
+      # installed here. That lets AZFORM_E2E_REQUIRED=1 below turn any skip into
       # a hard failure, so a green run means the tests really ran.
       #
       # macos-latest is deliberately left permissive: it ships bash
       # 3.2, which cannot run the bash widget at all, so the bash e2e
       # test must stay free to skip there.
-      - name: install zsh (e2e prerequisite)
+      - name: install zsh and fish (e2e prerequisites)
         if: matrix.os == 'ubuntu-latest'
-        run: sudo apt-get update && sudo apt-get install -y zsh
+        run: sudo apt-get update && sudo apt-get install -y zsh fish
 
       - name: test
         run: go test -race -count=1 ./...

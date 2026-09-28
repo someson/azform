@@ -189,3 +189,90 @@ func TestTokenizeStartPositions(t *testing.T) {
 		t.Errorf("tokens[1] Start=%d End=%d, want 3..8", tokens[1].Start, tokens[1].End)
 	}
 }
+
+// TestTokenizeFishSingleQuotes: fish escapes \' and \\ inside single
+// quotes, so `'it\'s'` is one word, where POSIX would end the quote at
+// the backslash-escaped quote and split the value.
+func TestTokenizeFishSingleQuotes(t *testing.T) {
+	cases := []struct {
+		line, want string
+		words      int
+	}{
+		{`az x --name 'it\'s'`, "it's", 4},
+		{`az x --name 'a\\b'`, `a\b`, 4},
+		{`az x --name 'a\b'`, `a\b`, 4}, // other backslashes are literal
+		{`az x --name 'end\\'`, `end\`, 4},
+	}
+	for _, tc := range cases {
+		toks := shell.TokenizeSyntax(tc.line, shell.Fish)
+		if len(toks) != tc.words {
+			t.Errorf("%s: got %d tokens, want %d: %+v", tc.line, len(toks), tc.words, toks)
+			continue
+		}
+		last := toks[len(toks)-1]
+		if last.Value != tc.want || last.Unclosed {
+			t.Errorf("%s: value = %q (unclosed=%v), want %q", tc.line, last.Value, last.Unclosed, tc.want)
+		}
+	}
+	// POSIX behaviour is unchanged.
+	toks := shell.Tokenize(`az x --name 'a\'`)
+	if last := toks[len(toks)-1]; last.Value != `a\` {
+		t.Errorf("POSIX single quotes must not treat backslash specially; got %q", last.Value)
+	}
+}
+
+func TestParseRawSyntaxFishQuotedValue(t *testing.T) {
+	raw, ok := shell.ParseRawSyntax(`az group create --name 'it\'s' --location westeurope`, 0, shell.Fish)
+	if !ok {
+		t.Fatal("no az segment found")
+	}
+	var found bool
+	for _, tok := range raw.FlagTokens {
+		if tok.Value == "it's" {
+			found = true
+		}
+	}
+	if !found {
+		t.Errorf("flag tokens lost the fish-quoted value: %+v", raw.FlagTokens)
+	}
+}
+
+// TestTokenizeFishSubst: fish's (…) substitution stays inside one word,
+// spaces and nested parens included, and marks the token Subst so it is
+// re-emitted verbatim instead of quoted as text.
+func TestTokenizeFishSubst(t *testing.T) {
+	cases := []struct{ line, want string }{
+		{`(whoami)-rg`, `(whoami)-rg`},
+		{`(echo x)`, `(echo x)`},
+		{`pre(string join - a (echo b))post`, `pre(string join - a (echo b))post`},
+		{`(echo ')' "(")`, `(echo ')' "(")`},
+		{`(echo 'it\'s')`, `(echo 'it\'s')`},
+	}
+	for _, tc := range cases {
+		toks := shell.TokenizeSyntax(tc.line, shell.Fish)
+		if len(toks) != 1 || toks[0].Value != tc.want || !toks[0].Subst || toks[0].Unclosed {
+			t.Errorf("%s: got %+v", tc.line, toks)
+		}
+	}
+	if toks := shell.TokenizeSyntax(`(echo x`, shell.Fish); len(toks) != 1 || !toks[0].Unclosed {
+		t.Errorf("unclosed subst: got %+v", toks)
+	}
+	// POSIX: parens are plain word characters there, and never Subst.
+	for _, tok := range shell.Tokenize(`a(b)c`) {
+		if tok.Subst {
+			t.Errorf("POSIX token marked Subst: %+v", tok)
+		}
+	}
+}
+
+// TestTokenizeFishDoubleQuoteBacktick: in fish double quotes \` is not an
+// escape, so the backslash is part of the value; POSIX drops it.
+func TestTokenizeFishDoubleQuoteBacktick(t *testing.T) {
+	line := "az x --name \"a\\`b\""
+	if got := shell.TokenizeSyntax(line, shell.Fish)[3].Value; got != "a\\`b" {
+		t.Errorf("fish: value = %q, want %q", got, "a\\`b")
+	}
+	if got := shell.Tokenize(line)[3].Value; got != "a`b" {
+		t.Errorf("POSIX: value = %q, want %q", got, "a`b")
+	}
+}
