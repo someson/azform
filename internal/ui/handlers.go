@@ -116,7 +116,7 @@ func (m Form) handleKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 				// Keep the input so the user can edit; popup stays open.
 				return m, nil
 			}
-			m.pendingExports = append(m.pendingExports, shellVarLine(name, value))
+			m.pendingExports = append(m.pendingExports, shellVarLineFor(m.src.Dialect, name, value))
 			// Surface the just-set var to the Ctrl+G picker so the
 			// user can immediately insert `$name` into a field without
 			// closing and reopening the form. Without this, the picker

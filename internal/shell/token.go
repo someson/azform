@@ -24,14 +24,27 @@ type Token struct {
 	Unclosed bool   // true when a quote or $(/`  delimiter was not closed before EOL
 }
 
-// Tokenize splits line into shell tokens, respecting single/double quoting,
+// Syntax selects the quoting rules Tokenize applies. The two differ only
+// inside single quotes: POSIX has no escapes there (a quote always closes
+// it), while fish treats \\ and \' as escapes.
+type Syntax int
+
+const (
+	POSIX Syntax = iota
+	Fish
+)
+
+// Tokenize splits line into POSIX shell tokens; see TokenizeSyntax.
+func Tokenize(line string) []Token { return TokenizeSyntax(line, POSIX) }
+
+// TokenizeSyntax splits line into shell tokens, respecting single/double quoting,
 // backslash escaping, line continuation (\<newline>), command substitution,
 // and shell operators.
 //
 // Whitespace between tokens is consumed silently. Redirections (> < >>) are
 // emitted as TokOp tokens so they terminate words, but their targets are not
 // parsed as special (they become plain TokWord tokens).
-func Tokenize(line string) []Token {
+func TokenizeSyntax(line string, syn Syntax) []Token {
 	var tokens []Token
 	i := 0
 	for i < len(line) {
@@ -53,7 +66,7 @@ func Tokenize(line string) []Token {
 		}
 		// $( command substitution — may appear after bare chars (e.g. RG=$(…))
 		if line[i] == '$' && i+1 < len(line) && line[i+1] == '(' {
-			tok, n := scanCmdSubst(line, i)
+			tok, n := scanCmdSubst(line, i, syn)
 			tokens = append(tokens, tok)
 			i += n
 			continue
@@ -84,7 +97,7 @@ func Tokenize(line string) []Token {
 			continue
 		}
 		// word (bare, quoted, or mix)
-		tok, n := scanWord(line, i)
+		tok, n := scanWord(line, i, syn)
 		if n == 0 {
 			i++ // safety
 			continue
@@ -98,7 +111,7 @@ func Tokenize(line string) []Token {
 // scanWord reads one shell word starting at start. A word ends at unquoted
 // whitespace, a bare operator, or a $( / ` that starts a command substitution
 // at the word boundary.
-func scanWord(line string, start int) (Token, int) {
+func scanWord(line string, start int, syn Syntax) (Token, int) {
 	var raw strings.Builder
 	var val strings.Builder
 	unclosed := false
@@ -126,6 +139,14 @@ func scanWord(line string, start int) (Token, int) {
 			raw.WriteByte('\'')
 			i++
 			for i < len(line) && line[i] != '\'' {
+				if syn == Fish && line[i] == '\\' && i+1 < len(line) &&
+					(line[i+1] == '\'' || line[i+1] == '\\') {
+					raw.WriteByte('\\')
+					raw.WriteByte(line[i+1])
+					val.WriteByte(line[i+1])
+					i += 2
+					continue
+				}
 				raw.WriteByte(line[i])
 				val.WriteByte(line[i])
 				i++
@@ -228,7 +249,7 @@ done:
 
 // scanCmdSubst reads a $(...) token starting at start (which is '$').
 // It tracks parenthesis depth, respecting single/double quotes inside.
-func scanCmdSubst(line string, start int) (Token, int) {
+func scanCmdSubst(line string, start int, syn Syntax) (Token, int) {
 	depth := 0
 	i := start + 2 // skip "$("
 	for i < len(line) {
@@ -246,6 +267,9 @@ func scanCmdSubst(line string, start int) (Token, int) {
 		case '\'':
 			i++
 			for i < len(line) && line[i] != '\'' {
+				if syn == Fish && line[i] == '\\' && i+1 < len(line) {
+					i++
+				}
 				i++
 			}
 		case '"':

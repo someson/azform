@@ -25,9 +25,14 @@ per-shell, not per-OS.
 | bash 4.0+ | Supported |
 | bash 3.x | Not supported — needs bash 4+ for `READLINE_LINE` |
 | sh / dash / ash | Not supported — no keybinding mechanism |
-| fish | Considering |
+| fish 3.4+ | Supported |
 | PowerShell | Considering |
 | nushell | Considering |
+
+In fish, azform reads the line with fish's quoting rules (`\'` and `\\`
+inside single quotes) and writes commands back in the same dialect.
+Command substitution is recognised in its `$(…)` form; a bare `(…)`
+is treated as plain text.
 
 macOS ships bash 3.2, so if you choose to use `bash` instead of `zsh`,
 you need a newer bash from a package manager. Linux distributions ship
@@ -86,7 +91,7 @@ You press a key. A form opens under your prompt, listing every parameter the com
 
 It is a way to *write* `az` commands. Nothing more than that, and that's the point.
 
-**Under the hood.** `azform` is a single Go binary. When you open a form, it shells out to `az <command> --help` and parses the text — the same help you'd read yourself. It attaches as a shell widget (Ctrl-X then A, in zsh and bash 4+), takes over the terminal via `/dev/tty` while the form is open, and writes the finished command straight into your shell's line buffer on exit. No daemon, no telemetry, no phone-home. Small state — drafts, remembered variable bindings — lives under `~/.local/state/azform/` as plain files you can delete at any time.
+**Under the hood.** `azform` is a single Go binary. When you open a form, it shells out to `az <command> --help` and parses the text — the same help you'd read yourself. It attaches as a shell widget (Ctrl-X then A, in zsh, bash 4+ and fish 3.4+), takes over the terminal via `/dev/tty` while the form is open, and writes the finished command straight into your shell's line buffer on exit. No daemon, no telemetry, no phone-home. Small state — drafts, remembered variable bindings — lives under `~/.local/state/azform/` as plain files you can delete at any time.
 
 ## What it is not
 
@@ -408,6 +413,7 @@ binary for it, so the piped one-liner above works from any directory:
 ```sh
 azform shell-init zsh    # prints the zsh widget to stdout
 azform shell-init bash   # prints the bash widget (needs bash 4+)
+azform shell-init fish   # prints the fish widget (needs fish 3.4+)
 ```
 
 Useful if you manage your dotfiles yourself: source the output from

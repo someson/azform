@@ -3,13 +3,15 @@ package render
 
 import "strings"
 
-// Dialect controls shell escaping. Only POSIX is implemented for M2; the
-// PowerShell constant is reserved per spec 5.1 / 13.2 to avoid future churn.
+// Dialect controls shell escaping. POSIX covers bash and zsh; Fish has its
+// own single-quote rules. The PowerShell constant is reserved per spec
+// 5.1 / 13.2 to avoid future churn.
 type Dialect int
 
 const (
 	POSIX      Dialect = iota
 	PowerShell         // not implemented until M9
+	Fish
 )
 
 // EscapePOSIX escapes s for POSIX shell per spec 5.1.
@@ -23,6 +25,21 @@ func EscapePOSIX(s string) string {
 		return s
 	}
 	return "'" + strings.ReplaceAll(s, "'", `'\''`) + "'"
+}
+
+// EscapeFish escapes s for fish. Clean identifiers are returned bare;
+// everything else is single-quoted. Inside fish single quotes only the
+// backslash and the single quote are special, so both are backslash-escaped;
+// the POSIX close-escape-reopen idiom would leave a bare quote behind.
+func EscapeFish(s string) string {
+	if s == "" {
+		return "''"
+	}
+	if !needsQuoting(s) && !strings.ContainsRune(s, '%') {
+		return s
+	}
+	r := strings.NewReplacer(`\`, `\\`, `'`, `\'`)
+	return "'" + r.Replace(s) + "'"
 }
 
 // needsQuoting reports whether s must be quoted to reach az as one
@@ -94,6 +111,8 @@ func Build(cmd Command) string {
 			switch cmd.Dialect {
 			case PowerShell:
 				val = EscapePOSIX(val) // placeholder; M9 adds real PS escaping
+			case Fish:
+				val = EscapeFish(val)
 			default:
 				val = EscapePOSIX(val)
 			}

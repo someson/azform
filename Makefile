@@ -30,6 +30,7 @@ widget-install: build ## Emit widgets from the built binary into $(SHARE_DIR)
 	@mkdir -p $(SHARE_DIR)
 	./bin/azform shell-init zsh > $(SHARE_DIR)/widget.zsh
 	./bin/azform shell-init bash > $(SHARE_DIR)/widget.bash
+	./bin/azform shell-init fish > $(SHARE_DIR)/widget.fish
 	@echo "widgets installed in $(SHARE_DIR) — restart shell or: exec $$SHELL"
 
 test: ## Run tests

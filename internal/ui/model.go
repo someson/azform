@@ -14,6 +14,7 @@ import (
 
 	"github.com/someson/azform/internal/debug"
 	"github.com/someson/azform/internal/metadata"
+	"github.com/someson/azform/internal/render"
 	"github.com/someson/azform/internal/shell"
 	"github.com/someson/azform/internal/state"
 	"github.com/someson/azform/internal/update"
@@ -229,6 +230,10 @@ type Sources struct {
 	Bindings      *state.BindingsStore
 	UpdateCheck   tea.Cmd // background self-update check (M8, spec §14.4)
 	Debug         *debug.Logger
+	// Dialect is the quoting dialect of the shell the widget runs in. The
+	// zero value is POSIX (bash, zsh); fish needs its own single-quote
+	// escapes both in the assembled command and in --env-out lines.
+	Dialect render.Dialect
 }
 
 // NewForm constructs a Form. cache may be nil (tests inject MetadataLoadedMsg directly).
@@ -1315,6 +1320,17 @@ func quoteForShell(value string) string {
 // the previous `export VAR=value` shape.
 func shellVarLine(name, value string) string {
 	return name + "=" + quoteForShell(value)
+}
+
+// shellVarLineFor is shellVarLine for a specific shell dialect. fish has
+// no NAME=VALUE assignment, so its widget gets `set -g NAME 'value'`,
+// quoted with fish's own escapes (a POSIX-quoted value containing a quote
+// would not survive the widget's eval).
+func shellVarLineFor(d render.Dialect, name, value string) string {
+	if d == render.Fish {
+		return "set -g " + name + " " + render.EscapeFish(value)
+	}
+	return shellVarLine(name, value)
 }
 
 // isValidVarName reports whether s is a valid POSIX shell variable name

@@ -49,6 +49,7 @@ detect_shell() {
     case "${SHELL:-}" in
         */zsh) echo zsh ;;
         */bash) echo bash ;;
+        */fish) echo fish ;;
         *) echo sh ;;
     esac
 }
@@ -71,6 +72,7 @@ bash_major() {
 azform_widget_for_shell() {
     case "$1" in
         zsh) echo widget.zsh ;;
+        fish) echo widget.fish ;;
         bash)
             if [ "${2:-0}" -ge 4 ] 2>/dev/null; then
                 echo widget.bash
@@ -89,14 +91,21 @@ azform_unsupported_message() {
     if [ "$1" = bash ]; then
         printf "widget not installed: your bash is %s.x; azform's widget needs bash 4+. Upgrade bash, then re-run this installer.\n" "${2:-?}"
     else
-        printf "widget not installed: your shell is %s; azform's widget supports zsh and bash 4+. Re-run from your target shell.\n" "$1"
+        printf "widget not installed: your shell is %s; azform's widget supports zsh, bash 4+ and fish. Re-run from your target shell.\n" "$1"
     fi
+}
+
+# fish_config_dir echoes fish's config directory. fish reads
+# $XDG_CONFIG_HOME/fish, falling back to ~/.config/fish.
+fish_config_dir() {
+    echo "${XDG_CONFIG_HOME:-$HOME/.config}/fish"
 }
 
 profile_path() {
     shell=$(detect_shell)
     case "$shell" in
         zsh) echo "$HOME/.zshrc" ;;
+        fish) echo "$(fish_config_dir)/config.fish" ;;
         bash)
             if [ "${OS:-}" = "Windows_NT" ] || uname -s | grep -qi mingw; then
                 echo "$HOME/.bash_profile"
@@ -196,7 +205,7 @@ write_widget() {
     # Both widgets are installed regardless of the current shell: it
     # costs nothing and means switching shells later works without
     # re-running the installer.
-    for shell in zsh bash; do
+    for shell in zsh bash fish; do
         tmp="$SHARE_DIR/widget.$shell.tmp.$$"
         # Via a temp file: a failing binary must not leave a truncated
         # widget.$shell behind for the profile to source.
@@ -221,6 +230,7 @@ add_to_profile() {
     fi
 
     prof=$(profile_path)
+    mkdir -p "$(dirname "$prof")"
     [ -f "$prof" ] || : > "$prof"
     if grep -qF "$MARKER_BEGIN" "$prof"; then
         log "profile already contains azform block; leaving as-is"
@@ -228,6 +238,8 @@ add_to_profile() {
     fi
     backup="${prof}.azform.bak.$(date +%s)"
     cp "$prof" "$backup"
+    # `[ -f x ] && source x` is valid in fish 3+ as well (`[` is test,
+    # `&&` arrived in 3.0), so one line serves all three shells.
     widget_line="[ -f \"$SHARE_DIR/$widget\" ] && source \"$SHARE_DIR/$widget\""
     {
         printf '\n%s\n%s\n%s\n' "$MARKER_BEGIN" "$widget_line" "$MARKER_END"
@@ -271,7 +283,7 @@ uninstall() {
         rm -rf "$(state_dir)" "$(cache_dir)"
         log "removed state and metadata cache"
     fi
-    for prof in "$HOME/.zshrc" "$HOME/.bashrc" "$HOME/.bash_profile" "$HOME/.profile"; do
+    for prof in "$HOME/.zshrc" "$HOME/.bashrc" "$HOME/.bash_profile" "$HOME/.profile" "$(fish_config_dir)/config.fish"; do
         if [ -f "$prof" ] && grep -qF "$MARKER_BEGIN" "$prof"; then
             backup="${prof}.azform.uninst.$(date +%s)"
             cp "$prof" "$backup"
@@ -328,7 +340,7 @@ cat <<SUMMARY
 azform $version installed.
 
   binary:  $BIN_DIR/azform
-  widget:  $SHARE_DIR/widget.zsh, $SHARE_DIR/widget.bash
+  widget:  $SHARE_DIR/widget.zsh, $SHARE_DIR/widget.bash, $SHARE_DIR/widget.fish
   profile: $prof
 
 Restart the shell or run:  exec "$SHELL"

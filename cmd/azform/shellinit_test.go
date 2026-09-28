@@ -5,6 +5,8 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/someson/azform/internal/render"
+	"github.com/someson/azform/internal/shell"
 	"github.com/someson/azform/widget"
 )
 
@@ -12,7 +14,7 @@ import (
 // the script goes to stdout unchanged, nothing goes to stderr, exit 0.
 func TestShellInitEmitsWidget(t *testing.T) {
 	t.Parallel()
-	for _, shell := range []string{"zsh", "bash"} {
+	for _, shell := range []string{"zsh", "bash", "fish"} {
 		t.Run(shell, func(t *testing.T) {
 			t.Parallel()
 			var stdout, stderr bytes.Buffer
@@ -40,7 +42,7 @@ func TestShellInitUsageErrors(t *testing.T) {
 	t.Parallel()
 	cases := map[string][]string{
 		"no shell":    {},
-		"unknown":     {"fish"},
+		"unknown":     {"nu"},
 		"unsupported": {"sh"},
 		"extra args":  {"zsh", "bash"},
 	}
@@ -67,5 +69,25 @@ func TestShellInitUsageErrors(t *testing.T) {
 func TestRunDispatchesShellInit(t *testing.T) {
 	if code := run([]string{"shell-init", "zsh"}); code != 0 {
 		t.Fatalf("run(shell-init zsh) = %d, want 0", code)
+	}
+}
+
+// TestShellDialect pins the --shell flag: bash, zsh and the empty
+// default (widgets that predate the flag) stay POSIX, fish switches both
+// the tokenizer and the output dialect, anything else is rejected.
+func TestShellDialect(t *testing.T) {
+	t.Parallel()
+	for _, name := range []string{"", "bash", "zsh"} {
+		syn, d, err := shellDialect(name)
+		if err != nil || syn != shell.POSIX || d != render.POSIX {
+			t.Errorf("shellDialect(%q) = %v, %v, %v; want POSIX", name, syn, d, err)
+		}
+	}
+	syn, d, err := shellDialect("fish")
+	if err != nil || syn != shell.Fish || d != render.Fish {
+		t.Errorf("shellDialect(fish) = %v, %v, %v; want Fish", syn, d, err)
+	}
+	if _, _, err := shellDialect("nu"); err == nil {
+		t.Error("shellDialect(nu) should fail")
 	}
 }
