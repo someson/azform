@@ -1,0 +1,56 @@
+name: dependabot-licenses
+
+# A Go dependency bump changes the version embedded in the license URLs of
+# THIRD_PARTY_LICENSES.md, so the "licenses" job in ci.yml fails on every
+# Dependabot PR until the file is regenerated. This workflow regenerates it
+# and pushes the result to the Dependabot branch.
+#
+# Setup (one time): create a token that can push to this repository
+# (fine-grained PAT with "Contents: read and write", or a GitHub App token)
+# and store it as the *Dependabot* secret DEPENDABOT_PUSH_TOKEN
+# (Settings -> Secrets and variables -> Dependabot). A push made with the
+# default GITHUB_TOKEN would not trigger CI on the new commit, leaving the
+# PR without a passing check; a PAT/App token does.
+
+on:
+  pull_request:
+    paths:
+      - go.mod
+      - go.sum
+
+permissions:
+  contents: read
+
+jobs:
+  regenerate:
+    name: regenerate THIRD_PARTY_LICENSES.md
+    if: github.actor == 'dependabot[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+          token: ${{ secrets.DEPENDABOT_PUSH_TOKEN }}
+
+      - uses: actions/setup-go@v7
+        with:
+          go-version: stable
+          cache: true
+
+      - name: install go-licenses
+        run: go install github.com/google/go-licenses@latest
+
+      - name: regenerate report
+        run: go-licenses report ./... > THIRD_PARTY_LICENSES.md
+
+      - name: commit and push if changed
+        run: |
+          if git diff --quiet -- THIRD_PARTY_LICENSES.md; then
+            echo "THIRD_PARTY_LICENSES.md already current"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add THIRD_PARTY_LICENSES.md
+          git commit -m "chore(deps): update THIRD_PARTY_LICENSES.md"
+          git push
