@@ -131,7 +131,7 @@ func (m *Form) applyBufferPreFill(params []metadata.Parameter) bool {
 					// user can confirm what az will receive.
 					// A fish (…) substitution is computed by the shell, so it
 					// is kept for choice params too rather than rejected.
-					if !pp.Subst && !valueAllowedForParam(f.Param, pp.Value) {
+					if !pp.Expands && !valueAllowedForParam(f.Param, pp.Value) {
 						if resolved := resolveBufferVars(pp, m.src.Vars); resolved != "" && valueAllowedForParam(f.Param, resolved) {
 							value, mode = resolved, FieldModeLiteral
 						} else {
@@ -442,7 +442,7 @@ func (m *Form) setTypedValue(f *Field, value string) {
 	// is shell code the user wants run, not text to quote.
 	if m.src.Dialect == render.Fish {
 		toks := shell.TokenizeSyntax(trimmed, shell.Fish)
-		if len(toks) == 1 && toks[0].Subst && !toks[0].Unclosed {
+		if len(toks) == 1 && toks[0].Expands && !toks[0].Unclosed {
 			f.Mode = FieldModeVar
 			return
 		}

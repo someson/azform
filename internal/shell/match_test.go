@@ -303,14 +303,19 @@ func TestMatchParamsListLiteral(t *testing.T) {
 }
 
 func TestMatchParamsListMixed(t *testing.T) {
-	// Mixed (some var, some literal) is treated as literal: not every
-	// consumed token is a var ref, so the safe path is literal mode.
+	// Mixed (some var, some literal) is not a pure var list, so there are
+	// no VarNames to resolve. It used to fall back to literal mode, which
+	// re-emitted it as the single argument '$addr1 10.0.0.5'; the shell
+	// expands "$addr1", so the list is now kept exactly as typed.
 	raw := rawFor(t, `az network application-gateway address-pool update --servers "$addr1" 10.0.0.5`)
 	parsed := shell.MatchParams(raw, listParams)
 
 	servers := parsed.Params[0]
-	if servers.IsVar {
-		t.Error("IsVar should be false for mixed var/literal list")
+	if !servers.IsVar || !servers.Expands {
+		t.Errorf("mixed list should be verbatim: IsVar=%v Expands=%v", servers.IsVar, servers.Expands)
+	}
+	if servers.Value != `"$addr1" 10.0.0.5` {
+		t.Errorf("Value = %q, want the raw text", servers.Value)
 	}
 	if len(servers.VarNames) != 0 {
 		t.Errorf("VarNames = %v, want empty for mixed list", servers.VarNames)
@@ -488,8 +493,8 @@ func TestMatchParamsFishSubstIsVerbatim(t *testing.T) {
 	want := map[string]string{"--name": "(whoami)-rg", "--location": "(echo west)"}
 	for _, pp := range pb.Params {
 		if w, ok := want[pp.Flag]; ok {
-			if pp.Value != w || !pp.IsVar || !pp.Subst {
-				t.Errorf("%s: value=%q isVar=%v subst=%v, want %q verbatim", pp.Flag, pp.Value, pp.IsVar, pp.Subst, w)
+			if pp.Value != w || !pp.IsVar || !pp.Expands {
+				t.Errorf("%s: value=%q isVar=%v subst=%v, want %q verbatim", pp.Flag, pp.Value, pp.IsVar, pp.Expands, w)
 			}
 			delete(want, pp.Flag)
 		}
@@ -499,5 +504,44 @@ func TestMatchParamsFishSubstIsVerbatim(t *testing.T) {
 	}
 	if len(pb.Positional) != 0 {
 		t.Errorf("unexpected positionals: %+v", pb.Positional)
+	}
+}
+
+// TestMatchParamsExpansionsAreVerbatim: values the shell expands are kept
+// as typed (Expands, verbatim), while a whole $VAR stays a named var ref.
+func TestMatchParamsExpansionsAreVerbatim(t *testing.T) {
+	cases := []struct {
+		line, value string
+		expands     bool
+		varName     string
+	}{
+		{`az x --name $(whoami)`, `$(whoami)`, true, ""},
+		{`az x --name pre-$(whoami)-post`, `pre-$(whoami)-post`, true, ""},
+		{"az x --name `whoami`", "`whoami`", true, ""},
+		{`az x --name "$(whoami)"`, `"$(whoami)"`, true, ""},
+		{`az x --name pre-$RG`, `pre-$RG`, true, ""},
+		{`az x --name "a $RG"`, `"a $RG"`, true, ""},
+		{`az x --name ~/x`, `~/x`, true, ""},
+		{`az x --name=$(whoami)`, `$(whoami)`, true, ""},
+		{`az x --name $RG`, `$RG`, false, "RG"},
+		{`az x --name "$RG"`, `$RG`, false, "RG"},
+		{`az x --name 'a$b'`, `a$b`, false, ""},
+		{`az x --name a$`, `a$`, false, ""},
+		{`az x --name "cost: 5$"`, `cost: 5$`, false, ""},
+	}
+	params := []metadata.Parameter{{Name: "--name", TakesValue: true}}
+	for _, tc := range cases {
+		pb := shell.MatchParams(rawFor(t, tc.line), params)
+		if len(pb.Params) != 1 {
+			t.Errorf("%s: %d params", tc.line, len(pb.Params))
+			continue
+		}
+		pp := pb.Params[0]
+		if pp.Value != tc.value || pp.Expands != tc.expands || pp.VarName != tc.varName {
+			t.Errorf("%s: value=%q expands=%v var=%q; want %q %v %q", tc.line, pp.Value, pp.Expands, pp.VarName, tc.value, tc.expands, tc.varName)
+		}
+		if len(pb.Positional) != 0 {
+			t.Errorf("%s: unexpected positionals %+v", tc.line, pb.Positional)
+		}
 	}
 }

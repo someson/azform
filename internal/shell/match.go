@@ -19,7 +19,7 @@ type ParsedParam struct {
 	Unknown  bool     // true when the flag is not found in params
 	Explicit bool     // true when a value was provided (inline `--flag=…` or a value token), even if empty
 	Inline   bool     // true for the `--flag=value` form: RawFlag then holds the whole token, value included
-	Subst    bool     // true when the value holds a fish (…) command substitution; Value is then the raw text, emitted verbatim
+	Expands  bool     // true when the shell expands the value ($(…), `…`, pre-$VAR, ~/…, fish (…)); Value is then the raw text, emitted verbatim
 }
 
 // ParsedBuffer is the result of matching RawBuffer flag tokens against
@@ -46,7 +46,7 @@ func MatchParams(raw RawBuffer, params []metadata.Parameter) ParsedBuffer {
 		CursorParam: -1,
 	}
 
-	tokens := raw.FlagTokens
+	tokens := joinAdjacent(raw.FlagTokens)
 	// consumed[i] marks tokens that have been absorbed into some ParsedParam
 	// (either as a flag name or as one of its value tokens). Anything not
 	// marked after the loop is a positional — a bare word the parser left
@@ -92,7 +92,7 @@ func MatchParams(raw RawBuffer, params []metadata.Parameter) ParsedBuffer {
 			flagName = flagRaw[:eqIdx]
 			inlineValue = flagRaw[eqIdx+1:]
 			inlineRawValue = inlineValue // no separate raw token
-			if tok.Subst {
+			if tok.Expands {
 				if rawEq := strings.IndexByte(tok.Raw, '='); rawEq >= 0 {
 					inlineValue = tok.Raw[rawEq+1:]
 					inlineRawValue = inlineValue
@@ -182,18 +182,6 @@ func MatchParams(raw RawBuffer, params []metadata.Parameter) ParsedBuffer {
 		// `$a1 $a2` which fails that check; classify each value token
 		// separately so the whole list ends up in var mode.
 		pp.IsVar, pp.VarName = detectVarRef(pp.Value)
-		// A fish (…) substitution is shell code, not a literal: keep the
-		// value exactly as typed and emit it verbatim, like a var ref.
-		if (eqIdx >= 0 && tok.Subst) || anySubst(valueTokens) {
-			pp.Subst = true
-			pp.IsVar = true
-			pp.VarName = ""
-			if eqIdx < 0 {
-				pp.Value = pp.RawValue
-			} else {
-				pp.Value = inlineValue
-			}
-		}
 		if param != nil && isListKind(param.ValueKind) && len(valueTokens) > 1 {
 			names := make([]string, 0, len(valueTokens))
 			allVars := true
@@ -209,6 +197,19 @@ func MatchParams(raw RawBuffer, params []metadata.Parameter) ParsedBuffer {
 				pp.IsVar = true
 				pp.VarName = ""
 				pp.VarNames = names
+			}
+		}
+
+		// A whole $VAR (or an all-var list) stays a named var ref, resolved
+		// and validated; any other expansion is kept exactly as typed.
+		if !pp.IsVar && ((eqIdx >= 0 && tok.Expands) || anyExpands(valueTokens)) {
+			pp.Expands = true
+			pp.IsVar = true
+			pp.VarName = ""
+			if eqIdx < 0 {
+				pp.Value = pp.RawValue
+			} else {
+				pp.Value = inlineValue
 			}
 		}
 
@@ -282,10 +283,36 @@ func DetectVarRef(value string) (bool, string) {
 	return false, ""
 }
 
-// anySubst reports whether any of toks carries a fish (…) substitution.
-func anySubst(toks []Token) bool {
+// joinAdjacent merges tokens that touch (no whitespace between them) into
+// one word, the way the shell sees them: `pre-$(whoami)` is a TokWord
+// followed by a TokCmdSubst, and `--name=$(x)` a flag word glued to one.
+// A lone $(…) or `…` also becomes a word. Merged words that contain a
+// command substitution are marked Expands so they are re-emitted verbatim.
+func joinAdjacent(toks []Token) []Token {
+	out := make([]Token, 0, len(toks))
 	for _, t := range toks {
-		if t.Subst {
+		if t.Kind == TokCmdSubst {
+			t.Kind = TokWord
+			t.Expands = true
+		}
+		if n := len(out); n > 0 && t.Kind == TokWord && out[n-1].Kind == TokWord && out[n-1].End == t.Start {
+			prev := &out[n-1]
+			prev.Raw += t.Raw
+			prev.Value += t.Value
+			prev.End = t.End
+			prev.Expands = prev.Expands || t.Expands
+			prev.Unclosed = prev.Unclosed || t.Unclosed
+			continue
+		}
+		out = append(out, t)
+	}
+	return out
+}
+
+// anyExpands reports whether any of toks is expanded by the shell.
+func anyExpands(toks []Token) bool {
+	for _, t := range toks {
+		if t.Expands {
 			return true
 		}
 	}
