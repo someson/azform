@@ -39,7 +39,10 @@ func TestInstallShWidgetSelection(t *testing.T) {
 		{"bash 5", "bash", "5", "widget.bash"},
 		{"bash 4", "bash", "4", "widget.bash"},
 		{"bash 3", "bash", "3", ""},
-		{"fish", "fish", "0", "widget.fish"},
+		{"fish 3.7", "fish", "307", "widget.fish"},
+		{"fish 4.0", "fish", "400", "widget.fish"},
+		{"fish 3.3", "fish", "303", ""},
+		{"fish unknown", "fish", "0", ""},
 		{"sh", "sh", "0", ""},
 	}
 	for _, tc := range cases {
@@ -79,6 +82,31 @@ func TestInstallShOldBashMessage(t *testing.T) {
 	}
 	if strings.Contains(strings.ToLower(got), "brew") {
 		t.Errorf("message must not hardcode a package manager; got %q", got)
+	}
+}
+
+// TestInstallShFishVersion parses `fish --version` from $SHELL, the
+// login shell the profile block is written for.
+func TestInstallShFishVersion(t *testing.T) {
+	t.Parallel()
+	dir := t.TempDir()
+	fake := filepath.Join(dir, "fish")
+	for _, tc := range []struct{ out, want string }{
+		{"fish, version 3.7.1", "307"},
+		{"fish, version 4.0.2", "400"},
+		{"fish, version 3.10.0-12-gabc", "310"},
+		{"garbage", "0"},
+	} {
+		if err := os.WriteFile(fake, []byte("#!/bin/sh\necho '"+tc.out+"'\n"), 0o755); err != nil {
+			t.Fatal(err)
+		}
+		if got := runInstallLib(t, "SHELL="+fake+" fish_version"); got != tc.want {
+			t.Errorf("%q: fish_version = %q, want %q", tc.out, got, tc.want)
+		}
+	}
+	got := runInstallLib(t, "azform_unsupported_message fish 303")
+	if !strings.Contains(got, "3.3") || !strings.Contains(got, "fish 3.4+") {
+		t.Errorf("fish message should name the version found and the requirement; got %q", got)
 	}
 }
 

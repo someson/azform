@@ -264,3 +264,15 @@ func TestTokenizeFishSubst(t *testing.T) {
 		}
 	}
 }
+
+// TestTokenizeFishDoubleQuoteBacktick: in fish double quotes \` is not an
+// escape, so the backslash is part of the value; POSIX drops it.
+func TestTokenizeFishDoubleQuoteBacktick(t *testing.T) {
+	line := "az x --name \"a\\`b\""
+	if got := shell.TokenizeSyntax(line, shell.Fish)[3].Value; got != "a\\`b" {
+		t.Errorf("fish: value = %q, want %q", got, "a\\`b")
+	}
+	if got := shell.Tokenize(line)[3].Value; got != "a`b" {
+		t.Errorf("POSIX: value = %q, want %q", got, "a`b")
+	}
+}

@@ -105,5 +105,7 @@ function azform-widget
     commandline -f repaint
 end
 
+# The legacy \cx notation is kept on purpose: fish 3.x needs it, and
+# fish 4 translates it to its new `ctrl-x,a` form (checked on 4.0.2).
 bind \cxa azform-widget
 bind -M insert \cxa azform-widget 2>/dev/null

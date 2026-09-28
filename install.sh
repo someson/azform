@@ -64,15 +64,31 @@ bash_major() {
     "${SHELL:-/bin/bash}" -c 'echo "${BASH_VERSINFO[0]}"' 2>/dev/null || echo 0
 }
 
-# azform_widget_for_shell echoes the widget filename for a shell and a
-# bash major version, or nothing at all when the shell cannot host the
-# widget. bash < 4 lacks READLINE_LINE/READLINE_POINT, so the binding
-# would fire and silently do nothing; sh and dash have no keybinding
-# mechanism whatsoever.
+# fish_version echoes the login shell's fish version as major*100+minor
+# (3.4 -> 304), from "$SHELL" for the same reason bash_major uses it.
+# Echoes 0 when it cannot tell, so an unreadable version is treated as
+# unsupported rather than assumed new.
+fish_version() {
+    fv=$("${SHELL:-fish}" --version 2>/dev/null | sed -n 's/.*version \([0-9][0-9]*\)\.\([0-9][0-9]*\).*/\1 \2/p')
+    [ -n "$fv" ] || { echo 0; return 0; }
+    set -- $fv # "major minor", split on purpose
+    echo $(( $1 * 100 + $2 ))
+}
+
+# azform_widget_for_shell echoes the widget filename for a shell and its
+# version (bash: major; fish: major*100+minor), or nothing at all when
+# the shell cannot host the widget. bash < 4 lacks
+# READLINE_LINE/READLINE_POINT, so the binding would fire and silently do
+# nothing; fish < 3.4 lacks $(…), which azform reads and writes; sh and
+# dash have no keybinding mechanism whatsoever.
 azform_widget_for_shell() {
     case "$1" in
         zsh) echo widget.zsh ;;
-        fish) echo widget.fish ;;
+        fish)
+            if [ "${2:-0}" -ge 304 ] 2>/dev/null; then
+                echo widget.fish
+            fi
+            ;;
         bash)
             if [ "${2:-0}" -ge 4 ] 2>/dev/null; then
                 echo widget.bash
@@ -90,6 +106,8 @@ azform_widget_for_shell() {
 azform_unsupported_message() {
     if [ "$1" = bash ]; then
         printf "widget not installed: your bash is %s.x; azform's widget needs bash 4+. Upgrade bash, then re-run this installer.\n" "${2:-?}"
+    elif [ "$1" = fish ]; then
+        printf "widget not installed: your fish is %s.%s; azform's widget needs fish 3.4+. Upgrade fish, then re-run this installer.\n" "$(( ${2:-0} / 100 ))" "$(( ${2:-0} % 100 ))"
     else
         printf "widget not installed: your shell is %s; azform's widget supports zsh, bash 4+ and fish. Re-run from your target shell.\n" "$1"
     fi
@@ -219,6 +237,7 @@ add_to_profile() {
     shell=$(detect_shell)
     major=0
     [ "$shell" = bash ] && major=$(bash_major)
+    [ "$shell" = fish ] && major=$(fish_version)
     widget=$(azform_widget_for_shell "$shell" "$major")
 
     # No widget for this shell: install nothing into the profile and

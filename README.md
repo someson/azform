@@ -35,6 +35,16 @@ Command substitutions — fish's `(…)` as well as `$(…)` — are kept
 exactly as typed, and a POSIX `${NAME}` is written back as fish's
 `{$NAME}`.
 
+The installer writes to the profile of your login shell (`$SHELL`). If
+you keep bash or zsh as the login shell and start fish from your
+terminal, add the widget to fish yourself — the installer has already
+put it in place:
+
+```fish
+# ~/.config/fish/config.fish
+test -f ~/.local/share/azform/widget.fish; and source ~/.local/share/azform/widget.fish
+```
+
 macOS ships bash 3.2, so if you choose to use `bash` instead of `zsh`,
 you need a newer bash from a package manager. Linux distributions ship
 bash 4.4+ (RHEL 8+) or 5.x (Debian, Ubuntu, Fedora, Arch), which work

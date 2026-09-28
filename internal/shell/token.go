@@ -168,8 +168,12 @@ func scanWord(line string, start int, syn Syntax) (Token, int) {
 			for i < len(line) && line[i] != '"' {
 				if line[i] == '\\' && i+1 < len(line) {
 					next := line[i+1]
-					switch next {
-					case '"', '\\', '$', '`', '\n':
+					// fish does not escape the backtick in double quotes
+					// (it has no backtick substitution), so \` stays two
+					// characters there.
+					switch {
+					case next == '"' || next == '\\' || next == '$' || next == '\n',
+						next == '`' && syn != Fish:
 						raw.WriteByte('\\')
 						raw.WriteByte(next)
 						if next != '\n' {
