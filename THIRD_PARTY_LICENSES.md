@@ -11,11 +11,11 @@ github.com/clipperhouse/displaywidth,https://github.com/clipperhouse/displaywidt
 github.com/clipperhouse/uax29/v2/graphemes,https://github.com/clipperhouse/uax29/blob/v2.7.0/LICENSE,MIT
 github.com/lucasb-eyer/go-colorful,https://github.com/lucasb-eyer/go-colorful/blob/v1.4.0/LICENSE,MIT
 github.com/mattn/go-isatty,https://github.com/mattn/go-isatty/blob/v0.0.20/LICENSE,MIT
-github.com/mattn/go-runewidth,https://github.com/mattn/go-runewidth/blob/v0.0.29/LICENSE,MIT
+github.com/mattn/go-runewidth,https://github.com/mattn/go-runewidth/blob/v0.0.30/LICENSE,MIT
 github.com/muesli/ansi,https://github.com/muesli/ansi/blob/276c6243b2f6/LICENSE,MIT
 github.com/muesli/cancelreader,https://github.com/muesli/cancelreader/blob/v0.2.2/LICENSE,MIT
 github.com/muesli/termenv,https://github.com/muesli/termenv/blob/v0.16.0/LICENSE,MIT
 github.com/rivo/uniseg,https://github.com/rivo/uniseg/blob/v0.4.7/LICENSE.txt,MIT
 github.com/someson/azform,https://github.com/someson/azform/blob/HEAD/LICENSE,MIT
 github.com/xo/terminfo,https://github.com/xo/terminfo/blob/abceb7e1c41e/LICENSE,MIT
-golang.org/x/sys/unix,https://cs.opensource.google/go/x/sys/+/v0.47.0:LICENSE,BSD-3-Clause
+golang.org/x/sys/unix,https://cs.opensource.google/go/x/sys/+/v0.48.0:LICENSE,BSD-3-Clause
