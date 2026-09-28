@@ -22,6 +22,10 @@ type Token struct {
 	Start    int    // byte offset in source
 	End      int    // exclusive byte offset
 	Unclosed bool   // true when a quote or $(/`  delimiter was not closed before EOL
+	// Subst is set on a fish word that contains an unquoted (…) command
+	// substitution. Value then holds the substitution verbatim, so the word
+	// must be re-emitted as typed (Raw), never quoted as a literal.
+	Subst bool
 }
 
 // Syntax selects the quoting rules Tokenize applies. The two differ only
@@ -115,6 +119,7 @@ func scanWord(line string, start int, syn Syntax) (Token, int) {
 	var raw strings.Builder
 	var val strings.Builder
 	unclosed := false
+	subst := false
 	i := start
 
 	for i < len(line) {
@@ -221,6 +226,24 @@ func scanWord(line string, start int, syn Syntax) (Token, int) {
 			goto done // backtick CmdSubst handled at top level
 		case ';', '|', '&', '>', '<':
 			goto done
+		case '(':
+			if syn != Fish {
+				raw.WriteByte('(')
+				val.WriteByte('(')
+				i++
+				continue
+			}
+			// fish command substitution: (cmd) anywhere in a word, e.g.
+			// (whoami)-rg. Copied verbatim, spaces and all, so the word
+			// survives as one token and is re-emitted exactly as typed.
+			end, closed := fishSubstEnd(line, i)
+			raw.WriteString(line[i:end])
+			val.WriteString(line[i:end])
+			subst = true
+			if !closed {
+				unclosed = true
+			}
+			i = end
 		default:
 			if i+1 < len(line) {
 				switch line[i : i+2] {
@@ -244,7 +267,41 @@ done:
 		Start:    start,
 		End:      i,
 		Unclosed: unclosed,
+		Subst:    subst,
 	}, i - start
+}
+
+// fishSubstEnd returns the exclusive end of the fish (…) substitution that
+// opens at line[start] and whether its closing paren was found. Nested
+// parens are balanced; quoted text inside is skipped with fish's rules
+// (\\ and \' in single quotes, backslash escapes in double quotes).
+func fishSubstEnd(line string, start int) (int, bool) {
+	depth := 0
+	i := start
+	for i < len(line) {
+		switch line[i] {
+		case '\\':
+			i++ // skip the escaped byte
+		case '(':
+			depth++
+		case ')':
+			depth--
+			if depth == 0 {
+				return i + 1, true
+			}
+		case '\'', '"':
+			q := line[i]
+			i++
+			for i < len(line) && line[i] != q {
+				if line[i] == '\\' && i+1 < len(line) {
+					i++
+				}
+				i++
+			}
+		}
+		i++
+	}
+	return len(line), false
 }
 
 // scanCmdSubst reads a $(...) token starting at start (which is '$').

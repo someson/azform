@@ -474,3 +474,30 @@ func TestRoundTrip(t *testing.T) {
 		})
 	}
 }
+
+func TestMatchParamsFishSubstIsVerbatim(t *testing.T) {
+	params := []metadata.Parameter{
+		{Name: "--name", TakesValue: true},
+		{Name: "--location", TakesValue: true},
+	}
+	raw, ok := shell.ParseRawSyntax(`az group create --name (whoami)-rg --location=(echo west)`, 0, shell.Fish)
+	if !ok {
+		t.Fatal("no segment")
+	}
+	pb := shell.MatchParams(raw, params)
+	want := map[string]string{"--name": "(whoami)-rg", "--location": "(echo west)"}
+	for _, pp := range pb.Params {
+		if w, ok := want[pp.Flag]; ok {
+			if pp.Value != w || !pp.IsVar || !pp.Subst {
+				t.Errorf("%s: value=%q isVar=%v subst=%v, want %q verbatim", pp.Flag, pp.Value, pp.IsVar, pp.Subst, w)
+			}
+			delete(want, pp.Flag)
+		}
+	}
+	if len(want) != 0 {
+		t.Errorf("params not matched: %v", want)
+	}
+	if len(pb.Positional) != 0 {
+		t.Errorf("unexpected positionals: %+v", pb.Positional)
+	}
+}

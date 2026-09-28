@@ -31,8 +31,9 @@ per-shell, not per-OS.
 
 In fish, azform reads the line with fish's quoting rules (`\'` and `\\`
 inside single quotes) and writes commands back in the same dialect.
-Command substitution is recognised in its `$(…)` form; a bare `(…)`
-is treated as plain text.
+Command substitutions — fish's `(…)` as well as `$(…)` — are kept
+exactly as typed, and a POSIX `${NAME}` is written back as fish's
+`{$NAME}`.
 
 macOS ships bash 3.2, so if you choose to use `bash` instead of `zsh`,
 you need a newer bash from a package manager. Linux distributions ship

@@ -1,7 +1,10 @@
 // Package render assembles the final az command string from form field values.
 package render
 
-import "strings"
+import (
+	"regexp"
+	"strings"
+)
 
 // Dialect controls shell escaping. POSIX covers bash and zsh; Fish has its
 // own single-quote rules. The PowerShell constant is reserved per spec
@@ -40,6 +43,15 @@ func EscapeFish(s string) string {
 	}
 	r := strings.NewReplacer(`\`, `\\`, `'`, `\'`)
 	return "'" + r.Replace(s) + "'"
+}
+
+var bracedVarRe = regexp.MustCompile(`\$\{([A-Za-z_][A-Za-z0-9_]*)\}`)
+
+// FishVarRefs rewrites POSIX ${NAME} references to fish's {$NAME}, which
+// expands the same way; fish rejects ${NAME} as a syntax error. Anything
+// else in a var-mode value is left as typed.
+func FishVarRefs(s string) string {
+	return bracedVarRe.ReplaceAllString(s, "{$$$1}")
 }
 
 // needsQuoting reports whether s must be quoted to reach az as one
@@ -107,6 +119,9 @@ func Build(cmd Command) string {
 			continue
 		}
 		val := f.Value
+		if f.IsVar && cmd.Dialect == Fish {
+			val = FishVarRefs(val)
+		}
 		if !f.IsVar {
 			switch cmd.Dialect {
 			case PowerShell:

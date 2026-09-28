@@ -19,6 +19,7 @@ type ParsedParam struct {
 	Unknown  bool     // true when the flag is not found in params
 	Explicit bool     // true when a value was provided (inline `--flag=…` or a value token), even if empty
 	Inline   bool     // true for the `--flag=value` form: RawFlag then holds the whole token, value included
+	Subst    bool     // true when the value holds a fish (…) command substitution; Value is then the raw text, emitted verbatim
 }
 
 // ParsedBuffer is the result of matching RawBuffer flag tokens against
@@ -91,6 +92,12 @@ func MatchParams(raw RawBuffer, params []metadata.Parameter) ParsedBuffer {
 			flagName = flagRaw[:eqIdx]
 			inlineValue = flagRaw[eqIdx+1:]
 			inlineRawValue = inlineValue // no separate raw token
+			if tok.Subst {
+				if rawEq := strings.IndexByte(tok.Raw, '='); rawEq >= 0 {
+					inlineValue = tok.Raw[rawEq+1:]
+					inlineRawValue = inlineValue
+				}
+			}
 		} else {
 			flagName = flagRaw
 		}
@@ -175,6 +182,18 @@ func MatchParams(raw RawBuffer, params []metadata.Parameter) ParsedBuffer {
 		// `$a1 $a2` which fails that check; classify each value token
 		// separately so the whole list ends up in var mode.
 		pp.IsVar, pp.VarName = detectVarRef(pp.Value)
+		// A fish (…) substitution is shell code, not a literal: keep the
+		// value exactly as typed and emit it verbatim, like a var ref.
+		if (eqIdx >= 0 && tok.Subst) || anySubst(valueTokens) {
+			pp.Subst = true
+			pp.IsVar = true
+			pp.VarName = ""
+			if eqIdx < 0 {
+				pp.Value = pp.RawValue
+			} else {
+				pp.Value = inlineValue
+			}
+		}
 		if param != nil && isListKind(param.ValueKind) && len(valueTokens) > 1 {
 			names := make([]string, 0, len(valueTokens))
 			allVars := true
@@ -261,6 +280,16 @@ func DetectVarRef(value string) (bool, string) {
 		}
 	}
 	return false, ""
+}
+
+// anySubst reports whether any of toks carries a fish (…) substitution.
+func anySubst(toks []Token) bool {
+	for _, t := range toks {
+		if t.Subst {
+			return true
+		}
+	}
+	return false
 }
 
 // detectVarRef is the internal alias kept so callers inside the shell

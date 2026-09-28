@@ -236,3 +236,31 @@ func TestParseRawSyntaxFishQuotedValue(t *testing.T) {
 		t.Errorf("flag tokens lost the fish-quoted value: %+v", raw.FlagTokens)
 	}
 }
+
+// TestTokenizeFishSubst: fish's (…) substitution stays inside one word,
+// spaces and nested parens included, and marks the token Subst so it is
+// re-emitted verbatim instead of quoted as text.
+func TestTokenizeFishSubst(t *testing.T) {
+	cases := []struct{ line, want string }{
+		{`(whoami)-rg`, `(whoami)-rg`},
+		{`(echo x)`, `(echo x)`},
+		{`pre(string join - a (echo b))post`, `pre(string join - a (echo b))post`},
+		{`(echo ')' "(")`, `(echo ')' "(")`},
+		{`(echo 'it\'s')`, `(echo 'it\'s')`},
+	}
+	for _, tc := range cases {
+		toks := shell.TokenizeSyntax(tc.line, shell.Fish)
+		if len(toks) != 1 || toks[0].Value != tc.want || !toks[0].Subst || toks[0].Unclosed {
+			t.Errorf("%s: got %+v", tc.line, toks)
+		}
+	}
+	if toks := shell.TokenizeSyntax(`(echo x`, shell.Fish); len(toks) != 1 || !toks[0].Unclosed {
+		t.Errorf("unclosed subst: got %+v", toks)
+	}
+	// POSIX: parens are plain word characters there, and never Subst.
+	for _, tok := range shell.Tokenize(`a(b)c`) {
+		if tok.Subst {
+			t.Errorf("POSIX token marked Subst: %+v", tok)
+		}
+	}
+}

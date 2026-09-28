@@ -76,3 +76,37 @@ func TestBuildFishDialect(t *testing.T) {
 		t.Errorf("fish output must not use the POSIX quote idiom: %q", got)
 	}
 }
+
+func TestBuildFishRewritesBracedVars(t *testing.T) {
+	got := render.Build(render.Command{
+		Path:    "group create",
+		Dialect: render.Fish,
+		Fields: []render.FieldValue{
+			{Name: "--name", Value: "${RG}", IsVar: true, Enabled: true},
+			{Name: "--tags", Value: "${A} ${B_2}", IsVar: true, Enabled: true},
+			{Name: "--location", Value: "(echo x)", IsVar: true, Enabled: true},
+		},
+	})
+	want := "az group create --name {$RG} --tags {$A} {$B_2} --location (echo x)"
+	if got != want {
+		t.Errorf("Build = %q, want %q", got, want)
+	}
+	// POSIX output keeps ${NAME}.
+	posix := render.Build(render.Command{Path: "x", Fields: []render.FieldValue{{Name: "--n", Value: "${RG}", IsVar: true, Enabled: true}}})
+	if posix != "az x --n ${RG}" {
+		t.Errorf("POSIX changed: %q", posix)
+	}
+}
+
+// TestFishVarRefsRunInFish proves the rewritten reference expands in a
+// real fish, where ${RG} would be a syntax error.
+func TestFishVarRefsRunInFish(t *testing.T) {
+	fish, err := exec.LookPath("fish")
+	if err != nil {
+		t.Skip("fish not installed")
+	}
+	out, err := exec.Command(fish, "--no-config", "-c", "set RG my-rg; printf %s "+render.FishVarRefs("${RG}")).Output()
+	if err != nil || string(out) != "my-rg" {
+		t.Errorf("fish printed %q, err %v", out, err)
+	}
+}
