@@ -52,3 +52,26 @@ func TestFishTypedValues(t *testing.T) {
 		t.Errorf("Result = %q, want %q (errorMsg=%q)", f.Result(), want, f.ErrorMsg())
 	}
 }
+
+// fish interprets unquoted escapes like \t and \x41; such a word must
+// reach fish as typed, not as the letters the tokenizer sees.
+func TestFishBufferEscapesRoundTrip(t *testing.T) {
+	line := `az group show --name a\x41b --resource-group tab\tsep`
+	raw, ok := shell.ParseRawSyntax(line, 0, shell.Fish)
+	if !ok {
+		t.Fatal("ParseRawSyntax failed")
+	}
+	src := ui.Sources{Buffer: raw, Dialect: render.Fish, Engine: validate.NewEngine(validate.BuiltinProvider{})}
+	f := ui.NewFormWithSources("group show", "/tmp/out.txt", t.TempDir(), "test", nil, src)
+	m, _ := f.Update(ui.MetadataLoadedMsg{Params: typedValueParams(), Summary: "."})
+	f = submit(t, m.(ui.Form))
+	if f.Result() != line {
+		t.Errorf("Result = %q, want %q (errorMsg=%q)", f.Result(), line, f.ErrorMsg())
+	}
+	// Plain escapes of special characters are still literal text.
+	raw, _ = shell.ParseRawSyntax(`az group show --name a\ b --resource-group rg`, 0, shell.Fish)
+	pb := shell.MatchParams(raw, typedValueParams())
+	if pb.Params[0].Expands || pb.Params[0].Value != "a b" {
+		t.Errorf(`a\ b: value=%q expands=%v, want literal "a b"`, pb.Params[0].Value, pb.Params[0].Expands)
+	}
+}

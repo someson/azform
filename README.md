@@ -31,9 +31,9 @@ per-shell, not per-OS.
 
 In fish, azform reads the line with fish's quoting rules (`\'` and `\\`
 inside single quotes) and writes commands back in the same dialect.
-Command substitutions — fish's `(…)` as well as `$(…)` — are kept
-exactly as typed, and a POSIX `${NAME}` is written back as fish's
-`{$NAME}`.
+Command substitutions — fish's `(…)` as well as `$(…)` — and escapes
+such as `\t` or `\x41` are kept exactly as typed, and a POSIX `${NAME}`
+is written back as fish's `{$NAME}`.
 
 The installer writes to the profile of your login shell (`$SHELL`). If
 you keep bash or zsh as the login shell and start fish from your

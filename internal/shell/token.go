@@ -22,10 +22,11 @@ type Token struct {
 	Start    int    // byte offset in source
 	End      int    // exclusive byte offset
 	Unclosed bool   // true when a quote or $(/`  delimiter was not closed before EOL
-	// Subst is set on a fish word that contains an unquoted (…) command
-	// substitution. Value then holds the substitution verbatim, so the word
+	// Expands is set on a word the shell would expand: a $VAR / ${VAR}
+	// outside single quotes, a backtick, a leading ~, or (fish) a (…)
+	// substitution. Its Value is not what az would receive, so the word
 	// must be re-emitted as typed (Raw), never quoted as a literal.
-	Subst bool
+	Expands bool
 }
 
 // Syntax selects the quoting rules Tokenize applies. The two differ only
@@ -122,6 +123,9 @@ func scanWord(line string, start int, syn Syntax) (Token, int) {
 	subst := false
 	i := start
 
+	if i < len(line) && line[i] == '~' {
+		subst = true // tilde expansion
+	}
 	for i < len(line) {
 		switch line[i] {
 		case ' ', '\t', '\n':
@@ -131,6 +135,12 @@ func scanWord(line string, start int, syn Syntax) (Token, int) {
 				goto done // line continuation ends the word
 			}
 			if i+1 < len(line) {
+				// fish gives unquoted \n, \t, \x41, \u00e9, … their C
+				// meaning; the value is then not the letter, so keep the
+				// word as typed.
+				if syn == Fish && strings.IndexByte("abefnrtvxXuUc01234567", line[i+1]) >= 0 {
+					subst = true
+				}
 				raw.WriteByte('\\')
 				raw.WriteByte(line[i+1])
 				val.WriteByte(line[i+1])
@@ -188,6 +198,7 @@ func scanWord(line string, start int, syn Syntax) (Token, int) {
 						i += 2
 					}
 				} else if line[i] == '$' && i+1 < len(line) && line[i+1] == '(' {
+					subst = true
 					// cmdsubst inside double-quotes: consume balanced parens verbatim
 					j := i + 2
 					depth := 0
@@ -208,6 +219,10 @@ func scanWord(line string, start int, syn Syntax) (Token, int) {
 					val.WriteString(frag)
 					i = j
 				} else {
+					if (line[i] == '$' && i+1 < len(line) && startsExpansion(line[i+1])) ||
+						(line[i] == '`' && syn != Fish) {
+						subst = true
+					}
 					raw.WriteByte(line[i])
 					val.WriteByte(line[i])
 					i++
@@ -222,6 +237,9 @@ func scanWord(line string, start int, syn Syntax) (Token, int) {
 		case '$':
 			if i+1 < len(line) && line[i+1] == '(' {
 				goto done // CmdSubst starts at word boundary; handled at top level
+			}
+			if i+1 < len(line) && startsExpansion(line[i+1]) {
+				subst = true
 			}
 			raw.WriteByte('$')
 			val.WriteByte('$')
@@ -271,8 +289,18 @@ done:
 		Start:    start,
 		End:      i,
 		Unclosed: unclosed,
-		Subst:    subst,
+		Expands:  subst,
 	}, i - start
+}
+
+// startsExpansion reports whether c, following a '$', makes it an
+// expansion ($NAME, ${NAME}, $1, $?, …) rather than a literal dollar.
+func startsExpansion(c byte) bool {
+	switch {
+	case c >= 'A' && c <= 'Z', c >= 'a' && c <= 'z', c >= '0' && c <= '9':
+		return true
+	}
+	return strings.IndexByte("_{?#@*!$-", c) >= 0
 }
 
 // fishSubstEnd returns the exclusive end of the fish (…) substitution that

@@ -238,7 +238,7 @@ func TestParseRawSyntaxFishQuotedValue(t *testing.T) {
 }
 
 // TestTokenizeFishSubst: fish's (…) substitution stays inside one word,
-// spaces and nested parens included, and marks the token Subst so it is
+// spaces and nested parens included, and marks the token Expands so it is
 // re-emitted verbatim instead of quoted as text.
 func TestTokenizeFishSubst(t *testing.T) {
 	cases := []struct{ line, want string }{
@@ -250,17 +250,17 @@ func TestTokenizeFishSubst(t *testing.T) {
 	}
 	for _, tc := range cases {
 		toks := shell.TokenizeSyntax(tc.line, shell.Fish)
-		if len(toks) != 1 || toks[0].Value != tc.want || !toks[0].Subst || toks[0].Unclosed {
+		if len(toks) != 1 || toks[0].Value != tc.want || !toks[0].Expands || toks[0].Unclosed {
 			t.Errorf("%s: got %+v", tc.line, toks)
 		}
 	}
 	if toks := shell.TokenizeSyntax(`(echo x`, shell.Fish); len(toks) != 1 || !toks[0].Unclosed {
 		t.Errorf("unclosed subst: got %+v", toks)
 	}
-	// POSIX: parens are plain word characters there, and never Subst.
+	// POSIX: parens are plain word characters there, and never Expands.
 	for _, tok := range shell.Tokenize(`a(b)c`) {
-		if tok.Subst {
-			t.Errorf("POSIX token marked Subst: %+v", tok)
+		if tok.Expands {
+			t.Errorf("POSIX token marked Expands: %+v", tok)
 		}
 	}
 }
